@@ -1,0 +1,276 @@
+Tosky_v6 implementation and staged review — 2026-11-15
+
+Created agents/Tosky_v6.py from the exact validated Tosky_v5 source. Original
+v3, v4, v5, TOSKY.py, PIRATE, and the recorded v4/v5 tests and v5 provenance
+remain unchanged. No paid inference, environment evaluation, submission or
+commit was performed. This is an offline-verified candidate, with no measured
+accuracy, race-score, latency or total inference-cost improvement claimed.
+
+Source SHA256:
+3a8a3df320bb9853aceaf05d7dc80c9f5b562f907471cf1b44e8b894e0d0c202
+
+The requested sequence was followed with separate source checkpoints and
+before/after checks. Final review added guards for cross-stage interactions.
+The new source changes 24 existing controller methods, adds six reachable
+methods and removes the old lossy history-trimming method. Another 227 existing
+controller methods retain identical ASTs. The model IDs and rate envelope are
+unchanged.
+
+1. Requirement evidence and category alternatives
+
+The previous category-specific-key rule could turn different semantic
+dimensions into a false contradiction. V6 detects differing generic/scoped
+evidence and returns unresolved instead of automatically selecting a winning
+field or rejecting the product. The semantic reviewer receives the raw keys
+and an explicit instruction to establish their meaning. A matching desired
+value alone is not sufficient to choose a field.
+
+Missing-property evidence no longer becomes a proven failure merely because
+another listing carries that property. It is also not treated as proof of fit.
+Automatic multi-item cart completion now uses the same positive-evidence
+predicate as other automatic selections. References that have not been
+resolved remain blocked.
+
+An explicitly qualified property in an accepted audit quote retains its scope.
+For example, replaying the actual audit output that shortened a property to
+type now preserves type of top from its supporting quote. A matching title
+word alone cannot establish an explicitly qualified property. This is generic
+grammar handling, not a product synonym or attribute table.
+
+Product alternatives remain valid through both fuller-label and named-label
+cart checks. Ordinary explicit shelves and compound product kinds retain their
+guards. A combined catalog label no longer invalidates an otherwise allowed
+alternative.
+
+Since ambiguous evidence is unresolved, recovery retains cheap unresolved
+candidates in its bounded review context instead of excluding them before a
+review. Retention does not authorize automatic purchase. The existing stricter
+positive-proof condition remains for automatic cheapest substitutions.
+
+Final review found and reproduced a preservation risk: four cheaper unresolved
+candidates could displace an older proven replacement from this bounded context.
+V6 now protects up to four proven replacements per affected item first, then
+retains up to two unresolved candidates per item, followed by recent records.
+The overall limit stays at 25. The failing counterexample now passes, and the
+recorded cheaper clock is still present. This retains evidence for review; it
+does not certify that either candidate is the correct final purchase.
+
+Evidence:
+- Five new falsifying tests fail on the starting source before these changes.
+- Under the same recorded skirt observations, v5 rejects both relevant
+  candidates; v6 marks the property ambiguous and keeps them eligible for
+  review. This removes a false veto; it is not a newly measured task pass.
+- The recorded Jeans candidate no longer receives the combined-category fault.
+- The known cheap clock remains in the bounded recovery context. Its conflicting
+  field spellings are now reviewed rather than mechanically declared proven.
+- Exclusions, explicit property scope, numeric bounds, unrelated components,
+  ordinary shelves and compound kinds have separate controls.
+- The actual tunik extraction/audit response now yields the full qualified
+  property. Whether a live review reaches the right final choice is unmeasured.
+
+Artifacts: 01-before.txt, 01-after.txt, 01-public-replay.json,
+06-qualified-property-replay.json, checkpoints/01_evidence.py.
+
+2. Review persistence and terminal recovery
+
+Review keys now include the request, current ledger, budget, resolved references,
+objective and relevant observed evidence. A rejected review remains rejected
+when the same state is retried. New evidence or requirements cause a fresh
+check. Interrupted, missing, malformed and internally contradictory replies
+cannot silently become approval.
+
+Final integration review also closed a fallback bypass: an unresolved product
+needs an explicit successful semantic review before it can be ordered. The
+controller does not equate absence of a deterministic rejection with proof.
+
+Checkout is blocked for a known empty cart and known unavailable lines. The
+same failed checkout is not repeated against unchanged evidence. The first
+fallback provides a repair opportunity; if recovery still cannot establish a
+valid order, the final fallback can use the existing decline tool and its
+required procedure. A stale cart view no longer authorizes an empty purchase.
+
+Evidence:
+- The negative-review cache, interrupted review, changed evidence, changed
+  budget and malformed-response contracts are tested separately.
+- Replays of the two unfinished recorded states no longer repeat the empty
+  or unavailable purchase. They reach a scripted acknowledged decline.
+- That proves a legal control-flow ending, not a correct decline score; a task
+  may still deserve an order when a fitting product has not been found.
+- Required procedure proofs, their invalidation and scoped stockout handling
+  retain their existing offline checks.
+
+Artifacts: 02-before.txt, 02-after.txt, 02-public-replay.json,
+checkpoints/02_review_finish.py.
+
+3. Budget-aware recovery and context preservation
+
+The per-invocation ceiling remains $0.050. The existing $0.004 allowance now
+protects ordinary completion as well as stated procedures. It becomes available
+when the main loop enters recovery, or when executing the required procedure.
+This is progress-based behavior within an episode, with no phase, validator or
+time-of-day routing.
+
+The controller declines large structured-review requests whose budget would
+reduce them to an unusably small output allowance. An empty length-limited
+response is logged as unusable. Structured-response failures can receive one
+priced fallback through the existing spare model; all physical attempts remain
+charged, and credit/budget failures still stop calls.
+
+Before an otherwise inadmissible planner request is refused, repeated
+observation fragments can be replaced with references to a plain JSON table
+containing the original data. Repeated narrative lines are handled similarly.
+This transformation preserves chronological messages, tool-call/result pairs,
+cache metadata, changed prices and stock, and every original observation value.
+It does not select a smaller candidate pool or remove old evidence. Unique
+histories that cannot shrink are returned unchanged. The original uncompressed
+history remains in memory; references are generated solely from this episode's
+observations. No encoded static answers, filesystem storage or new module is
+used. The old method that clipped historical tool text has been removed.
+
+Final review narrowed the trigger: an ordinarily admissible request is not
+transformed merely because its output cap is somewhat reduced. Deduplication
+is used when the request is inadmissible, or the previous history-size limit
+would have caused truncation.
+
+Evidence from actual recorded final planner requests:
+
+Case          Original bytes   Compacted bytes   Reduction   Output allowance
+Milk              79,817            53,926         32.4%           3,793
+Pants/jeans       90,363            63,364         29.9%           1,032
+
+At the respective recorded spends, the full requests were inadmissible. The
+compacted recovery requests fit the unchanged envelope, with reservations of
+approximately $0.011427 and $0.011206. These are conservative admission
+reservations, not new charges or expected bills. The second case has little
+remaining output room; this is not a guarantee of a useful model answer.
+
+All 30 final recorded planner histories passed an observation round-trip check:
+expanding the references restores every parsed observation and exact trailing
+text, while non-tool messages and tool protocol fields are preserved. This
+checks information preservation, not the model's ability to interpret the
+reference notation. That behavioral effect remains unmeasured and is a reason
+to isolate this stage in any subsequent paid comparison.
+
+The 90-invocation unknown-billing stress check includes both ordinary and
+reserved recovery spending, and remains within the $4.50 configured allocation.
+The corresponding 30-invocation allocation is $1.50. These calculations depend
+on the configured model-rate envelope and invocation count; they are not a
+guarantee against arbitrary provider-price changes or additional runs.
+
+Artifacts: 03-before.txt, 03-after.txt, 03-compaction-feasibility.json,
+03-public-admission.json, validate_compaction.py,
+checkpoints/03_budget_context.py.
+
+4. Questions with observable outcomes
+
+Within an item, an unsuccessful question no longer causes the next message to
+combine several properties. Each question requests one property. An ambiguous
+answer to a legacy grouped question does not mark all unaddressed properties
+as used or free. Explicit requested questions, answered-property exclusions,
+metadata exclusion and procedure-message reservations remain in place.
+
+The existing multi-item scheduling is retained. This change does not add a
+fixed priority list of product attributes or change the planning model.
+
+Evidence:
+- A stricter scripted shopper responds only when its property is asked alone.
+  The pre-change candidate misses that preference; the new candidate discovers
+  it and completes the required explanation within the message allowance.
+- Existing successful preference/procedure and stockout/procedure scenarios
+  also remain successful in the preserved suite.
+- This demonstrates a specific protocol improvement in the fixture. It does
+  not establish ORO shopper behavior for every task or prove a higher discovery
+  rate on the 30 real tasks.
+
+Question priority remains a limitation. Atomic questions cannot guarantee that
+every undisclosed property is reached with a three-message budget. The watch
+and coat are not declared solved, and no task-specific priority was embedded.
+
+Artifacts: 04-before.txt, 04-after.txt, checkpoints/04_atomic_questions.py.
+
+5. Search-mode correction and progress feedback
+
+When a keyword argument is present and a tool explicitly advertises one enum
+value for keyword/text search, the controller selects that documented value.
+It retains all other arguments. Pure filter searches and undocumented or
+ambiguous mode choices are left unchanged. Both planner and internal calls use
+the correction before contacting the environment.
+
+Search progress is measured from returned listing data. Repeated IDs with new
+prices, stock or other facts remain new evidence. Identical listing data triggers
+a reminder that these results do not add candidate coverage, while new notes or
+pagination may still matter. No search result is fabricated or used to assert
+that the whole catalog has been exhausted.
+
+The new progress feedback does not impose a blanket ban on refreshing results.
+The inherited exact-call cache remains; this change does not expand it into a
+cache across different keyword queries or different observed inventory states.
+
+Evidence:
+- Renamed tool and mode fixtures verify that choices come from the advertised
+  contract rather than fixed public-world names.
+- On the recorded pants and knit-clothing actions, the helper identifies 11 and
+  three keyword-mode corrections, respectively.
+- It identifies seven and three repeated listing-result sets in those traces.
+- Actual search results for corrected queries have not been fetched. The knit
+  task is not declared recovered merely because mode selection is corrected.
+
+Artifacts: 05-before.txt, 05-after.txt, 05-public-search.json,
+checkpoints/05_search.py.
+
+6. Final verification and remaining limits
+
+Final suite: 34 top-level unittest checks pass. One wrapper additionally runs
+53 inherited checks against v6, including the six scripted success scenarios.
+One former budget assertion that expected a severely shortened expensive-model
+answer is intentionally replaced by an admission/recovery contract. Original
+test files are unchanged. A test added during stage four was initially placed
+under the wrong class; this fixture error was corrected before judging the
+stage, and the retained pre-change result shows the three intended failures.
+
+Final review added counterexamples for an unreviewed ambiguous fallback,
+internally contradictory approvals, irrelevant component fields, qualified
+property words in titles, recovery spending across 90 invocations, and uncertain
+candidates displacing proven replacements. Their
+checks and the preserved suite pass together. Public evidence, terminal-flow
+and all-history preservation replays were rerun against the final source.
+
+The source is 450,209 UTF-8 bytes with a synchronous agent_main. Local parsing
+and compilation took about 0.26 seconds. Imports are unchanged; the local scan
+finds no prohibited direct file/eval/exec calls or embedded task/product/world
+IDs. The six new controller methods are reachable from the entry path. New
+state is confined to the invocation. Only existing proxy environment and
+inference paths are used. The new logic does not contain product synonym,
+attribute-priority or unit registries.
+
+Reviewed against current official requirements:
+https://oroagents.com/docs/miners/code-requirements
+https://oroagents.com/docs/miners/agent-interface
+
+This preflight does not execute ORO's private AST, integrity, similarity or
+submission-acceptance service, and cannot certify that service's outcome.
+
+The recurring top and cleanser grading failures still lack an exposed exact
+failed predicate. No speculative product blacklist or benchmark-answer rule was
+added. Semantic review, priority of scarce questions, search discovery and the
+model's handling of compacted references still require live measurement. A
+correctly terminated decline is not interchangeable with a correct shopping
+answer. No score increase, net cost decrease or zero-regression guarantee is
+asserted from these offline results.
+
+The checkpoints allow any subsequently authorized paid comparison to isolate
+the interpretation, terminal, budget/context, interview or search change before
+testing the combined candidate on the matched roster. Until then, v6 is a
+candidate with verified local contracts, not a proven improvement over PIRATE
+or an agent established to win a race.
+
+Entry files and evidence:
+- agents/Tosky_v6.py
+- agents/Tosky_v6.provenance.json
+- agents/tests/test_tosky_v6.py
+- build-review.json, original-hashes.json and checkpoints/
+- 06-final-tests.txt and 06-preflight.txt
+- 06-recovery-retention-before.txt and 06-recovery-retention-after.txt
+
+Offline verification command:
+python3 -m unittest agents.tests.test_tosky_v6

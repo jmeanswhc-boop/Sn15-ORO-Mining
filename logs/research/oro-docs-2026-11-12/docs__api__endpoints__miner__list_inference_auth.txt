@@ -1,0 +1,28 @@
+Miner
+List all inference-auth providers the miner has connected
+List every provider the authenticated miner currently has a credential for.
+Server URLloading...GET/v1/miner/inference-authSendAuthorization
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Response Body
+200
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X GET "https://api.oroagents.com/v1/miner/inference-auth"200
+{
+  "providers": [
+    {
+      "connected": true,
+      "provider": "string",
+      "updated_at": "2019-08-24T14:15:22Z"
+    }
+  ],
+  "default_provider": "string"
+}
+List agent versions
+List all versions of a specific agent owned by the miner.
+List miner's agents
+List all agents owned by the authenticated miner, with cooldown status.
+
+Includes the latest version per agent with its state and score so the
+frontend doesn't need to make N additional requests.

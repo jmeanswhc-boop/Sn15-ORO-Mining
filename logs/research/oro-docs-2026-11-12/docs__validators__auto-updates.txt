@@ -1,0 +1,70 @@
+
+Automatic Updates
+Watchtower configuration for automatic Docker image updates between evaluation cycles.
+The validator stack includes Watchtower to keep Docker images up to date without manual intervention. Updates are triggered between evaluation cycles and never interrupt a running evaluation.
+
+What Gets Updated
+
+ | Component | Update Mechanism
+ | validator | Watchtower (scoped)
+ | search-server | Watchtower (scoped)
+ | proxy | Watchtower (scoped)
+ | sandbox | docker pull (ephemeral container, not watched by Watchtower)
+
+How It Works
+
+After each completed evaluation cycle, the validator:
+
+
+Sends GET /v1/update to Watchtower over the internal Docker network.
+
+Watchtower checks GHCR for new images on all scoped containers.
+
+If a service image has changed, Watchtower restarts that service with the new image.
+
+The validator polls health endpoints on its dependencies until all are healthy.
+
+Pulls the latest sandbox image via docker pull.
+
+Proceeds to the next evaluation cycle.
+
+
+If the validator's own image is updated, Watchtower stops the container. Docker's restart: unless-stopped policy restarts it with the new image, and depends_on ensures dependencies are healthy before the validator proceeds.
+
+Configuration
+
+ | Variable | Default | Description
+ | WATCHTOWER_TOKEN | oro-watchtower-token | Shared token between the validator and Watchtower HTTP API
+ | ORO_AUTO_UPDATE | true | Set to false to disable auto-updates entirely
+ | ORO_WATCHTOWER_URL | http://watchtower:8080 | Watchtower HTTP API URL (internal Docker network)
+ | WATCHTOWER_LOG_LEVEL | info | Watchtower log verbosity (debug, info, warn, error)
+
+Image Channels
+
+ORO Docker images are published to two tags:
+
+ | Tag | Purpose | Updated
+ | :stable | Production: recommended for all validators | Manually promoted after staging verification
+ | :latest | Testing/staging: may contain untested changes | Automatically on every release
+
+The default docker-compose.yml uses :stable. If you want to test pre-release images, override in your .env:
+
+# Override a specific image to use the latest (testing) channel
+SANDBOX_IMAGE=ghcr.io/oro-ai/oro/sandbox:latest
+
+When a new version is published, the ORO team verifies it on staging (:latest), then promotes to :stable. Watchtower on your validator detects the new :stable image and updates automatically.
+
+Disable Auto-Updates
+
+Add the following to your .env file:
+
+ORO_AUTO_UPDATE=false
+
+When auto-updates are disabled, pull new images manually:
+
+docker compose --profile validator pull
+docker compose --profile validator up -d
+Running the Validator
+Start the validator stack, understand the service architecture, and verify it is working.
+Running as a Service
+systemd unit file for running the ORO validator as a background service with automatic restarts.

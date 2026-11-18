@@ -1,0 +1,129 @@
+CHIDORI: procedure-enforcement update plan
+Evidence snapshot: 2026-11-12. Status: analysis and plan only.
+
+DECISION
+
+Repair the lifecycle of the request's mandatory procedures. Treat a procedure as outstanding until its actual execution is recorded, schedule it before its deadline, and enforce the result on every path that selects a product or finishes the episode. Add spending admission at the existing central inference function as a separately verified prerequisite. This is one accuracy intervention with supporting budget controls.
+
+The evidence supports this as the highest-priority target. It does not establish an achieved score gain, guarantee zero regressions, or establish that every procedure failure has the same cause. No new agent has been implemented and no paid inference was launched during this investigation.
+
+BASELINE AND EVIDENCE
+
+Agent: CHIDORI v11, public version 06af2157-d650-7d40-8000-519949f07ca0.
+Released source: ../champion-lineage-2026-11-12/source-06af2157-d650-7d40-8000-519949f07ca0.py
+SHA-256: b32f88b0ef42100f10d9ad29e3019a54dd79dfaefe8ded2b72a88772f9247bf2
+Current upstream inspected after git fetch: f156ffd2abacf7c742edaaa43a6413ebd922b2df.
+
+Race 21, two included 90-task validator evaluations:
+
+                                         Run ...7a   Run ...0e   Combined
+Passed                                         24          25         49
+process_requirement_missed                      45          43         88
+request_not_met                                 17          16         33
+not_the_best_option                              4           6         10
+Total                                          90          90        180
+Reported inference cost, USD              4.468932    4.511571
+Reported duration, seconds                   479.9       477.5
+Reported inference calls                     1,463       1,516
+Reported failed inference calls                  0           0
+
+Run ...7a: 06af4e40-6225-78b9-8000-a483ac276c7a.
+Run ...0e: 06af4f22-14b4-7570-8000-c3ecd7deb00e.
+
+Procedure failures account for 88/131 = 67.18% of failed executions. Thirty-seven distinct tasks received that category on both validators. These are repeated observations of the same 90 tasks, not 180 independent task designs.
+
+The same source's earlier race runs reported $3.805181-$3.860816 in Race 19 and $4.198698-$4.411905 in Race 20. These involve different race worlds and service images. They demonstrate variation in resource demands, not a causal effect of a code change. The latest publicly reported costs are already about 90% of a $5 per-evaluation cap. Their public projection does not provide the agent/simulator billing split required for a complete budget proof.
+
+All 180 released Race 21 feedback records were inspected for verdict/category consistency. Their query fields are null and private grading checks are withheld. Consequently, the precise missing instruction cannot be reconstructed for every failure. Eight failed public qualifying episodes were also collected. Their failure categories concern request matching and undiscovered needs, rather than procedures. A public qualifying score alone therefore cannot validate the proposed procedure repair.
+
+REPRODUCED CONTROL DEFECTS
+
+The probes execute selected methods from the actual released source with synthetic state and mocked dependencies. They make no service calls. Results are in procedure-control-probes.json.
+
+1. E7.gate, source line 4689, permits continuation after a missing model response.
+2. The same method accepts an empty object and caches the gate as passed, although no required duty was accounted for.
+3. An explicitly unproven duty can still produce an allowed, cached result. The method checks only steps the model returns, so omitted duties are not required to appear.
+4. G6B.finish calls the gate and then ignores a false result before ordering. The probe returns (False, "Required approval is still missing") and observes a buy call anyway. The decline branch also ignores the result in the source.
+5. read_brief parses choose-stage duties, but there is no choose-stage gate invocation. The normal conversational instructions may prompt their completion, but the procedural controller does not enforce that boundary.
+6. Two independent one-message order duties reserve one message: read_brief uses max(c), not the resources needed for every independent duty on the selected branch. reserve() also only protects one message plus the final tool call. The active dispatcher bypasses the procedure gate when only one step remains.
+
+The central defect is a mismatch between a textual obligation list and executable control flow. Missing information, incomplete coverage, resource exhaustion and fallback paths can all become permission to finish. Merely changing the final True to False would leave required actions until too late and could turn incorrect finishes into unfinished episodes without recovering any score.
+
+PROPOSED CHANGE BOUNDARY
+
+Active methods were resolved through Episode's actual method-resolution order. The accuracy patch should touch the existing procedure prompt, E1.read_brief's procedure subsection, E1.reserve/free_msgs/gate_due, E7.gate, and the active action/finish boundaries. The budget patch should touch E1.one_call/think and their per-episode accounting state. An audit of E1.env and direct checkout helpers is required to make sure scripted and recovery calls cannot bypass the boundary.
+
+Product matching, candidate ranking, search expansion, compatibility, cheapest-option selection and the existing product review are outside the accuracy patch. Broad model substitutions and general review passes would introduce a second accuracy intervention and prevent attribution of results.
+
+PROCEDURE PATCH DESIGN
+
+1. Keep the existing dynamically extracted duties. Give each a local stable ID and retain its original request-derived text, a supporting span from the public instruction, stage, pending/completed state, supporting executed step numbers and relevant cart revision. Reject invented requirements with no instruction support. Distinguish cart-dependent approval from one-time duties. A valid, explicitly empty procedure list can use the zero-duty fast path; an absent or malformed procedure parse is unknown rather than evidence of no duties. Do not build product/task lookup tables or keyword lists from the benchmark.
+
+2. Use one compact structured procedure decision covering every currently due ID exactly once. Missing IDs, duplicate/unknown IDs, malformed replies, unavailable inference, invalid evidence references and unexecuted proposals leave a duty pending. A semantic claim still depends on the model interpreting public instructions and observations; structural evidence checks do not prove arbitrary shopping semantics. Check that cited records actually exist, succeeded, occur before the applicable boundary and, when necessary, follow the latest relevant cart change. Record relevant successful actions from both ordinary/scripted paths and gate execution. Currently done_log contains sent messages and gate-performed nonmessage calls, so an ordinary required read may lack a citeable record. Preserve the relevant observed reply for assessment, deduplicate replayed steps and exclude synthetic diagnostic notes from evidence.
+
+3. Plan and perform early duties before the action the request says they must precede. For an unconditional before-selection duty, act before any selection. Permit read-only prerequisites when the public instruction needs listing information first. Use the supplied schemas and existing role/argument discrimination. In particular, purchase and decline may share one tool name with different arguments. All scripted selection routes need the same protection.
+
+4. Reserve the messages and environment steps needed for remaining independent duties on each feasible branch, plus the final tool step. Sum duties that really require separate actions. Use the maximum across mutually exclusive order/decline branches rather than charging both. Count a combined action once only where the instruction permits combining it. Recompute after actual progress or a changed cart. Optional interviewing/search must not consume these reserved resources.
+
+5. Require successful completion at normal purchase, normal decline, direct checkout, complete-cart recovery and forced finish. Audit every terminating call, including the one-step-left case. A procedure decision may propose a nonterminal action, but may not execute the final order itself. Prevent recursive gate execution if the common environment-call boundary is used. After a shopper response changes requirements, return control for the existing cart repair before considering checkout again.
+
+6. Reuse completion evidence while it remains valid. Invalidate only duties whose relevant cart or requirements changed. A failed or unknown inference result must never enter the completed cache. Use the existing brief and recorded observations, a compact due-duty subset and bounded procedure-only decisions. Begin with the existing light model; any escalation must fit a separately reserved monetary allowance. There must be a finite no-progress bound. Gate-round counts should be selected after mocked multistep cases, not cut blindly below the number of actions a legitimate procedure requires.
+
+BUDGET FEASIBILITY AND POLICY
+
+Interpret $5 as ORO's cap for one validator evaluation run. Each of the two included Race 21 evaluations has its own run key/cap. Their publicly reported costs sum to $8.980503; $5 is not a combined bill ceiling for every validator's evaluation of an agent.
+
+The released agent sets HARD = $0.078 per episode. Across the observed 90-task roster, 90 * 0.078 = $7.02. That is already above $5 before simulator costs, call overshoot or recovery allowances. HARD is also not an admission barrier immediately before every request. The central one_call adds usage.cost only for responses with choices, and unknown/failed-response costs can be unaccounted. The outer retry pattern includes 402, allowing retries before no_credit is set.
+
+Current upstream SessionRegistry constructs ProxyModelClient with the same inference_access_token supplied for the agent evaluation. Its docstring explicitly identifies the miner-funded run key. Runtime reader/simulator calls therefore consume the shared cap. The validator collects simulator usage separately and merges it with agent usage for episode resource accounting. This makes extra shopper interactions a billing decision as well as an environment-step decision.
+
+There is no supported shared remaining-run-balance endpoint on the current agent inference proxy. Its allowlist exposes GET /inference/models and POST /inference/chat/completions to agents; typed decisions are validator-only. The agent contract exposes per-task input, not the full roster size or other tasks' bills. Tasks execute in separate child processes. A module-global counter cannot enforce a shared run budget, and agents may not write a shared ledger file. Provider routing preferences are stripped by the proxy, so a proposed max-priced provider route is not an available enforcement mechanism.
+
+The proposed practical release target is <= $4.00 total per 90-task evaluation, including simulator use and conservatively reserved uncertain charges. This leaves $1.00 below the platform cap. It is a target and release condition, not a demonstrated full-run guarantee.
+
+Use the following budget equation only after establishing the components:
+
+    N * A + S_reserved + U_reserved <= $4.00
+
+N is the supported maximum task count for the evaluated configuration, A is the maximum agent allocation per task, S_reserved covers simulator usage under the new action policy, and U_reserved covers ambiguous/in-flight attempts and other supported billing uncertainty. For the observed N = 90, if S_reserved + U_reserved can actually be bounded at $0.85, A <= $0.035. If that reserve is $1.30, A <= $0.030. These are arithmetic examples, not measured simulator costs or selected production constants. The 90-task observation must not become phase/ID-dependent routing in submitted code.
+
+Implement monetary admission at the single one_call HTTP entry point. It must apply to the brief, planner, gate, fallback, malformed-output repair, low-effort compatibility retry and recovery calls. Reserve conservative input/output charges before each physical attempt, using supported model pricing and token ceilings. Include all applicable reasoning/cache/other billing components; do not call len(text)/4 a hard token bound. Model catalog access does not by itself establish a worst-case routed price. Verify the chosen bound against actual provider usage before treating it as enforceable.
+
+Reconcile every returned numeric cost even if choices/content parsing fails. Retain a conservative reservation for missing cost or a possibly billed timeout. Re-admit every retry and count physical attempts, not only logical model calls. A 402 ends inference retries immediately. Partition each per-task allocation so required procedure work and finishing have room before optional work consumes it. No recovery path may silently raise the allocation. Preserve one strategy in public practice, qualifying and races.
+
+An absolute guarantee for an arbitrary future full race cannot be established by agent code alone with this contract. It additionally needs a supported bound on roster size and simulator billing, or supported shared-budget admission/telemetry at the runtime. No such endpoint is assumed in this plan. If those bounds cannot be established, report the remaining uncertainty explicitly and do not label an agent-only counter as a guaranteed $5 solution.
+
+SEQUENTIAL VERIFICATION AND ADVANCEMENT
+
+Stage 0: Freeze the baseline and evidence. Confirm the exact source hash and active methods, retain original files, and create a new candidate file only when implementation begins. Done for the research baseline. Evidence and six baseline control probes are retained beside this plan.
+
+Stage 1: Validate budget accounting independently with mocked responses and charges. Cover successful output, charged malformed/empty output, missing cost, billed timeout, fallback, the recursive compatibility retry, 402, exhausted allocation, and many simultaneous isolated tasks. Pass criteria: no unadmitted HTTP attempt, no retry on 402, no forgotten uncertain reservation, and the sum of all independent per-task allocations remains within the established run envelope. Do not assume local process state is shared. Establish the run-level bounds or mark whole-run safety conditional. Price/billing changes invalidate the corresponding bound.
+
+Stage 2: Implement procedure state and scheduling in isolation. Cover zero duties, already completed duties, two independent same-stage messages, mutually exclusive branches, choose-stage work, required reads, approval for the current cart, changed cart, refusal, invalid evidence, a changed shopper need and insufficient resources. Pass criteria: every applicable duty is represented, no false completed cache entry, feasible required work retains its resources, and zero-duty traces require no additional procedure inference/action. Preserve the existing search/review behavior in those control cases.
+
+Stage 3: Connect every action/finish path only after Stage 2 passes. Include ordinary dispatch, direct checkout, complete-cart recovery, forced order, forced decline, shared purchase/decline tool names, a single remaining step, replayed tool responses and finished=true. Pass criteria: no boundary bypass, no recursion, no duplicate performed procedure, valid one-call-per-step protocol, and no call after finished=true. Exhaustion remains explicit rather than a fictitious completed duty.
+
+Stage 4: Combine only the independently verified budget and procedure patches. Inject a full 90-task concurrent cost workload and adversarial retry/usage cases without paid inference. Verify every attempt against the allocation, simulator reserve assumptions and $4 target. Such a mock verifies the controller under its assumptions; it is not a measured model bill or a race score.
+
+Stage 5: Perform submission-policy preflight: syntax/AST, permitted imports/API routes, single synchronous entry point, source size below 1 MB, static-analysis runtime budget, actual reachability of the new logic, no file writes, no hardcoded task/product data, no grader recreation and no phase-dependent strategy. A local AST parse cannot certify ORO's private integrity/similarity decision. The meaningful change is enforced, reachable procedure execution, and final platform acceptance remains its own check.
+
+Stage 6: Only then use paid verification, starting with a small fixed public-practice canary and advancing to a matched baseline/candidate comparison on the same exact public pack. Reuse an existing baseline only if its source, pack, provider, runtime and diagnostics make the comparison valid. Track per-task wins and losses, all failure categories, agent and simulator costs separately, missing-cost status, physical attempt count, latency and unfinished tasks. Resolve every unexplained baseline-correct regression before advancing. A qualifying pass-rate gain is insufficient evidence for the targeted race-world behavior.
+
+Stage 7: Release only after a complete run-cost reconciliation and a representative 90-task cost stress test meet the <= $4 target with no 402, no unmetered cost and no deadline/step regressions. Repeating public practice tasks can stress accounting, but does not reproduce hidden race complexity or establish hidden accuracy. An empirical gain on unseen race worlds remains to be observed. If run-level cost bounds remain unavailable, full-race safety remains conditional and must be described that way.
+
+STOP CONDITIONS
+
+Stop advancement at an unbounded billing path, unknown run-wide cost component, failed procedure invariant, unexplained previously-correct regression or policy conflict. Correct the failing stage and rerun its relevant checks before combining it with the next stage. The current deliverable stops at the plan and reproduced baseline defects.
+
+REFERENCES
+
+Local: diagnosis.json; procedure-control-probes.json; runs.json; problems.json; feedback-manifest.json; feedback-*.json.
+https://oroagents.com/docs/oro-bench
+https://oroagents.com/docs/miners/agent-interface
+https://oroagents.com/docs/miners/inference-providers
+https://oroagents.com/docs/miners/code-requirements
+https://github.com/ORO-AI/oro/blob/f156ffd2abacf7c742edaaa43a6413ebd922b2df/subnet/validator/session_registry.py
+https://github.com/ORO-AI/oro/blob/f156ffd2abacf7c742edaaa43a6413ebd922b2df/subnet/validator/main.py
+https://github.com/ORO-AI/oro/blob/f156ffd2abacf7c742edaaa43a6413ebd922b2df/docker/proxy/validate_model.js
+https://github.com/ORO-AI/oro/blob/f156ffd2abacf7c742edaaa43a6413ebd922b2df/src/agent/sandbox_executor.py
+https://openrouter.ai/docs/cookbook/administration/usage-accounting

@@ -1,0 +1,100 @@
+ICDI CHIDORI v2 verification analysis
+Run: local-46df07bb11a34426b51f83c581c88575
+Scope: analysis of provided artifacts and offline control-flow probes. Agent source files are unchanged. No paid tests were launched.
+
+RESULT
+
+The recorded agent hash matches agents/ICDI_chidori_v2.py exactly:
+3d40d11553e4bf2ea6d67d90305030cee98ca85d9ec397e070e468c1bfa3cdc9.
+
+The run completed 30 episodes and scored 16/30, or 53.33%. Six failures are classified as request not met and eight as changes missed. All 405 agent-model requests and 661 environment requests returned HTTP 200. The earlier unauthorized catalog GET failure is absent. No model request received HTTP 402, and no task failed to terminate.
+
+Reported agent-model inference cost was $0.50111707. This is not a reconciled all-in bill: the artifacts do not include a financial ledger for the simulator's separate model requests. Median sandbox time per episode was 64.26 seconds, and maximum episode time was 91.86 seconds. The sum of episode times is not wall-clock run duration because tasks run concurrently.
+
+COMPARISON ON THE SAME PUBLIC PRACTICE PACK
+
+Agent/result                 Correct      Agent-model cost    Calls    Median episode seconds
+ICDI_cn3 / local-f680...      24/30        $1.025440           531      81.56
+ICDI_cn4 / local-0e47...      23/30        $1.097902           553      83.95
+ICDI_chidori_v2 / this run    16/30        $0.501117           405      64.26
+
+Source hashes identify the older runs as the current ICDI_cn3.py and ICDI_cn4.py files. All three runs have the same pack digest and the same 30 task requests. Against cn3, v2 has 2 observed wins, 10 observed losses, 14 shared passes and 4 shared failures. The net loss is 8 tasks, or 26.67 percentage points. Cost is 51.13% lower and median episode time 21.22% lower. Cost per correct task fell from $0.04273 to $0.03132, but the accuracy loss fails the user's competition objective.
+
+These are matched public task observations, not a controlled same-nonce experiment: episode draws and model outputs can differ. They establish an observed regression against cn3, not a precise causal score estimate for each code change. No unmodified CHIDORI run on this exact pack was supplied, so a same-pack champion delta cannot be calculated.
+
+CENTRAL CONTROL-FLOW DEFECT
+
+There are 151 local budget-admission denials. Nineteen tasks latch local_inference_stop. All 14 failed tasks are in that group; five tasks nevertheless finish correctly through existing fallback behavior.
+
+BudgetControls.think treats the inability to admit one requested prompt/model combination as an agent-wide no_credit condition. This blocks subsequent inference calls even when their smaller prompts and lower prices fit the remaining allowance. It also prevents the ordinary recovery loop from acting on rejected checkout observations.
+
+The agent's actual charges never reach even 60% of the configured $0.035 task allowance. The lowest-cost failed task stops at $0.00307301, leaving approximately $0.031927. The run has no missing reported call costs and no observed billing-envelope breaches. The issue is not reservations permanently remaining charged after successful responses; reservations are reconciled. The harmful behavior is conservative admission followed by a global shutdown.
+
+Offline probes reconstruct each of the 19 stopped tasks' observed charges and public brief. A compact change-reading request is admissible under v2's own current quote function in all 19 cases, yet think() refuses it without calling the model client because no_credit is already set. This verifies a control-flow defect without assuming what the model would answer or what score would result.
+
+One precise example is t-d4e2bc9e66. The light cart reviewer correctly says that the selected skirt's structured style is commute rather than sweet. Its optional heavy escalation is unaffordable. The resulting global flag prevents further cheap correction, despite approximately $0.021831 remaining. The same light review prompt still has an admissible $0.014086 reservation. The inherited forced-finishing path then orders a cart for which a negative product review already exists. Both this behavior and the denial chain were reproduced offline using the actual source methods.
+
+HOW CHANGES WERE LOST
+
+All eight changes-missed episodes contain explicit public stockout warnings at the first checkout attempt, followed by another purchase attempt without a completed replacement. This is visible in the agent's own environment responses, not inferred from a hidden answer.
+
+Examples:
+- t-ceb23f4007: checkout step 15 says the monitor has sold out; step 16 attempts purchase again.
+- t-13e82f2c08: checkout step 32 reports unavailability; the agent rereads the same skirt at step 33 and attempts purchase again at step 34.
+- t-b9e9292a88: checkout step 16 reports the cleanser unavailable; the page at step 17 explicitly has in_stock:false; step 18 attempts purchase again.
+
+read_note() adds a notice to heard before its inference call succeeds. Once the global budget stop suppresses that call, the notice produces no parsed change but is still remembered as handled. Offline probes using the eight failed tasks' actual stockout texts reproduce this behavior: no model call, no sold-out interpretation, and the notice added to heard. Repeated observations can consequently be filtered out of later handling.
+
+The six request-not-met episodes comprise three failed declines and three failed purchases:
+- t-069a67a0c4: forced decline is not reconsidered after the packaging requirement is explicitly withdrawn.
+- t-5ae33c1dde: the shopper discloses female gender for the watch and withdraws the color-family exclusion. Search continues, then local budget shutdown forces decline while 17 environment steps remain.
+- t-eb5b2c8367: a candidate is proposed, but an unaffordable review leads to a forced decline after only $0.003073 of agent inference and 12/38 environment steps.
+- t-350bf2a022 and t-b516252b9f: purchase/stockout/retry patterns are visible. Their final category is request not met, so the stockout pattern is not established as the sole violation.
+- t-d4e2bc9e66: the light reviewer explicitly rejects the chosen style; escalation denial and forced purchase discard the correction opportunity. The earlier budget change to 317 cents was actually read and understood, so it is not accurate to blame this case solely on a missed monetary update.
+
+Full per-task outcomes, notices, costs and terminal calls are retained in per-task.json. These observations do not prove that every failed task would pass after the shutdown fix; product interpretation and search can still fail.
+
+OVERLY CONSERVATIVE QUOTES AND PAID EMPTY OUTPUT
+
+Median reserved-to-reported-cost ratios in admitted calls were 54.73x for Haiku, 2.64x for Sonnet and 80.25x for Luna. These are prospective reservation-to-actual ratios, not extra money charged to the account. They include unused maximum output allowances and conservative input/pricing assumptions.
+
+The input-byte estimate is a median 3.40x actual prompt tokens for Haiku, 3.49x for Sonnet and 5.00x for Luna. The static financial settings also use the maximum published long-context tier for every request. In this run, the largest admitted Haiku prompt estimate was 33,160 versus 11,630 actual tokens, below the published 100,000-token higher-price threshold in the retained pricing snapshot. A later tier-aware estimate can use an upper input estimate to select an applicable price envelope while retaining the byte/framing estimate and margin. This needs separate validation; dividing bytes by a measured average and calling it a hard token bound would be unsound.
+
+Five successful HTTP responses contain no usable content/tool call. Four stop at the output length limit with all completion tokens consumed by reasoning: Haiku caps of 1,839 and 636; Sonnet caps of 845 and 811. Those four responses cost $0.0270548 without a usable answer. The fifth is a small Luna empty response with finish_reason:stop. This shows why an arbitrarily reduced cap is not necessarily a useful inference call.
+
+Sonnet accounts for $0.342704, or about 68.4% of agent-model cost, from only 29/405 requests. This is a second efficiency issue to measure separately, not justification for changing every model or removing necessary reviews.
+
+PROCEDURE REPAIR COVERAGE
+
+All 30 procedure parses are valid. Twenty-nine lists are empty. The monitor task t-eb5b2c8367 has one inferred order-stage duty: tell the shopper what is worth asking before committing savings. That duty reserves one shopper message and the protected inference allowance, but the task ends in a decline before an order-stage procedure is performed. No procedure-verification inference request is recorded in this run. The result does not measure whether the original procedure-targeted fix improves hidden race situations. It does establish regressions in general shopping behavior associated with budget control. The semantic necessity of that one inferred duty is not established by the failure category and warrants a separate control case.
+
+Both ICDI_chidori_v2.py and ICDI_chidori_v2_budget.py have AST-identical InferenceBudget and BudgetControls classes. The same global-shutdown defect therefore affects the budget-only variant. Switching to it does not remove the confirmed budget-control issue.
+
+THE $5 LIMIT FOR ALL 90 PROBLEMS
+
+The mandatory release condition is:
+
+    agent inference + simulator inference + uncertain/in-flight charges <= $5
+    across all 90 problems in one evaluation run.
+
+The operating target remains $4 all-in, with $1 of headroom. The present $0.035 per-task agent allocation corresponds to $3.15 across 90 tasks under its tested quote assumptions. It leaves $1.85 under the $5 ceiling for simulator and uncertain charges, or $0.85 within the $4 operating target. Those allowances are arithmetic, not measured simulator bounds.
+
+The first correction does not require increasing the agent allocation. All 19 stopped tasks can already admit a compact notice request under their existing remaining allocations. Correct classification of a per-request refusal should restore that opportunity while retaining admission checks, actual-cost reconciliation, immediate 402 stopping and a bounded recovery policy.
+
+The $0.501117 figure covers 30 public-practice agent runs only. Multiplying it by three would not establish a 90-problem hidden-race bill, and the supplied artifacts do not provide a complete simulator cost ledger. A whole-run $5 guarantee therefore remains unverified. Complete billing capture at the shared proxy/runtime is required for release accounting; a module-global agent counter cannot aggregate separate task processes.
+
+SCOPED NEXT UPDATE PLAN
+
+1. Split per-request admission refusal from real credit exhaustion and billing-envelope failure. Denying an optional heavy call must leave an affordable light or compact corrective call available. Add the exact negative-review/escalation sequence and all 19 admitted-but-blocked notice cases as regression controls.
+2. Teach the planning loop to distinguish budget refusal from a temporary provider outage. Exit or switch to one bounded affordable recovery request without sleeping and repeatedly retrying an unchanged overlarge prompt. Keep every attempted recovery behind the same per-request admission and task allocation.
+3. Record notice processing only after a valid interpretation. Keep failed interpretations pending, and preserve a negative product review or an observed stockout as an unresolved repair requirement instead of blindly repeating checkout. Test these lifecycle changes individually before combining them.
+4. Address price-tier selection and minimum usable completion capacity as a separate, independently tested budget-estimation change. Retain conservative input accounting and financial headroom. Avoid concurrent search/ranking/model-policy changes so any score effect can be attributed.
+5. Compare fixed-source behavior on matched public tasks, accounting separately for wins, losses, completion, meaningful model output and full cost. No paid test or claimed score forecast follows from the current offline probes alone. Full 90-task release accounting must include simulator usage before describing a candidate as within the $5 requirement.
+
+The immediate target is the shared budget-denial and recovery lifecycle. The strict full-run ceiling is retained. Agent files were not modified during this investigation.
+
+REPRODUCE
+
+python3 logs/research/chidori-v2-run-46df07bb/analyze_run.py
+
+The script reads the supplied artifacts and executes isolated source-method probes with network requests blocked. analysis.json contains aggregate data, paired comparisons and probe results. per-task.json contains the 30 task records.

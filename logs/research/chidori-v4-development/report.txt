@@ -1,0 +1,95 @@
+ICDI CHIDORI v4 is implemented in agents/ICDI_chidori_v4.py and agents/ICDI_chidori_v4_budget.py. All v1-v3 files remain byte-identical. The full variant includes the procedure-controller repair; the budget variant retains its original procedure strategy and receives the shared recovery, review, coverage and interview protections. No paid model call, evaluation, qualifying submission or race was run.
+
+The design goal was to repair the eight identified failure mechanisms without removing the agent's existing successful search, questioning, compatibility, selection and procedure logic. Most changes live in one explicit ScopedControls class. The existing implementation is called through super() on the normal path. In the full agent only ProcedureControls.procedure_gate changes in place; the budget agent's existing methods are all unchanged. The main planner's prompt/model order, heavy question planner, financial settings, message allowance and environment binding protocol remain in place.
+
+This is preservation evidence and an implemented candidate, not a guarantee about future model answers. The v3 verification scored 21/30. V4 has not received a new scored verification. All stated offline passing counts below refer to tests or conditional replay, not a new success rate.
+
+The changes for the eight problems are:
+
+1. Contradictory reviews and stale optimality conclusions.
+
+Negative cart reviews now carry contexts that include the public records, availability and recorded verdicts of the alternatives cited against that cart. A change in those dependencies can therefore invalidate the comparison's support. Positive normal reviews retain the prior simple context and are not repeatedly invalidated by unrelated alternative changes.
+
+A repeated unchanged rejection, or a disputed dependency, can receive a bounded independent adjudication using the already configured fallback model. Approval requires a structured response that covers every binding item/requirement once, quotes actual key/value evidence from current cart records, resolves every previously suggested alternative, and respects actual availability and total budget. Missing, invented, mis-scoped, unquoted or incomplete evidence does not overturn a negative review. Evidence validation checks the actual record; it cannot mathematically certify a language model's semantic interpretation.
+
+Disputes are limited by state and by two adjudication requests per episode. An unresolved adjudication does not prevent the original reviewer from reconsidering genuinely changed evidence. It also does not turn a planner's disagreement into automatic approval. Regular product review, compatibility and cheapest-choice machinery remain active.
+
+2. Half-completed stockout recovery.
+
+Known unavailable lines can be removed using the world's supplied cart schema before a bounded compact planning loop. The existing cart-shape interpreter supports both delta-style and whole-basket array tools, retaining surviving quantities. The original deterministic proven-basket builder retains priority when it can already reconstruct an empty basket.
+
+The compact state contains the unshortened request and active ledger, withdrawals/changes, cart, review issues, pending notices, duties, remaining messages/steps, and relevant public candidates. It explicitly reports that some candidates may be omitted and that this is not proof of global infeasibility or optimality. The existing GUIDE and tool schemas remain available. Tool calls still pass schema validation and the ordinary dispatcher, except that repair cart mutations additionally require observation checks before local state advances.
+
+Model requests, no-progress rounds and optional environment actions are bounded. A finishing action has a reserved opportunity. Required procedure actions do not consume the optional repair-action quota, and all operations still respect the original global step/message/financial limits.
+
+3. Truncated or incomplete recovery actions.
+
+Recovery uses compact requests with 2048 output tokens instead of repeatedly supplying the unaffordable long history with a shrinking reply allowance. Only fully parsed, schema-valid arguments execute. An invalid reply can receive one bounded corrective request; a partial argument string is never completed by guessing. A per-role burst limit also bounds charged transport/compatibility attempts.
+
+The normal planner's inference policy is retained. The new path becomes available when finishing cannot resolve a real repair state. It does not replace all ordinary planning or globally change model effort.
+
+4. Empty procedure decisions.
+
+The full procedure controller now requests at least 2048 output tokens rather than 700 for a single duty. Only this mechanical procedure role requests thinking disabled; the other new roles use scoped low effort. Unsupported reasoning parameters get one compatibility retry through the same monetary admission and physical-attempt accounting. A real 402 or envelope breach cannot be reopened by either role.
+
+Retry identity uses unique recorded public evidence rather than merely the current step number. Re-reading an identical record does not restart the same failed procedure decision indefinitely. New relevant evidence can still be considered. The original obligation parser, minimum-message requirements, cart-dependent approval invalidation, before-selection boundary, action execution and evidence verification remain enforced. A proposed message does not count as a completed duty.
+
+5. Lost explicit requirements.
+
+Before product approval, a single independent source-coverage audit compares the entire original request with the active ledger. It can add an omitted constraint only with an exact request excerpt, valid item identity and a well-formed need. Entries are validated as a batch before application. Existing exclusions, alternatives, disclosed preferences and quantities remain intact. Original clauses cannot restore a subsequently withdrawn property. An optional typed unit-count correction updates requested quantity, rather than inventing a product pack-size constraint; later changes take precedence.
+
+The audit is deferred until after the ordinary interview/question-planning stage. This avoids shrinking the heavy question planner's already constrained output allowance before it has performed its established work. A valid recovered requirement increments the ledger revision and requires basket reassessment.
+
+An unavailable, uncertain or malformed audit is recorded as unverified and does not erase existing requirements or create a new permanent terminal blocker. The original full-request review remains available. This is an intentional capacity-preservation choice: an auxiliary check must not destroy an otherwise working path when it cannot return a verified addition. It also means source coverage is not an infallible guarantee.
+
+6. Unreviewed fallback replacements.
+
+Fallback/recovery checkout now requires a current valid cart review after a material change. Cached approvals are reused when their evidence context is unchanged. An unknown review cannot silently count as approval of a replacement. If a review blocks the basket, the compact repair mechanism is already available; this guard was added after the recovery path was tested, not as a refusal-only update.
+
+7. Empty-cart checkout followed by unsupported decline.
+
+Known empty baskets are distinguished from unresolved basket contents. A failed checkout or empty basket is not treated as proof that no fitting item exists. If fallback checkout is locally held, the same fallback invocation cannot silently fall through to a decline. The existing deterministic basket builder runs first when applicable; otherwise bounded recovery can inspect and rebuild the basket before choosing a terminal action.
+
+Ambiguous negative-looking cart observations are not blindly interpreted as completed mutations. Where the supplied cart-view tool permits it, the agent can read back the public basket and reconcile actual state. This matters because an all-false observation can describe an empty basket, rather than a failed action. Explicit errors still do not advance local cart state. Finished sessions return immediately and cannot re-enter the builder, audit or recovery loop.
+
+8. Redundant questioning and missed disclosure opportunities.
+
+The question filter removes only exact normalized properties whose values are fully specified. Exclusions, alternatives and ranges remain eligible for useful questioning. Different components/aspects are not merged just because they share a word. Withdrawn disclosed needs do not continue suppressing a topic.
+
+A proposed first topic whose name contains a fully specified property's words plus additional scope can receive one small grounded scope check per item. Suppression requires the exact existing need, a verbatim request excerpt, the proposed topic, item identity and an actual public key/value citation. Uncertain or ungrounded responses preserve the original question choice. No fixed property ranking, hidden preference, product name or benchmark wording is added to production code.
+
+In the thirty recorded public states, this overlap trigger occurs only in the previously failing coat task, for the jacket/coat-style topic despite an explicit style requirement. With a scripted grounded same-property decision, the implementation skips that redundant topic and retains the other topics. The correctness of that classifier and the resulting shopper disclosure are unmeasured without a new evaluation. It does not assume that a particular hidden preference will be disclosed.
+
+The existing multi-topic indifference logic was inspected and retained: it already avoids marking every mentioned topic as answered. No global rewrite of message bundling, topic ranking or shopper-response handling was introduced.
+
+Cross-impact analysis found and corrected several draft risks before completion:
+
+- A broad known-property filter removed a color-family question from a previously successful watch session. The request only excluded one value. The filter was narrowed to preserve exclusions, alternatives and ranges. The original successful question sequence now replays.
+- Entering model-based recovery immediately after every rejected empty-cart state bypassed the deterministic builder that already solved a previously passing case. Its priority was restored; recovery is used when that established path cannot resolve the state.
+- Optional recovery-action counting initially included mandatory procedure actions. Those are now exempt from the optional quota while remaining subject to the actual world and monetary limits.
+- A failed independent adjudication could have prevented the normal reviewer from evaluating newly changed records. The ordinary fresh-evidence path is preserved.
+- A simple negative-acknowledgement rule could misread a valid empty-basket response. Public cart readback provides a recovery path without inventing a successful mutation.
+- Optional auditing could have created a new failure state when its output was malformed or unavailable. Such output now leaves established state and review handling intact, with no false claim that coverage was verified.
+- Distinct item scopes, per-item monetary caps, alternative quantities, withdrawn requirements and single-attribute records were reviewed separately. No global attribute/value alias table is used.
+
+Verification is entirely offline:
+
+- 456 total tests pass: 309 pre-existing checks and 147 v4-targeted checks.
+- The new checks cover output capacity, scoped parameter fallback, immediate remote-credit stopping, uncertain-charge accounting, bounded retries, stockout cleanup, two cart-schema shapes, unchanged quantities, failed/ambiguous mutation observations, partial arguments, review dependencies and evidence validation, source anchoring, withdrawals, alternatives, empty baskets, fresh fallback reviews and interview scope.
+- Actual ProxyClient code is exercised through mocked HTTP. Tests include authenticated scoped requests, stockout removal -> source audit -> review -> order, empty-basket reconstruction, fallback review, and required message -> executed evidence -> order. The v1 401 and 402 outputs in test-results.txt are mocked negative controls, not new provider failures.
+- Ninety isolated tasks with mixed successful, empty, transient-failure and missing-cost responses stay within the configured aggregate agent allocation. Reservations exist before physical calls; missing/uncertain costs remain reserved; retries and compatibility attempts are charged separately.
+- The twenty-one passing v3 action/request histories are replayed for both v4 variants under two scripted audit outcomes: no new omission, and no verified audit result. All 84 conditional scenarios preserve the recorded environment action sequence. Newly required fallback-review answers are also explicitly scripted. These are control-flow preservation checks, not measurements of new model accuracy. The budget variant adapts its intentionally different briefing prefix only for the recorded zero-duty briefs.
+- All five previously unfinished final states can admit the actual compact snapshot with a full 2048-token reply under the old remaining allocations. The tested reservations are approximately $0.00497-$0.00556, including the original GUIDE and tool schemas. These are admission quotes against captured states, not measured new execution costs or assurances that every repaired run will pass.
+- Both files pass local source/AST checks, remain below one megabyte, have one synchronous agent_main, use the existing proxy routes/imports, and contain no concrete benchmark task/product identifiers. Old source hashes are verified unchanged. Private server novelty/admission checks were not run.
+
+The configured agent limit stays at $0.035 per task and the protected procedure amount at $0.010. Across ninety tasks the nominal agent allocation remains $3.15, leaving $1.85 under the requested $5 total ceiling for simulator and other shared charges. The token/price envelope remains an estimate; a complete shared ninety-task bill is not certified by agent-only data. No larger allowance or credit-stop bypass was used to obtain the results.
+
+No new live score, speedup, cost saving or unconditional non-regression guarantee is claimed. The implementation adds reachable resolution paths and protects the supplied successful histories under stated scripted assumptions. Real classification/review errors, new worlds and separately billed simulator usage still require measured validation. In particular, grounded citations constrain an answer but cannot prove its natural-language interpretation. The evaluated v3 files are preserved as rollback checkpoints.
+
+Review artifacts:
+- verification.json: final source hashes, file sizes, test counts, changed-method scope and financial assumptions.
+- test-results.txt: the complete offline result.
+- preservation-replay.json and replay_controls.py: all 84 conditional replay scenarios and the scripted-response disclosures.
+- late-state-quotes.json and late_state_quotes.py: admission checks at the five failed states in both variants.
+- question-scope-public-probe.json and question_scope_public_probe.py: the conditional public-state question-scope test.
+- ICDI_chidori_v4.py.diff and ICDI_chidori_v4_budget.py.diff: exact changes from the corresponding immutable v3 files.

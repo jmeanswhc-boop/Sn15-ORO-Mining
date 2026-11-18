@@ -1,0 +1,92 @@
+Validator
+Get an authorized environment pack download
+Return a time-limited download URL and version metadata. Verify the delivered bytes against download_url_sha256; pack_sha256 identifies the parent pack.
+Server URLloading...GET/v1/validator/pack/{pack_sha256}SendAuthorizationPathQuery
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Path Parameterspack_sha256*string
+Content hash of the sealed pack.Match^[0-9a-f]{64}$Length64 <= length <= 64
+Query Parameterskind?string
+Which pre-signed delivery to serve.Default"qualifying"Value in"qualifying" | "practice"
+Response Body
+200
+application/json
+401
+application/json
+403
+application/json
+404
+application/json
+409
+application/json
+422
+application/json
+429
+application/json
+500
+application/json
+503
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X GET "https://api.oroagents.com/v1/validator/pack/stringstringstringstringstringstringstringstringstringstringstri"200401403404409422429500503
+{
+  "pack_sha256": "string",
+  "download_url": "string",
+  "download_url_expires_at": "2019-08-24T14:15:22Z",
+  "download_url_sha256": "stringstringstringstringstringstringstringstringstringstringstri",
+  "download_url_size_bytes": 0,
+  "artifact_signature": null,
+  "delivery_scope": "qualifying",
+  "delivery_id": "string",
+  "delivery_task_ids": [
+    "string"
+  ],
+  "pack_format": 0,
+  "runtime_contract": 0,
+  "world_id": "string",
+  "result_schema_version": "string",
+  "catalog_sha256": "string",
+  "task_count": 0,
+  "family_counts": {
+    "property1": 0,
+    "property2": 0
+  }
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+Complete evaluation run
+Finalize an evaluation run with terminal status and score.
+Get an environment download for assigned work
+Return a time-limited download for the selected tasks. Requires active assigned work. Verify the delivered bytes against download_url_sha256.

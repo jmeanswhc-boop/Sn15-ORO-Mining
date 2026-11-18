@@ -1,0 +1,46 @@
+{
+  "agent_sha256": "ea169847a7c61efc9957d1190e8751e134b6c7bbfb30089284facb979cc22e27",
+  "offline_only": true,
+  "paid_calls": 0,
+  "probes": [
+    {
+      "probe": "direct_order_ignores_negative_gate",
+      "observed": true,
+      "meaning": "The terminal path sends buy after gate returns False."
+    },
+    {
+      "probe": "finish_ignores_negative_gate",
+      "observed": true,
+      "meaning": "The terminal path sends buy after gate returns False."
+    },
+    {
+      "probe": "gate_unavailable_response",
+      "observed": [
+        true,
+        ""
+      ],
+      "meaning": "The gate returns permission without proof when its model response is unavailable."
+    },
+    {
+      "probe": "402_retry_accounting",
+      "physical_calls": 4,
+      "counted_calls": 1,
+      "nominal_wait_seconds": 34,
+      "meaning": "A persistent 402 triggers four requests and 34 seconds of scheduled waits before the latch."
+    },
+    {
+      "probe": "missing_cost",
+      "before": 0.08,
+      "after": 0.08,
+      "meaning": "A successful response without usage.cost consumes zero recorded dollars."
+    },
+    {
+      "probe": "dimensionally_unrelated_figures",
+      "required": "1000 mAh",
+      "page": "10 V",
+      "observed": true,
+      "meaning": "The reference-mismatch helper accepts matching stripped digits across unrelated units; it does not prove physical equivalence."
+    }
+  ],
+  "limitation": "Synthetic dependency stubs isolate the shown control-flow branches. These are not live tasks, full-agent tests, or proof that a branch caused a particular race failure."
+}

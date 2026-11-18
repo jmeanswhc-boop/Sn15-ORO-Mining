@@ -1,0 +1,620 @@
+Miyagi v2 complete function index
+Exact source SHA-256 69cbf616848f99b0d6dda0e57c44af39b7f4a11e7a347a825cd5b4da69a59b70
+Line numbers refer to the archived original. Includes nested helpers.
+
+121-123  _codes  [identical]
+  Calls re.findall, re.fullmatch, re.sub, re.sub('[\\s-]+', ' ', c).strip, re.sub('[\\s-]+', ' ', c).strip().lower, str
+125-130  _code_hit  [modified]
+  Calls len, plain.startswith, re.sub, stem[-1:].isdigit, wide.rstrip
+132-150  _fit_marks  [identical]
+  Calls _codes, _series_marks, hit.group, hit.group(1).upper, hit.start, len, max, more.group, more.group(1).upper, own.group, own.group(1).upper, re.finditer, re.search, re.split, str
+152-156  _series_marks  [modified]
+  Calls hit.upper, re.findall, re.sub, sorted
+172-178  _failed  [modified]
+  Calls any, isinstance, iter, len, next, observation.items, observation.values, re.search, str
+180-191  _plain  [modified]
+  Calls bare.lower, float, int, money.group, money.group(1).replace, number.is_integer, re.fullmatch, re.match, text.strip
+193-195  _block_value  [modified]
+  Calls _plain, isinstance, text.strip
+197-204  _pair  [modified]
+  Calls len, mark.strip, name.split, re.fullmatch, re.sub, re.sub(LIST_BULLET, '', head).strip, rest.strip, text.endswith, text.partition
+206-232  _split_fields  [modified]
+  Calls _pair, bare.endswith, bare[:-1].strip, fields.append, len, p.strip, part.strip, parts[0].strip, re.fullmatch, re.match, text.split
+234-269  _attr_block  [modified]
+  Calls _block_value, _pair, _plain, all, bare.split, bare.splitlines, dict, found.items, isinstance, json.loads, k.strip, len, line.strip, name.strip, p.strip, part.partition, part.strip, re.findall, re.match, re.split, text.strip
+271-295  _record_text  [modified]
+  Calls _attr_block, _plain, _split_fields, len, p.strip, re.search, text.split, value.strip
+297-309  _table_text  [modified]
+  Calls _plain, all, any, c.strip, len, line.split, line.strip, line.strip().strip, line.strip().strip('|').strip, re.fullmatch, text.splitlines, zip
+311-338  _records_text  [modified]
+  Calls '\n'.join, _record_text, _records_text, _restore, _table_text, bare.splitlines, iter, json.loads, len, line.strip, next, re.search, re.split, re.sub, re.sub('\\s*(?:<[^<>]{1,40}>\\s*)+', '\n', plain).strip, text.strip
+340-346  _block_text  [modified]
+  Calls _attr_block, all, len, p.strip, re.fullmatch, re.search, re.split, text.strip
+348-378  _pairs_block  [modified]
+  Calls _pair, _plain, all, any, isinstance, len, list, name.strip, pair[0].split, re.search, row.strip, row[0].strip, set, str
+380-389  _column_rows  [modified]
+  Calls all, dict, isinstance, len, node.items, re.fullmatch, zip
+391-394  _id_texts  [modified]
+  Calls abs, any, isinstance, re.search, record.items, record.values, str
+396-402  _keyed_rows  [modified]
+  Calls all, any, isinstance, len, list, node.items, node.values, re.search, set, set(rows[0]).intersection, str
+404-405  _holds_id  [identical]
+  Calls any, re.search, str
+407-416  _flat_block  [modified]
+  Calls any, isinstance, node.items, node.values, out.update, value.items
+418-422  _restore_field  [modified]
+  Calls _holds_id, _id_like, _restore, any, found.values, isinstance, len
+424-449  _restore  [modified]
+  Calls _block_text, _column_rows, _flat_block, _holds_id, _id_like, _id_texts, _keyed_rows, _pairs_block, _records_text, _restore_field, any, isinstance, iter, len, next, node.items, node.values, out.items, out.values, v.values, value.values
+453-465  _join_twins  [modified]
+  Calls ', '.join, _FIRST_SPELLING.get, extra.append, have.add, held.strip, part.strip, part.strip().lower, re.split
+467-468  _glued  [modified]
+  Calls re.sub, text.lower
+470-472  _text_words  [modified]
+  Calls _glued, re.findall, set, text.lower
+474-476  _value_tokens  [modified]
+  Calls _glued, re.findall
+478-487  _value_forms  [added]
+  Calls ' '.join, len, match.groups, out.append, re.fullmatch, unit.isalpha, value.lower, value.lower().split
+489-510  _fold_twins  [modified]
+  Calls _fold_twins, _join_twins, _words, isinstance, len, node.items, re.search, seen.get
+512-516  _dump  [identical]
+  Calls json.dumps, str
+518-527  _clip  [identical]
+  Calls _clip, isinstance, len, value.items
+529-548  _json_obj  [identical]
+  Calls fence.group, isinstance, json.loads, re.match, text.find, text.rfind, text.strip
+550-552  _words  [identical]
+  Calls re.sub, re.sub('[\\s_.\\-]+', ' ', key).strip, re.sub('[\\s_.\\-]+', ' ', key).strip().lower, str
+554-555  _snake  [identical]
+  Calls _words, _words(key).replace
+557-558  _stem  [identical]
+  Calls _words, _words(text).split, frozenset, len, w.endswith
+560-566  _roots  [identical]
+  Calls _words, _words(text).split, len, out.add, re.search, set, w.endswith
+568-569  _spelled  [modified]
+  Calls _words, _words(text).split, frozenset, len, re.sub, w.endswith
+571-574  _names  [identical]
+  Calls len
+576-578  _same_prop  [added]
+  Calls _spelled, bool, len, min
+580-584  _kinds  [identical]
+  Calls isinstance, schema.get
+586-601  _fits_kind  [identical]
+  Calls isinstance
+603-662  _shape  [identical]
+  Calls '/'.join, _fits_kind, _kinds, _shape, any, enumerate, faults.append, float, int, isinstance, len, number.is_integer, o.lower, props.get, re.fullmatch, schema.get, str, value.is_integer, value.items, value.strip, value.strip().lower
+664-669  _items  [identical]
+  Calls isinstance
+671-680  _count  [identical]
+  Calls float, int, isinstance, re.fullmatch, value.is_integer
+682-685  _id_like  [identical]
+  Calls bool, isinstance, len, re.search, value.strip
+687-700  _learn_id  [identical]
+  Calls _id_like, all, bool, len, re.search, row.get, set, str, sum, v.strip
+702-709  _in_rows  [identical]
+  Calls _in_rows, any, isinstance, node.values, str, str(x).strip, v.values
+711-717  _llm_within  [modified]
+  Calls ProxyClient, int, max
+719-728  _fact_block  [identical]
+  Calls isinstance, len, node.values, value.items
+730-741  _soft  [modified]
+  Calls callable, fallback, method, self.trace.append, type
+732-740  _soft.wrap  [nested helper]
+  Calls callable, fallback, method, self.trace.append, type
+734-739  _soft.wrap.guarded  [nested helper]
+  Calls callable, fallback, method, self.trace.append, type
+745-747  _Stamped.__init__  [identical]
+  Calls super, super().__init__
+749-751  _Stamped.append  [identical]
+  Calls entry.setdefault, round, self.clock, super, super().append
+753-764  _filler  [modified]
+  Calls _kinds, isinstance, spec.get
+766-771  _strings  [modified]
+  Calls _strings, isinstance, node.values
+773-778  _says  [modified]
+  Calls _says, any, isinstance, node.values
+782-789  Item.__init__  [identical]
+  Calls 
+818-826  _sd_key  [added]
+  A property name as the questions use it: 'Color_Options:' -> 'color', 'bedding size 2' -> 'bedding size'.
+  Calls re.sub, re.sub('[:;*#.]+$', '', key).strip, re.sub('\\s*(options|choices)$', '', key).strip, str, str(key).replace, str(key).replace('_', ' ').replace, str(key).replace('_', ' ').replace('-', ' ').replace, str(key).replace('_', ' ').replace('-', ' ').replace('\xa0', ' ').strip, str(key).replace('_', ' ').replace('-', ' ').replace('\xa0', ' ').strip().lower
+829-831  _sd_clip  [added]
+  Calls len, re.sub, re.sub('\\s+', ' ', str(text)).strip, str, text[:n - 1].rstrip
+834-872  _sd_json_all  [added]
+  Every top-level JSON object in a model's reply, in order.
+  Calls isinstance, json.loads, len, out.append, range, str, text.find
+875-886  _sd_json_in  [added]
+  The first JSON object holding the key `need` (any object when None), also inside a wrapper's string values (a reply the transport wrapped as {"content": "..."}).
+  Calls _sd_json_all, _sd_json_in, got.values, isinstance
+889-921  _sd_facts  [added]
+  A listing's properties as {key: value text}, whatever shape the world gives them.
+  Calls ', '.join, _sd_clip, _sd_key, any, isinstance, len, listing.get, p.split, pairs.append, raw.items, re.search, re.split, str, tuple, x.get, x.split
+924-925  _sd_words  [added]
+  Calls re.findall, set, str, str(text).lower
+928-932  _sd_stem  [added]
+  Calls len, word.endswith
+935-936  _sd_stems  [added]
+  Calls _sd_stem, _sd_words
+939-946  _sd_cat_fit  [added]
+  How well a store category names a product: shared word stems over all of them, 0 unless the product's head noun (its last word) is among them.
+  Calls _sd_stem, _sd_stems, len, re.findall, str, str(name).lower
+949-959  _sd_distinct  [added]
+  Up to n properties, none a word-subset of another already taken ('resolution' / 'display resolution').
+  Calls _sd_stems, any, len, out.append
+963-987  AskItem.__init__  [added]
+  Calls set
+989-990  AskItem.share  [added]
+  Calls len, max, self.carry.get
+992-993  AskItem.stated_keys  [added]
+  Calls _sd_key, s.split
+995-996  AskItem.open_props  [added]
+  Calls 
+1000-1013  SendoAsk.__init__  [added]
+  Calls int, self.clock, str
+1017-1018  SendoAsk.elapsed  [added]
+  Calls self.clock
+1020-1037  SendoAsk.think  [added]
+  The first model in `models` whose reply holds a JSON object with the key `need`; None when none did.
+  Calls _sd_clip, _sd_json_in, len, min, model.split, round, self.elapsed, self.io.llm, self.trace['calls'].append, self.trace['errors'].append
+1052-1064  SendoAsk.merge_twins  [added]
+  'pack type', 'packtype' and 'pack types' are one property (named as most listings name it).
+  Calls ''.join, _sd_stem, by.get, it.carry.pop, it.examples.pop, it.examples[twin].append, k.split, len, max, sorted
+1090-1138  SendoAsk.rank  [added]
+  Calls ' | '.join, '; '.join, '\n'.join, '\n\n'.join, (got or {}).get, _sd_clip, _sd_key, blocks.append, bool, by_n.get, enumerate, float, int, isinstance, it.carry.get, it.examples.get, it.scores.get, it.scores.setdefault, it.share, it.stated_keys, keys.sort, len, lines.append, rare, round, row.get, scores.items, self.RANK.format, self.elapsed, self.items.sort, self.think, set, sorted
+1142-1143  SendoAsk.free  [added]
+  Calls max
+1145-1161  SendoAsk.next_message  [added]
+  Calls _sd_distinct, bool, it.open_props, self.again_list, self.free, sorted
+1163-1177  SendoAsk.again_list  [added]
+  The same product again. The reply to a list is about its first tracked property, so: after a told property, what came after it; after 'lost' (most often nothing tracked was named), new properties first; after 'don't mind' (a decoy came first), the rest of the list backwards, which puts what stood behind the decoy ahead of it.
+  Calls _sd_distinct, it.open_props, list, reversed
+1180-1184  SendoAsk._join  [added]
+  Calls ', '.join, len, list
+1186-1196  SendoAsk.wording  [added]
+  Calls len, self._join
+1219-1301  SendoAsk.hear  [added]
+  Calls ', '.join, _sd_clip, _sd_key, _sd_stems, about.strip, entries, got.get, isinstance, it.done.add, it.pointers.add, it.told.append, item_of, key_of, len, max, props.index, reply.strip, self.HEAR.format, self.elapsed, self.record.append, self.think, str, str(got.get('kind') or 'other').lower, str(t.get('value') or '').strip, t.get
+1234-1240  SendoAsk.hear.item_of  [nested helper]
+  Calls _sd_stems, len, max
+1242-1250  SendoAsk.hear.key_of  [nested helper]
+  Calls _sd_key, _sd_stems, len, max
+1252-1257  SendoAsk.hear.entries  [nested helper]
+  Calls isinstance
+1312-1321  BodyAsk.__init__  [added]
+  Calls set, super, super().__init__
+1325-1328  BodyAsk.llm  [added]
+  Calls (message or {}).get, isinstance, self.agent.think
+1330-1331  BodyAsk.steps_left  [added]
+  Calls self.agent.left
+1333-1338  BodyAsk.ask  [added]
+  Calls RuntimeError, self.agent.send, self.sent_log.append
+1340-1341  BodyAsk.free  [added]
+  Calls max, self.agent.msgs_free
+1345-1357  BodyAsk.brief  [added]
+  Calls AskItem, _sd_cat_fit, _sd_key, enumerate, int, labels.count, list, self.items.append, str, str(item.name).lower
+1359-1377  BodyAsk.scout  [added]
+  Calls _fact_block, _sd_facts, e.lower, facts.items, it.carry.get, it.examples.setdefault, it.seen.append, len, list, record.get, self.agent.category_key, self.agent.full.items, self.agent.owns, self.merge_twins, shown.append, str, value.lower
+1379-1381  BodyAsk.wording  [added]
+  Calls super, super().wording
+1383-1393  BodyAsk.hear  [added]
+  Calls len, needs.append, self.agent.take_heard, self.told_numbers.add, super, super().hear
+1395-1416  BodyAsk.send_one  [added]
+  One message of the plan: sent, its products' state kept, the reply read. False when it was not sent.
+  Calls _sd_clip, got.get, isinstance, it.done.update, list, round, self.ask, self.elapsed, self.hear, self.trace['messages'].append, self.wording, str
+1418-1431  BodyAsk.converse  [added]
+  Calls _sd_clip, self.agent.trace.append, self.elapsed, self.next_message, self.send_one, self.trace.get, self.trace['errors'].append, step, type
+1436-1596  Cairn.__init__  [modified]
+  Calls _Stamped, _count, bool, dict, int, isinstance, self.view.get, set, str, t.get, t['function'].get, time.monotonic
+1598-1599  Cairn.left  [identical]
+  Calls 
+1601-1602  Cairn.clock  [identical]
+  Calls time.monotonic
+1604-1605  Cairn.model_room  [identical]
+  Calls self.clock
+1607-1609  Cairn.rushed  [modified]
+  Calls max, self.model_room
+1611-1612  Cairn.msgs_free  [identical]
+  Calls max
+1614-1615  Cairn.cart_mark  [identical]
+  Calls _dump, self.cart_lines.items, sorted
+1617-1635  Cairn.row_ids  [modified]
+  Calls (self.schemas.get(name) or {}).get, args.items, isinstance, known, len, props.get, re.escape, re.search, row.get, self.roles.get, self.rows.items, self.schemas.get, self.title_key, self.trace.append, str, str(row.get(title) or '').lower, value.strip, value.strip().lower
+1626-1634  Cairn.row_ids.known  [nested helper]
+  Calls isinstance, len, props.get, re.escape, re.search, row.get, self.rows.items, self.trace.append, str, str(row.get(title) or '').lower, value.strip, value.strip().lower
+1637-1639  Cairn.page_tools  [identical]
+  Calls self.roles.get
+1641-1646  Cairn.facts_tool  [identical]
+  Calls next, self.facts_from.get, self.facts_from.items, self.roles.get, self.single_target
+1648-1649  Cairn.compare_facts  [identical]
+  Calls self.facts_from.get, self.roles.get
+1651-1653  Cairn.compare_bare  [identical]
+  Calls bool, self.compare_facts, self.facts_from.get, self.facts_tool, self.roles.get
+1655-1656  Cairn.gate_due  [identical]
+  Calls any, self.cart_mark
+1658-1660  Cairn.tail  [identical]
+  Calls any, self.gate_due
+1662-1665  Cairn.judges  [identical]
+  Calls 
+1667-1704  Cairn.think  [modified]
+  Calls isinstance, len, random.random, round, self.call_model, self.clock, self.model_room, self.trace.append, self.wants_effort, time.sleep
+1706-1711  Cairn.wants_effort  [added]
+  Calls self.clock
+1713-1745  Cairn.call_model  [modified]
+  Calls _count, _llm_within, _llm_within(self.model_room()).post_verbose, data.get, data['choices'][0].get, data['error'].get, dict, error.get, float, isinstance, len, message.get, model.startswith, self.model_room, self.trace.append, sent[index].get, str, usage.get
+1747-1755  Cairn.ask_json  [identical]
+  Calls (message or {}).get, _json_obj, self.think
+1757-1812  Cairn.act  [identical]
+  Calls _dump, _env.post_verbose, _fact_block, _failed, args.values, body.lower, data.get, dict, error.get, found.group, int, isinstance, range, re.search, seen.get, self.factless.add, self.facts_tool, self.ident, self.note_read, self.opened.update, self.page_tools, self.roles.get, self.trace.append, self.unspelled, self.views.setdefault, self.views.setdefault(ident, set()).add, set, str, time.monotonic, time.sleep, v.strip
+1814-1835  Cairn.unspelled  [modified]
+  Calls _fact_block, _fold_twins, _restore, gathered, isinstance, len, out.items, record.items, self.ident, self.roles.get, self.row_keys.update, self.rows.items
+1824-1830  Cairn.unspelled.gathered  [nested helper]
+  Calls _fact_block, isinstance, len, record.items, self.ident
+1837-1930  Cairn.read_request  [modified]
+  Calls '\n'.join, Item, _clip, _count, _dump, _items, _words, a.partition, a.split, again.get, again['roles'].get, any, b.partition, b.split, became.get, brief.get, brief['roles'].get, entry.get, enumerate, fixed.get, float, fn.get, isinstance, item.shelf.strip, len, lines.append, m.split, max, merged.append, merged.index, min, next, pair.get, re.fullmatch, roles.items, self.ask_json, self.bound.append, self.clock, self.items.append, self.process.append, self.quote_refs, self.refs.append, self.request_counts, self.roles.get, self.schemas.get, self.shared_shelf, self.trace.append, self.twin_musts, self.unmix, self.view.get, str, str(entry.get('step') or '').strip, str(entry.get('when') or '').strip, str(entry.get('when') or '').strip().lower, str(entry['step']).strip, str(lookup).strip, text.split, time.sleep
+1933-1950  Cairn.twin_musts  [added]
+  Calls _codes, _items, _stem, _words, brief.get, entry.get, isinstance, len, seen.setdefault, str, str(must).partition
+1953-1956  Cairn.shared_shelf  [identical]
+  Calls _items, _words, brief.get, e.get, isinstance, len, set, str
+1958-1978  Cairn.request_counts  [added]
+  Calls a.endswith, a.rstrip, all, enumerate, found.items, found.setdefault, found.setdefault(best, set()).add, int, item.name.lower, len, match.end, match.group, min, re.findall, re.finditer, self.request.lower, self.trace.append, set, sorted, w.rstrip, zip
+1980-2001  Cairn.quote_refs  [added]
+  Calls best.lower, enumerate, len, list, need.lower, re.findall, re.split, self.trace.append, sentence.lower, set, t.strip
+2003-2018  Cairn.unmix  [identical]
+  Calls '; '.join, '\n'.join, _items, enumerate, got.get, self.ask_json, self.trace.append, str, str(x).strip
+2020-2041  Cairn.described  [identical]
+  Calls _fact_block, _items, _stem, _words, any, len, need.partition, prop.strip, re.findall, re.search, record.get, self.brief.get, self.category_key, self.full.values, self.owns, set, str, value.lower
+2043-2085  Cairn.ledger  [modified]
+  Calls ' or '.join, ', '.join, '; '.join, '\n'.join, _items, brief.get, enumerate, f"budget: at most {self.budget} {brief.get('budget_unit') or ''} {scope}".replace, f"pick: the {pick} {brief.get('pick_measure') or ''} among fitting listings".replace, len, parts.append, self.described, self.facts_from.get, self.facts_tool, self.page_tools, self.roles.get, sorted
+2087-2129  Cairn.status  [modified]
+  Calls ' | '.join, ', '.join, len, self.clock, self.fit_plan, self.ledger, self.left, self.needs_now, self.short_items, self.tail, self.unread_hits
+2131-2155  Cairn.unproven  [added]
+  Calls ' '.join, _fact_block, _names, _roots, _same_prop, _spelled, any, block.items, isinstance, need.partition, need.strip, out.append, prop.strip, re.findall, re.search, record.values, self.full.get, self.needs_now, str, value.lower, value.strip
+2157-2171  Cairn.unproven_hint  [added]
+  Calls ' | '.join, '; '.join, faults.append, len, next, range, self.cart_ids, self.clock, self.item_ids, self.left, self.tail, self.trace.append, self.unproven
+2173-2196  Cairn.bare_faults  [added]
+  Calls _fact_block, _names, _same_prop, _spelled, bare.group, block.items, float, need.partition, need.strip, out.append, prop.strip, re.fullmatch, re.search, self.full.get, self.needs_now, sorted, str, value.lower, wanted.group
+2198-2210  Cairn.bare_hint  [added]
+  Calls ' | '.join, len, next, range, self.bare_faults, self.cart_ids, self.clock, self.item_ids, self.left, self.tail, self.trace.append
+2212-2217  Cairn.short_items  [added]
+  Calls len, range, self.cart_ids, self.category_key, self.item_ids, set
+2219-2251  Cairn.read_first_hint  [added]
+  Calls ', '.join, args.get, enumerate, item.name.lower, len, need.partition, need.partition(':')[2].lower, re.findall, rows.sort, self.brief.get, self.buyable, self.cart_ids, self.credit, self.facts_tool, self.item_ids, self.left, self.needs_now, self.price_of, self.read_first.add, self.roles.get, self.sold_out, self.tail, self.trace.append, self.value_template, set, str, text.lower
+2254-2256  Cairn.hit_tokens  [added]
+  Calls len, re.findall, re.search, text.lower
+2258-2276  Cairn.credit_hits  [added]
+  Calls (self.schemas.get(tool) or {}).get, any, args.get, args.items, base.items, isinstance, props.get, self.hit_tokens, self.hit_words.setdefault, self.hit_words.setdefault(ident, set()).update, self.paging, self.records_in, self.schemas.get, self.value_template, set, str, v.strip
+2278-2294  Cairn.credit  [added]
+  Calls ' '.join, (self.rows.get(ident) or {}).values, isinstance, len, need.partition, self.hit_tokens, self.hit_words.get, self.needs_now, self.rows.get, set, str, value.split
+2296-2314  Cairn.unread_hits  [added]
+  Calls ' | '.join, ', '.join, enumerate, len, parts.append, rows.sort, self.brief.get, self.buyable, self.cart_ids, self.credit, self.item_ids, self.left, self.price_of, self.sold_out, self.tail, set
+2316-2327  Cairn.ident  [identical]
+  Calls _id_like, _learn_id, any, isinstance, len, node.get, node.values, node[found].strip, node[self.id_key].strip, str, str(found).lower
+2329-2339  Cairn.learn_rows  [identical]
+  Calls _id_like, _learn_id, all, isinstance, len, r.get
+2341-2369  Cairn.absorb  [identical]
+  Calls _fact_block, any, dict, isinstance, node.items, node.values, old.get, self.full[ident].update, self.ident, self.learn_rows, self.rows[ident].update, self.seen_order.append, self.unavailable.add, self.unavailable.discard, walk
+2343-2368  Cairn.absorb.walk  [nested helper]
+  Calls _fact_block, any, dict, isinstance, node.items, node.values, old.get, self.full[ident].update, self.ident, self.learn_rows, self.rows[ident].update, self.seen_order.append, self.unavailable.add, self.unavailable.discard, walk
+2371-2385  Cairn.labels  [identical]
+  Calls found.add, isinstance, option.strip, option.strip().lower, schema.get, schema.values, self.schemas.values, set, walk
+2374-2382  Cairn.labels.walk  [nested helper]
+  Calls found.add, isinstance, option.strip, option.strip().lower, schema.get, schema.values, walk
+2387-2406  Cairn.category_key  [identical]
+  Calls counts.items, counts.setdefault, counts.setdefault(key, set()).add, isinstance, len, max, present.get, re.search, row.items, self.labels, self.rows.values, set, sum, v.strip, v.strip().lower
+2411-2420  Cairn.item_groups  [identical]
+  Calls _stem, _words, any, groups.items, groups.setdefault, groups.setdefault(label, []).append, groups.values, len, list, max, self.category_key, self.owner_of, self.rows[ident].get, sorted, str
+2422-2429  Cairn.single_target  [identical]
+  Calls _kinds, any, isinstance, len, next, props.items, schema.get, self.schemas.get
+2431-2438  Cairn.price_of  [identical]
+  Calls (self.rows.get(ident) or {}).get, figure.group, figure.group(1).replace, float, isinstance, next, re.fullmatch, self.rows.get, value.values
+2440-2446  Cairn.buyable  [identical]
+  Calls (self.rows.get(ident) or {}).get, isinstance, re.search, self.rows.get, self.sold_out, value.strip
+2448-2463  Cairn.records_in  [identical]
+  Calls isinstance, observation.values, self.ident, value.values
+2465-2470  Cairn.note_view  [identical]
+  Calls self.records_in, self.tool_keys.setdefault, self.tool_keys.setdefault(name, set()).update, self.view_keys.get, set
+2472-2475  Cairn.shown_already  [identical]
+  Calls bool, self.tool_keys.get, self.view_keys.get, set
+2477-2504  Cairn.read_shape  [identical]
+  Calls (self.schemas.get(name) or {}).get, _clip, _dump, all, got.get, isinstance, len, named, observation.items, self.ask_json, self.schemas.get, self.trace.append
+2495-2496  Cairn.read_shape.named  [nested helper]
+  Calls isinstance
+2506-2515  Cairn.paging  [identical]
+  Calls isinstance, len, observation.get, self.read_shape
+2517-2519  Cairn.price_sorted  [identical]
+  Calls all, len, self.price_of, self.records_in, zip
+2521-2529  Cairn.valued  [added]
+  Calls ' '.join, args.get, args.values, bool, isinstance, item.name.lower, len, need.partition, need.partition(':')[2].lower, re.findall, self.needs_now, self.value_template, set, str, text.lower
+2531-2580  Cairn.more_pages  [modified]
+  Calls '\n'.join, _clip, _dump, _shape, args.get, bool, isinstance, len, range, reply.get, self.act, self.brief.get, self.left, self.msgs_free, self.observe, self.paged_obs.append, self.paging, self.price_sorted, self.schemas.get, self.tail, self.trace.append, self.valued, str, str(given or '').strip, texts.append
+2582-2600  Cairn.cap_ignored  [identical]
+  Calls ', '.join, (props.get(k) or {}).get, (self.schemas.get(name) or {}).get, _dump, any, args.items, bool, caps.sort, isinstance, len, modes.items, others.items, others.values, priced, props.get, re.search, self.cap_keys, self.price_of, self.records_in, self.schemas.get, spec.get, str
+2585-2587  Cairn.cap_ignored.priced  [nested helper]
+  Calls bool, isinstance, props.get, re.search, spec.get, str
+2602-2609  Cairn.cheapest_here  [identical]
+  Calls ', '.join, len, self.brief.get, self.buyable, self.price_of, self.records_in, sorted
+2611-2616  Cairn.wider_hold  [identical]
+  Calls '; '.join, len, self.brief.get, self.cart_ids, self.left, self.price_of
+2618-2624  Cairn.note_facts  [modified]
+  Calls self.bare_pages.get, self.facts_from.get
+2626-2628  Cairn.lists_things  [modified]
+  Calls _snake, bool, re.search, self.single_target
+2630-2688  Cairn.fill_facts  [identical]
+  Calls _fact_block, _shape, bool, isinstance, len, max, min, reply.get, self.act, self.compare_facts, self.compare_room, self.compare_target, self.facts_from.get, self.facts_tool, self.ident, self.left, self.note_facts, self.note_view, self.observe, self.records_in, self.roles.get, self.rushed, self.schemas.get, self.show, self.single_target, self.sold_out, self.trace.append, texts.append
+2690-2713  Cairn.show_links  [modified]
+  Calls (marks.get(ident) or {}).get, _shape, any, len, mark.get, marks.get, marks.items, marks.values, max, reply.get, self.act, self.fill_facts, self.fit_index, self.left, self.link_tried.add, self.observe, self.rushed, self.schemas.get, self.tail, self.trace.append, self.value_template
+2715-2745  Cairn.cap_template  [modified]
+  Calls (schema or {}).get, _kinds, _snake, a.items, any, dict, isinstance, len, next, props.get, props.items, re.search, reversed, self.cap_keys, self.cap_modes, self.cap_modes(tool).items, self.schemas.items, set, spec.get, v.get, v.strip
+2747-2756  Cairn.cap_keys  [modified]
+  Calls (self.schemas.get(tool) or {}).get, _kinds, _snake, isinstance, props.items, re.search, self.cap_modes, self.cap_modes(tool).items, self.schemas.get, set
+2758-2784  Cairn.cap_modes  [modified]
+  Calls (self.rows.get(i) or {}).get, (self.schemas.get(tool) or {}).get, args.items, isinstance, len, max, out.get, prices.get, prices.setdefault, prices.setdefault(str(row.get(cat_key) or '').strip().lower() if cat_key else '', []).append, props.get, props[k].get, row.get, self.category_key, self.price_of, self.read_args.items, self.read_calls.get, self.records_in, self.rows.get, self.rows.items, self.schemas.get, set, sorted, str, str((self.rows.get(i) or {}).get(cat_key) or '').strip, str((self.rows.get(i) or {}).get(cat_key) or '').strip().lower, str(row.get(cat_key) or '').strip, str(row.get(cat_key) or '').strip().lower, sum, tuple
+2786-2829  Cairn.list_below  [identical]
+  Calls (self.rows.get(line) or {}).get, _shape, any, float, float(low).is_integer, float(price).is_integer, int, len, min, more.get, range, reply.get, self.act, self.cap_template, self.capped.add, self.category_key, self.left, self.observe, self.paging, self.price_of, self.price_sorted, self.records_in, self.rows.get, self.rushed, self.schemas.get, self.tail, self.trace.append, set, str, tried.add
+2831-2853  Cairn.cheaper_rows  [identical]
+  Calls (self.rows.get(i) or {}).get, (self.rows.get(line) or {}).get, float, len, max, min, pool.sort, self.brief.get, self.buyable, self.cart_ids, self.cart_mark, self.category_key, self.cheaper_marks.add, self.compare_facts, self.compare_room, self.fill_facts, self.list_below, self.price_of, self.rows.get, self.tail, str, str((self.rows.get(i) or {}).get(cat_key) or '').strip, str((self.rows.get(i) or {}).get(cat_key) or '').strip().lower, str((self.rows.get(line) or {}).get(cat_key) or '').strip, str((self.rows.get(line) or {}).get(cat_key) or '').strip().lower
+2856-2868  Cairn.below_cart  [modified]
+  Calls ', '.join, (self.rows.get(i) or {}).get, (self.rows.get(line) or {}).get, _soft, float, pool.sort, self.buyable, self.cart_ids, self.category_key, self.price_of, self.rows.get, str, str((self.rows.get(i) or {}).get(cat_key) or '').strip, str((self.rows.get(i) or {}).get(cat_key) or '').strip().lower, str((self.rows.get(line) or {}).get(cat_key) or '').strip, str((self.rows.get(line) or {}).get(cat_key) or '').strip().lower
+2870-2884  Cairn.title_key  [modified]
+  Calls isinstance, len, max, min, row.items, self.category_key, self.rows.values, set, slot[3].add, totals.items, totals.setdefault, value.split
+2886-2909  Cairn.hunt_words  [modified]
+  Calls ' '.join, ((other.shelf or '') + ' ' + other.name).lower, (_fact_block(record) or {}).values, (item.shelf or item.name).lower, _fact_block, _roots, counts.get, counts.items, dict.fromkeys, enumerate, int, isinstance, len, max, max(labels, key=labels.count).lower, names.append, re.findall, record.get, row.get, self.category_key, self.full.values, self.owns, self.rows.values, self.title_key, str, w.lower, words.sort
+2911-2914  Cairn.rows_of_item  [identical]
+  Calls row.get, self.category_key, self.owns, self.rows.values, str, sum
+2917-2944  Cairn.hunt_cheaper  [modified]
+  Calls _dump, _soft, len, list, max, min, range, self.brief.get, self.cart_ids, self.clock, self.hunt_item, self.left, self.needs_now, self.tail, self.trace.append, self.value_template, sorted
+2946-3035  Cairn.hunt_item  [modified]
+  Calls ' '.join, ' '.join(values + [noun]).strip, ' '.join(values[:-1] + [noun]).strip, _shape, all, any, bool, dict.fromkeys, enumerate, f'{words[0]} {stem}'.strip, f'{w} {stem}'.strip, f'{w} {stem}'.strip().lower, f.lower, forms.get, len, query.lower, reply.get, run, self.act, self.call_mark, self.clock, self.credit_hits, self.floor_values, self.hunt_no_noun.add, self.hunt_stem.get, self.hunt_tried.setdefault, self.hunt_words, self.observe, self.paging, self.records_in, self.rows_of_item, self.schemas.get, self.value_forms, self.value_rows.update, self.value_words, set, stem.lower, stem.lower().split, stem.split, tried.add, tuple, walked.add
+2954-2999  Cairn.hunt_item.run  [nested helper]
+  Calls _shape, all, any, bool, f.lower, forms.get, query.lower, reply.get, self.act, self.call_mark, self.clock, self.credit_hits, self.observe, self.paging, self.records_in, self.rows_of_item, self.schemas.get, self.value_rows.update, set, tried.add, walked.add
+3038-3093  Cairn.hunt_fits  [modified]
+  Calls (self.rows.get(i) or {}).get, _dump, _shape, _soft, _text_words, _value_tokens, any, dict.fromkeys, enumerate, f'{family} {value} {noun}'.strip, f'{value} {noun}'.strip, f'{word} {noun}'.strip, float, isinstance, len, list, max, min, pool.sort, range, reply.get, self.act, self.buyable, self.cart_ids, self.category_key, self.clock, self.fill_facts, self.held_units, self.hunt_words, self.left, self.observe, self.owns, self.price_of, self.rows.get, self.schemas.get, self.series_for, self.tail, self.trace.append, self.unread_pages, self.value_template, self.value_words, set, str, wanted.get
+3095-3130  Cairn.unread_pages  [modified]
+  Calls ' '.join, ' '.join((v for v in args.values() if isinstance(v, str))).lower, _shape, _text_words, args.values, isinstance, len, list, max, min, record.get, reply.get, self.act, self.call_mark, self.category_key, self.observe, self.owner_of, self.paging, self.read_args.items, self.records_in, self.schemas.get, set, str, walked.add, wanted.items
+3132-3141  Cairn.call_mark  [modified]
+  Calls ' '.join, (self.schemas.get(name) or {}).get, _dump, args.items, isinstance, props.get, self.page_args.get, self.schemas.get, sorted, spec.get, value.lower, value.lower().split
+3143-3163  Cairn.note_read  [modified]
+  Calls (self.schemas.get(name) or {}).get, _failed, args.get, dict, isinstance, max, props.get, props.get(key, {}).get, self.call_mark, self.next_rows.get, self.offset_key, self.offset_rows.add, self.page_tools, self.paging, self.query_is_new, self.query_mark, self.roles.get, self.schemas.get, self.shapes.get
+3165-3170  Cairn.query_is_new  [modified]
+  Calls _dump, args.items, isinstance, seen.add, self.page_queries.setdefault, set
+3173-3206  Cairn.last_page_first  [modified]
+  Calls (self.schemas.get(name) or {}).get, _shape, _soft, args.items, isinstance, len, observation.get, props[k].get, props[key].get, reply.get, seen.get, self.act, self.left, self.observe, self.read_shape, self.records_in, self.schemas.get, self.show, self.tail, self.trace.append, shape.get
+3209-3217  Cairn.names_code  [modified]
+  Calls _codes, _soft, args.values, bool, isinstance, known.update, mark.get, self.fit_index, self.fit_index()['marks'].values, set
+3219-3224  Cairn.offset_key  [added]
+  Calls (self.schemas.get(name) or {}).get, (self.shapes.get(name) or {}).get, _kinds, isinstance, props.get, self.page_args.get, self.schemas.get, self.shapes.get
+3226-3227  Cairn.query_mark  [added]
+  Calls _dump, args.items, isinstance
+3229-3241  Cairn.first_look  [modified]
+  Calls (self.schemas.get(name) or {}).get, args.get, isinstance, props.get, props.get(key, {}).get, self.next_rows.get, self.offset_key, self.query_mark, self.schemas.get
+3244-3276  Cairn.shorter_search  [modified]
+  Calls ' '.join, _codes, _shape, _soft, args.get, isinstance, len, observation.values, re.search, reply.get, self.act, self.credit_hits, self.left, self.more_pages, self.observe, self.records_in, self.schemas.get, self.show, self.tail, self.trace.append, self.value_hits.setdefault, self.value_template, self.valued, text.split, w.lower, {**args, field: short}.items
+3279-3325  Cairn.first_moves  [modified]
+  Calls ' '.join, '\n'.join, _failed, _shape, _soft, dict, dict.fromkeys, enumerate, item.name.split, len, list, m.split, m.split(':', 1)[1].strip, min, range, re.search, reply.get, self.act, self.credit_hits, self.evidence, self.full.items, self.full.values, self.left, self.more_rows_for_keys, self.msgs_free, self.observe, self.page_text, self.records_in, self.records_of_item, self.roles.get, self.rows_of_item, self.schemas.get, self.show, self.tail, self.trace.append, self.value_template, self.widen, shown.append, w.split
+3327-3330  Cairn.page_text  [modified]
+  Calls _clip, _dump, _fact_block, isinstance, record.items
+3332-3345  Cairn.more_rows_for_keys  [modified]
+  Calls _shape, reply.get, self.act, self.credit_hits, self.observe, self.paging, self.rows_of_item, self.schemas.get, self.show
+3347-3355  Cairn.observe  [identical]
+  Calls self.absorb, self.loose_lines, self.queued.append, self.take_note
+3357-3404  Cairn.widen  [identical]
+  Calls _fact_block, _kinds, _shape, any, isinstance, len, max, min, next, props.items, props[target].get, range, reply.get, schema.get, self.act, self.compare_bare, self.compare_room, self.facts_from.get, self.fill_facts, self.item_groups, self.left, self.note_view, self.observe, self.records_in, self.roles.get, self.schemas.get, self.trace.append, self.widen_singly, sorted, sum
+3406-3427  Cairn.widen_singly  [modified]
+  Calls _dump, _dump(self.rows.get(i) or {}).lower, float, heads.append, lanes.append, len, max, min, need.split, need.split(':', 1)[-1].lower, pool.sort, range, re.findall, self.brief.get, self.buyable, self.facts_tool, self.fill_facts, self.hit_words.get, self.item_groups, self.needs_now, self.price_of, self.rows.get, self.single_target, set, sum, zip
+3429-3439  Cairn.ready_to_ask  [identical]
+  Calls all, len, max, range, self.clock, self.left, self.msgs_free, self.records_of_item, self.roles.get
+3441-3469  Cairn.message_args  [identical]
+  Calls (spec.get('properties') or {}).items, _filler, _kinds, _shape, _snake, bool, isinstance, max, next, props.get, props.items, props[k].get, re.search, schema.get, self.roles.get, self.schemas.get, spec.get
+3471-3500  Cairn.interview  [modified]
+  Calls ' | '.join, '; '.join, '\n'.join, BodyAsk, any, engine.converse, self.early_trail, self.msgs_free, self.value_search, self.widen, sorted
+3502-3542  Cairn.late_question  [modified]
+  Calls ' | '.join, '; '.join, BodyAsk, any, engine.brief, engine.elapsed, engine.next_message, engine.rank, engine.scout, engine.send_one, getattr, len, self.clock, self.judges, self.left, self.msgs_free, self.roles.get, self.trace.append, self.value_search, sorted, told.append, type
+3545-3571  Cairn.search_template  [identical]
+  Calls (props.get(k) or {}).get, _dump, _kinds, _snake, _stem, _words, a.get, any, args.get, args.items, isinstance, keep.items, len, list, max, next, props.get, props.items, r.get, re.search, reversed, row.get, schema.get, self.category_key, self.roles.get, self.rows.values, self.schemas.get, set, str, str(a.get(k) or '').strip, str(a.get(k) or '').strip().lower, str(a.get(k)).split, str(r.get(self.category_key()) or '').strip, str(r.get(self.category_key()) or '').strip().lower
+3573-3588  Cairn.value_words  [modified]
+  Calls edge.group, edge.group(1).strip, need.split, need.split(':', 1)[1].strip, out.append, re.search, self.needs_now
+3590-3596  Cairn.value_forms  [added]
+  Calls _value_forms, edge.group, edge.group(1).strip, floors.add, need.split, need.split(':', 1)[1].strip, re.search, self.needs_now, self.value_words, set
+3598-3599  Cairn.floor_values  [added]
+  Calls edge.group, edge.group(1).strip, need.split, need.split(':', 1)[1].strip, re.search, self.needs_now
+3601-3634  Cairn.value_template  [modified]
+  Calls (self.schemas.get(named_tool) or {}).get, _kinds, _shape, _snake, base.pop, base.update, enums.items, isinstance, last.get, len, modes.append, props.items, re.search, schema.get, self.brief.get, self.roles.get, self.schemas.get, self.search_template, told.get, v.get
+3636-3688  Cairn.value_search  [identical]
+  Calls ' '.join, ' | '.join, ', '.join, '\n'.join, (self.rows.get(i) or {}).get, _dump, _shape, _words, all, args.get, enumerate, isinstance, len, min, re.fullmatch, reply.get, rows.sort, seen.append, self.act, self.buyable, self.category_key, self.fill_facts, self.home_label, self.left, self.observe, self.owns, self.price_of, self.records_in, self.rows.get, self.schemas.get, self.tail, self.trace.append, self.value_template, self.value_words, str, v.split
+3690-3706  Cairn.home_label  [modified]
+  Calls _words, counts.get, max, pool.values, record.get, self.category_key, self.owns, str
+3722-3732  Cairn.adopt_labels  [identical]
+  Calls any, len, range, record.get, self.adopted.update, self.category_key, self.full.values, self.owner_of, self.part_shelves, self.trace.append, str
+3734-3756  Cairn.owner_of  [identical]
+  Calls _roots, _words, enumerate, len, max, self.owners_seen.get
+3758-3759  Cairn.owns  [identical]
+  Calls _words, bool, self.items.index, self.owner_of
+3761-3764  Cairn.records_of_item  [identical]
+  Calls _fact_block, record.get, self.category_key, self.full.values, self.owns, str, sum
+3771-3792  Cairn.send  [identical]
+  Calls answer.get, isinstance, reply.get, self.act, self.cart_mark, self.done_log.append, self.done_steps.append, self.left, self.message_args, self.spoken, self.trace.append, sent.append
+3794-3818  Cairn.take_heard  [identical]
+  Calls _count, _items, _words, entry.get, heard.get, isinstance, item.dropped.extend, len, m.split, max, min, self.items[number - 1].free.append, self.items[number - 1].told.append, self.refs.append, str, str(entry.get('need') or '').strip, str(entry.get('property') or '').strip, str(entry['need']).strip, str(entry['property']).split, told.append, told.extend
+3822-3885  Cairn.gate  [identical]
+  Calls '; '.join, '\n'.join, (call or {}).get, GATE.replace, _clip, _count, _dump, _items, _shape, _strings, any, call.get, e.get, enumerate, got.get, isinstance, len, max, range, reply.get, said.append, self.absorb, self.act, self.ask_json, self.cart_mark, self.cart_text, self.done_log.append, self.done_steps.append, self.gate_due, self.gate_ok.add, self.ledger, self.left, self.roles.get, self.send, self.show, self.take_heard, self.trace.append, str, str(got.get('hold') or '').strip, t['function'].get
+3887-3904  Cairn.spoken  [identical]
+  Calls ' '.join, _dump, found.append, isinstance, len, node.split, node.values, walk
+3892-3902  Cairn.spoken.walk  [nested helper]
+  Calls found.append, isinstance, len, node.split, node.values, walk
+3906-3918  Cairn.loose_lines  [identical]
+  Calls all, inner.split, isinstance, len, lines.append, lines.extend, observation.items, self.ident, v.split, value.split, value.values
+3920-3970  Cairn.take_note  [identical]
+  Calls ', '.join, '; '.join, '\n'.join, (summary + (' (' + '; '.join(changed) + ')' if changed else '')).strip, _count, _items, _words, added.add, any, bool, c.startswith, changed.append, e.get, entry.get, got.get, isinstance, item.dropped.extend, item.dropped.remove, item.told.append, len, m.split, max, min, self.ask_json, self.brief.get, self.heard.update, self.ledger, self.notes.append, self.sold_lines.update, self.unavailable.update, set, str, str(e.get('need') or '').strip, str(entry['need']).strip, str(got.get('summary') or '').strip, target.split
+3972-3978  Cairn.needs_now  [identical]
+  Calls enumerate, out.append
+3980-4015  Cairn.evidence  [identical]
+  Calls ' | '.join, ', '.join, '; '.join, _fact_block, _names, _stem, block.items, ids.append, isinstance, len, lines.append, need.split, need.split(':', 1)[0].strip, node.values, parts.append, self.full.get, self.ident, self.needs_now, str, walk
+3983-3995  Cairn.evidence.walk  [nested helper]
+  Calls _fact_block, ids.append, isinstance, node.values, self.ident, walk
+4017-4020  Cairn.cart_text  [identical]
+  Calls _clip, _dump
+4022-4035  Cairn.held_units  [identical]
+  Calls _count, _words, isinstance, len, node.items, node.values, re.search, self.cart_lines.get, stack.pop, v.strip
+4037-4041  Cairn.cart_ids  [identical]
+  Calls _dump, list
+4043-4045  Cairn.record_of  [identical]
+  Calls _clip, _dump, self.full.get, self.rows.get
+4047-4059  Cairn.others  [identical]
+  Calls '\n'.join, _clip, _dump, float, len, lines.append, list, order.sort, reversed, self.brief.get, self.full.get, self.price_of, self.rows.get, self.sold_out
+4061-4075  Cairn.fit_index  [identical]
+  Calls ' '.join, '. '.join, _fit_marks, block.items, isinstance, len, notes.setdefault, notes.setdefault(part, set()).update, record.values, self.full.get, self.rows.get, self.views.values, set, str, sum
+4077-4082  Cairn.fit_set  [identical]
+  Calls index['marks'].get, index['notes'].get, mark.get, set
+4084-4087  Cairn.item_ids  [identical]
+  Calls (self.rows.get(i) or {}).get, self.category_key, self.owns, self.rows.get, str
+4089-4099  Cairn.link_system  [modified]
+  Calls (marks.get(i) or {}).get, any, len, marks.get, self.item_ids
+4101-4104  Cairn.link_holds  [modified]
+  Calls (index['marks'].get(carried) or {}).get, (index['marks'].get(namer) or {}).get, bool, index['marks'].get, set
+4106-4120  Cairn.link_faults  [identical]
+  Calls ', '.join, faults.append, marks[carried].get, marks[i].get, marks[namer].get, self.item_ids, self.link_holds, self.link_system, self.sold_out, set, sorted
+4122-4139  Cairn.series_for  [modified]
+  Calls (marks.get(i) or {}).get, counts.get, held.append, marks.get, self.cart_ids, self.fit_index, self.item_ids, self.link_system, set, sorted
+4141-4166  Cairn.fit_faults  [identical]
+  Calls ', '.join, _code_hit, any, barred, covers, faults.append, index['marks'].get, index['marks'].get(devices[0], {}).get, index['marks'].get(i, {}).get, len, self.cart_ids, self.fit_index, self.fit_plan, self.fit_set, self.item_ids, self.link_faults, self.sold_out, set, sorted
+4168-4202  Cairn.fit_plan  [modified]
+  Calls ' | '.join, ', '.join, '; '.join, (index['marks'].get(i) or {}).get, _code_hit, any, index['marks'].get, index['marks'].get(i, {}).get, kv[1].values, len, lines.append, per.items, self.brief.get, self.cheapest_sets, self.fit_index, self.fit_set, self.item_ids, self.link_system, self.proven_sets, self.sold_out, set, sorted, sum, tally.items, tally.setdefault, tally.setdefault(code, {}).setdefault
+4204-4218  Cairn.proven  [added]
+  Calls need.partition, need.partition(':')[2].lower, re.search, self.buyable, self.needs_now, self.price_of, self.shows_need, self.unproven
+4220-4227  Cairn.fits_with  [added]
+  Calls self.link_holds, self.link_system, self.pair_fits
+4230-4250  Cairn.proven_sets  [added]
+  Calls ' + '.join, '; '.join, _soft, isinstance, options.append, options.sort, picks.append, self.brief.get, self.fits_with, self.item_ids, self.price_of, self.proven, sorted
+4253-4277  Cairn.cheapest_sets  [modified]
+  Calls ' + '.join, '; '.join, _code_hit, _soft, any, index['marks'].get, index['marks'].get(device, {}).get, index['marks'].get(i, {}).get, next, options.append, options.sort, picks.append, self.buyable, self.fit_set, self.item_ids, self.link_holds, self.link_system, self.price_of, sorted
+4279-4286  Cairn.missing_items  [modified]
+  Calls (self.rows.get(i) or {}).get, any, enumerate, len, r.get, self.cart_ids, self.category_key, self.held_units, self.owns, self.rows.get, self.rows.values, str
+4288-4300  Cairn.states_needs  [modified]
+  Calls _fact_block, _names, _spelled, _words, any, block.items, need.partition, re.sub, re.sub('[,/;|]', ' ', _words(text)).split, self.full.get, self.needs_now, set, split, str
+4302-4325  Cairn.fill_short_cart  [modified]
+  Calls _shape, fits.sort, isinstance, len, self.act, self.brief.get, self.buyable, self.cart_calls, self.cart_ids, self.held_units, self.item_ids, self.left, self.missing_items, self.note_cart, self.price_of, self.roles.get, self.schemas.get, self.states_needs, self.trace.append, sum
+4327-4344  Cairn.part_shelves  [modified]
+  Calls _roots, _words, any, item.shelf.strip, len, row.get, self.category_key, self.rows.values, self.trace.append, sorted, str, str(row.get(cat_key) or '').strip
+4346-4351  Cairn.fuller_label  [identical]
+  Calls _roots, len, next, r.get, self.category_key, self.rows.values, sorted, str
+4353-4360  Cairn.named_label  [modified]
+  Calls _words, next, r.get, self.category_key, self.rows.values, str
+4362-4403  Cairn.line_faults  [identical]
+  Calls ', '.join, (self.rows.get(i) or {}).get, all, any, enumerate, faults.append, isinstance, len, prices.values, r.get, self.adopt_labels, self.brief.get, self.cart_ids, self.category_key, self.fuller_label, self.held_units, self.named_label, self.owns, self.price_of, self.rows.get, self.rows.values, self.sold_out, str, sum
+4405-4416  Cairn.count_fixes  [identical]
+  Calls (self.rows.get(i) or {}).get, (self.rows.get(ident) or {}).get, enumerate, len, out.append, self.cart_ids, self.cart_lines.get, self.category_key, self.held_units, self.owns, self.rows.get, self.sold_out, str
+4418-4455  Cairn.fix_counts  [modified]
+  Calls _dump, _kinds, _shape, calls.append, done.append, isinstance, len, next, props.items, re.search, reply.get, schema.get, self.act, self.cart_sets, self.left, self.note_cart, self.observe, self.roles.get, self.schemas.get, self.show, self.trace.append, sorted, str, v.get
+4457-4458  Cairn.check_key  [identical]
+  Calls '|'.join, sorted
+4460-4494  Cairn.check_cart  [identical]
+  Calls ', '.join, '; '.join, '\n'.join, _items, bool, enumerate, got.get, len, self.ask_json, self.brief.get, self.cart_ids, self.cart_text, self.check_key, self.checked.add, self.judges, self.ledger, self.others, self.record_of, self.sold_out, self.trace.append, str
+4496-4502  Cairn.refuse_trail  [modified]
+  Calls any, self.clock, self.left, self.needs_now, self.trail
+4504-4515  Cairn.early_trail  [modified]
+  Calls any, list, self.clock, self.left, self.needs_now, self.ref_values.values, self.trace.append, self.trail
+4517-4526  Cairn.listing_of  [added]
+  Calls len, re.escape, re.search, row.get, self.rows.items, self.title_key, str, str(row.get(title) or '').lower, value.lower
+4528-4530  Cairn.page_read  [modified]
+  Calls self.roles.get, self.single_target, self.views.get
+4532-4610  Cairn.trail  [modified]
+  Calls ' | '.join, '; '.join, '\n'.join, _clip, _dump, _items, _shape, all, bool, chain.get, gap.get, gaps.append, got.get, isinstance, l.get, len, links[-1].get, lost.append, max, min, next, records.append, reply.get, reversed, seen.append, self.act, self.ask_json, self.clock, self.find_link, self.full.get, self.left, self.listing_of, self.needs_now, self.observe, self.page_read, self.ref_values.items, self.roles.get, self.rows.get, self.rushed, self.schemas.get, self.show, self.single_target, self.tail, self.trace.append, self.trace[-1].get, str, str(chain.get('need') or '').strip, str(chain.get('value') or '').strip, str(chain['value']).strip, str(gap.get('find') or '').strip, str(l.get('id') or '').strip, str(links[-1].get('find') or '').strip, zip
+4612-4613  Cairn.not_maker_keys  [modified]
+  Calls self.category_key, self.title_key
+4615-4624  Cairn.shop_rows  [identical]
+  Calls about.lower, any, isinstance, len, n.lower, out.append, re.escape, re.search, row.items, self.not_maker_keys, self.rows.get, str, str(v).strip, v.strip, v.strip().lower
+4626-4635  Cairn.opened_shop  [modified]
+  Calls about.lower, any, isinstance, len, n.lower, out.append, re.escape, re.search, row.items, self.not_maker_keys, self.rows.get, sorted, str, str(v).strip, v.strip, v.strip().lower
+4637-4680  Cairn.find_link  [identical]
+  Calls ' '.join, ' '.join(leaves).lower, (self.rows.get(ident) or {}).items, (words or about).lower, _dump, _dump(self.rows.get(i) or {}).lower, _shape, all, dict.fromkeys, isinstance, leaves.append, len, list, node.values, of_kind, re.escape, re.findall, re.search, reply.get, reversed, self.act, self.full.get, self.not_maker_keys, self.observe, self.opened_shop, self.records_in, self.rows.get, self.schemas.get, self.shop_rows, self.trace.append, self.value_template, set, stack.pop, str, v.lower, v.strip, v.strip().lower, w.isdigit, words.lower, words.lower().split, words.split
+4678-4679  Cairn.find_link.of_kind  [nested helper]
+  Calls _dump, _dump(self.rows.get(i) or {}).lower, re.findall, self.rows.get, set
+4682-4704  Cairn.anchor_view  [added]
+  Calls _items, _shape, chain.get, got.get, isinstance, last.get, link.get, next, reply.get, reversed, self.absorb, self.act, self.left, self.offer_tool, self.page_read, self.rushed, self.schemas.get, self.single_target, self.trace.append, str, str(link.get('id') or '').strip, t.get, unread.append
+4706-4707  Cairn.offer_tool  [identical]
+  Calls self.roles.get
+4709-4738  Cairn.reread_offers  [identical]
+  Calls ', '.join, '\n'.join, _clip, _dump, _shape, after.items, dict, isinstance, len, lines.append, max, reply.get, self.act, self.cart_ids, self.left, self.observe, self.offer_seen.get, self.offer_tool, self.rows.get, self.rushed, self.schemas.get, self.single_target, self.trace.append
+4740-4741  Cairn.sold_out  [identical]
+  Calls 
+4743-4770  Cairn.overrides  [added]
+  Calls _stem, any, found.append, isinstance, m.group, m.group(1).strip, m.group(1).strip().lower, m.group(2).strip, node.values, re.match, re.search, re.split, self.full.get, self.rows.get, sentence.strip, texts.append, walk
+4746-4756  Cairn.overrides.walk  [nested helper]
+  Calls isinstance, node.values, texts.append, walk
+4772-4791  Cairn.override_hint  [added]
+  Calls '; '.join, (self.rows.get(line) or {}).get, _same_prop, _words, lines.append, need.split, self.cart_ids, self.category_key, self.left, self.needs_now, self.override_held.add, self.overrides, self.owner_of, self.rows.get, self.tail, self.trace.append, str
+4793-4810  Cairn.shows_need  [added]
+  Calls _fact_block, _names, _roots, _same_prop, _stem, any, block.values, isinstance, need.partition, prop.strip, re.search, record.values, self.full.get, self.overrides, str, value.lower, value.strip
+4812-4857  Cairn.cheaper_fit_hint  [added]
+  Calls '. '.join, '; '.join, '|'.join, (self.rows.get(ident) or self.full.get(ident) or {}).get, (self.rows.get(line) or {}).get, all, any, found.append, isinstance, prices.values, self.brief.get, self.buyable, self.cart_ids, self.cart_lines.get, self.category_key, self.cheap_marks.add, self.full.get, self.left, self.needs_now, self.owner_of, self.price_of, self.rows.get, self.shows_need, self.tail, self.trace.append, sorted, str, str((self.rows.get(ident) or self.full.get(ident) or {}).get(cat_key) or '').strip, str((self.rows.get(ident) or self.full.get(ident) or {}).get(cat_key) or '').strip().lower, str((self.rows.get(line) or {}).get(cat_key) or '').strip, str((self.rows.get(line) or {}).get(cat_key) or '').strip().lower, sum
+4859-4875  Cairn.swap_hint  [identical]
+  Calls ', '.join, self.brief.get, self.cart_ids, self.left, self.replacements, self.sold_out
+4877-4884  Cairn.find_sold  [identical]
+  Calls any, len, self.cart_ids, self.reread_offers, self.sold_out, self.unavailable.add
+4886-4910  Cairn.replacements  [identical]
+  Calls '\n'.join, (got or {}).get, _clip, _dump, _items, entry.get, fits.append, float, isinstance, len, records.append, reversed, self.ask_json, self.brief.get, self.cart_ids, self.cart_text, self.full.get, self.judges, self.ledger, self.record_of, self.rows.get, self.sold_out, self.trace.append, sorted, str
+4912-4927  Cairn.audit  [identical]
+  Calls ', '.join, '; '.join, (got or {}).get, _items, got.get, named.items, named.values, self.audit_call, self.audit_fits, self.judges, self.open_rows, self.sold_out, str
+4929-4947  Cairn.audit_call  [identical]
+  Calls '\n'.join, _clip, _dump, len, records.append, reversed, self.ask_json, self.audit_fits, self.full.get, self.judges, self.ledger, self.rows.get, self.sold_out, self.trace.append, sorted
+4949-4954  Cairn.audit_fits  [identical]
+  Calls (got or {}).get, _items, fits.items, isinstance, named.items, self.sold_out, str
+4956-4980  Cairn.open_rows  [identical]
+  Calls _shape, enumerate, len, max, reply.get, self.act, self.cart_calls, self.compare_bare, self.compare_room, self.compare_target, self.facts_tool, self.left, self.observe, self.roles.get, self.schemas.get, self.single_target, self.tail, self.trace.append
+4982-5019  Cairn.cart_calls  [modified]
+  Calls _kinds, calls.append, inner.items, isinstance, len, lines.items, next, props.items, props[count].get, s.get, schema.get, self.cart_ids, self.cart_lines.get, self.cart_sets, self.roles.get, self.schemas.get, shape.get, sorted, spec.get
+5021-5094  Cairn.complete_cart  [identical]
+  Calls ' | then: '.join, '; '.join, (self.rows.get(ident) or {}).get, _clip, _dump, _shape, any, dict, done.append, found.group, int, kind, len, list, next, range, re.search, replies.append, reply.get, self.act, self.brief.get, self.cart_calls, self.cart_ids, self.cart_lines.get, self.category_key, self.check_cart, self.check_key, self.fill_facts, self.gate, self.lead_items.items, self.left, self.note_cart, self.observe, self.reread_offers, self.roles.get, self.rows.get, self.schemas.get, self.show, self.show_links, self.sold_out, self.trace.append, self.verdicts.get, str, str((self.rows.get(ident) or {}).get(cat_key) or '').strip, str((self.rows.get(ident) or {}).get(cat_key) or '').strip().lower
+5028-5029  Cairn.complete_cart.kind  [nested helper]
+  Calls (self.rows.get(ident) or {}).get, self.rows.get, str, str((self.rows.get(ident) or {}).get(cat_key) or '').strip, str((self.rows.get(ident) or {}).get(cat_key) or '').strip().lower
+5096-5108  Cairn.pair_fits  [added]
+  Calls _code_hit, any, index['marks'].get, main.get, part.get, self.fit_set, set
+5110-5197  Cairn.salvage  [added]
+  Calls (self.lead_items or {}).items, _clip, _shape, bool, dict, dict.fromkeys, isinstance, leads.get, len, max, next, picks.get, picks.values, pools.get, range, reply.get, score, self.act, self.brief.get, self.buyable, self.cart_calls, self.cart_ids, self.fit_index, self.gate, self.held_units, self.item_ids, self.left, self.needs_now, self.note_cart, self.observe, self.pair_fits, self.price_of, self.proven, self.roles.get, self.schemas.get, self.show, self.shows_need, self.sold_out, self.trace.append, sorted, str, sum, total
+5130-5133  Cairn.salvage.score  [nested helper]
+  Calls leads.get, len, self.needs_now, self.proven, self.shows_need, str, sum
+5199-5203  Cairn.is_buy  [identical]
+  Calls all, args.get, fixed.items, isinstance, self.brief.get, self.roles.get
+5205-5209  Cairn.is_refuse  [identical]
+  Calls all, args.get, fixed.items, isinstance, self.brief.get, self.roles.get
+5211-5228  Cairn.offered  [modified]
+  Calls len, self.facts_tool, self.left, self.message_args, self.roles.get, self.short_items, self.tail, set
+5230-5244  Cairn.quiet  [identical]
+  Calls _kinds, any, dict, isinstance, out.get, props.items, schema.get, self.brief.get, self.schemas.get, spec.get, str
+5246-5275  Cairn.resolve_ids  [identical]
+  Calls ', '.join, (self.schemas.get(name) or {}).get, _id_like, _kinds, any, dict, fix, isinstance, len, next, props.items, row.items, self.roles.get, self.rows.items, self.schemas.get, v.strip, v.strip().lower, v.strip().lower().startswith, value.strip, value.strip().lower
+5254-5265  Cairn.resolve_ids.fix  [nested helper]
+  Calls ', '.join, _id_like, any, isinstance, len, row.items, self.rows.items, v.strip, v.strip().lower, v.strip().lower().startswith, value.strip, value.strip().lower
+5277-5281  Cairn.cart_sets  [identical]
+  Calls _kinds, any, isinstance, len, props.values, s.get, self.schemas.get, self.schemas.get(name, {}).get
+5283-5288  Cairn.whole_removal  [modified]
+  Calls (spec.get(k) or {}).get, _kinds, any, args.items, args.values, isinstance, min, next, self.schemas.get, self.schemas.get(name, {}).get, spec.get, spec.items, spec[count].get
+5290-5333  Cairn.note_cart  [identical]
+  Calls (spec.get(key) or {}).get, _count, _kinds, any, args.items, args.values, isinstance, len, line.values, lines.append, next, self.cart_lines.get, self.cart_lines.pop, self.cart_sets, self.schemas.get, self.schemas.get(name, {}).get, shape.get, spec.get, spec.values
+5335-5339  Cairn.show  [identical]
+  Calls _clip, _dump, len, self.records_in
+5341-5347  Cairn.compare_target  [identical]
+  Calls _kinds, any, isinstance, next, props.items, schema.get, self.roles.get, self.schemas.get
+5349-5359  Cairn.compare_room  [modified]
+  Calls ((self.schemas.get(name) or {}).get('properties') or {}).get, (self.schemas.get(name) or {}).get, caps.append, int, isinstance, max, min, next, re.search, self.compare_target, self.roles.get, self.schemas.get, spec.get, stated.group, str, t['function'].get
+5361-5388  Cairn.join_opens  [identical]
+  Calls (args or {}).get, _dump, _json_obj, call.get, enumerate, fn.get, isinstance, len, out.append, picks.append, self.compare_bare, self.compare_room, self.compare_target, self.roles.get, self.single_target, self.trace.append, set, str, str((args or {}).get(target) or '').strip
+5390-5745  Cairn.run_calls  [modified]
+  Calls ' | '.join, ', '.join, '; '.join, '\n'.join, (raw or '').strip, _count, _dump, _fact_block, _in_rows, _json_obj, _shape, all, any, args.get, args.items, args.values, bool, call.get, dict, enumerate, fn.get, isinstance, len, list, map, max, min, next, out.append, reply.get, self.absorb, self.act, self.anchor_view, self.audit, self.bare_hint, self.below_cart, self.cap_ignored, self.cart_ids, self.cart_text, self.cheaper_fit_hint, self.cheaper_rows, self.cheapest_here, self.check_cart, self.check_key, self.code_tries.append, self.compare_room, self.compare_target, self.complete_cart, self.count_fixes, self.credit_hits, self.dropped.add, self.dropped.discard, self.evidence, self.facts_from.get, self.fill_facts, self.find_sold, self.first_look, self.fit_faults, self.fix_counts, self.gate, self.hunt_cheaper, self.hunt_fits, self.id_args.update, self.ident, self.is_buy, self.is_refuse, self.join_opens, self.last_page_first, self.late_question, self.left, self.line_faults, self.lists_things, self.loose_lines, self.message_args, self.more_pages, self.names_code, self.note_cart, self.note_facts, self.note_view, self.observe, self.offer_tool, self.offered, self.offset_key, self.override_hint, self.query_is_new, self.quiet, self.read_cache.get, self.read_first_hint, self.record_of, self.records_in, self.refuse_trail, self.reread_offers, self.resolve_ids, self.roles.get, self.roles.items, self.row_ids, self.rushed, self.schemas.get, self.shorter_search, self.show, self.show_links, self.shown_already, self.single_target, self.sold_out, self.spoken, self.swap_hint, self.tail, self.take_note, self.trace.append, self.trail, self.unproven_hint, self.value_hits.setdefault, self.valued, self.verdicts.get, self.whole_removal, self.wider_hold, sorted, str, view.get
+5747-5753  Cairn.can_refuse  [identical]
+  Calls _shape, dict, self.brief.get, self.quiet, self.roles.get, self.schemas.get
+5755-5809  Cairn.finish  [modified]
+  Calls _clip, _shape, bool, dict, len, reply.get, self.act, self.brief.get, self.can_refuse, self.cart_ids, self.fill_facts, self.fill_short_cart, self.gate, self.left, self.model_room, self.observe, self.quiet, self.roles.get, self.salvage, self.schemas.get, self.show, self.show_links, self.tail, self.trace.append
+5811-5821  Cairn.trim  [identical]
+  Calls ', '.join, _dump, dict.fromkeys, enumerate, len, m.get, max, re.findall, self.chat[index].get, sum
+5823-5851  Cairn.run  [identical]
+  Calls _restore, round, self.absorb, self.chat.append, self.finish, self.first_moves, self.left, self.read_request, self.show, self.status, self.trace.append, self.view.get, self.work
+5853-5860  Cairn.work  [identical]
+  Calls range, self.answer_open_calls, self.trace.append, self.turns, type
+5862-5870  Cairn.answer_open_calls  [modified]
+  Calls len, m.get, next, range, self.chat.append, self.chat[n].get, self.status
+5872-5937  Cairn.turns  [modified]
+  Calls (again or {}).get, _dump, _json_obj, any, call.get, calls.append, enumerate, fn.get, isinstance, len, message.get, raw.strip, self.cart_ids, self.chat.append, self.clock, self.interview, self.left, self.model_room, self.msgs_free, self.offered, self.ready_to_ask, self.roles.get, self.run_calls, self.status, self.think, self.trace.append, self.trim, str, time.sleep
+5939-5953  agent_main  [identical]
+  Calls Cairn, episode.finish, episode.run, episode.trace.append, list, type

@@ -1,0 +1,55 @@
+{
+  "name": "ICDI_chidori_budget",
+  "version": 2,
+  "status": "startup correction verified offline; scoring unverified",
+  "candidate": {
+    "path": "agents/ICDI_chidori_v2_budget.py",
+    "sha256": "a4228519020b09f18582abbdd265f8000874263b942e1a3a3450e024b1fea5e6",
+    "bytes": 492493
+  },
+  "base": {
+    "path": "agents/ICDI_chidori_v1_budget.py",
+    "sha256": "7a8e0d8da12870e9b5af9f59ccae03166cec723d70f9ae31f4e10795871e533c",
+    "unchanged": true
+  },
+  "related_versions_unchanged": {
+    "full_v1": "295f290c70a2fc71035052f23f78e40bd8c6e23782c6d457829454e7473baaf3",
+    "full_v2": "3d40d11553e4bf2ea6d67d90305030cee98ca85d9ec397e070e468c1bfa3cdc9",
+    "original_chidori": "b32f88b0ef42100f10d9ad29e3019a54dd79dfaefe8ded2b72a88772f9247bf2"
+  },
+  "scope": {
+    "existing_method_changed": "BudgetControls.budget_post",
+    "added_configuration": "BUDGET_PRICE_CONFIG, identical to reviewed full-v2 configuration",
+    "all_other_existing_class_methods_unchanged": true,
+    "shopping_and_procedure_prompts_unchanged": true,
+    "method_resolution_order_unchanged": true,
+    "new_procedure_controller_included": false,
+    "runtime_sdk_modified": false
+  },
+  "verification": {
+    "offline_checks_passed": 32,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "actual_proxy_client_with_fake_http": true,
+    "recorded_inputs_startup_admitted": 30,
+    "recorded_inputs_scored": false,
+    "local_source_preflight_passed": true,
+    "ast_parse_seconds": 0.13197791499987943,
+    "paid_inference_calls": 0,
+    "live_authenticated_calls": 0,
+    "log": "logs/research/chidori-v2-budget-correction/offline-verification.log"
+  },
+  "budget": {
+    "agent_allowance_usd_per_task": 0.035,
+    "protected_procedure_allowance_usd": 0.01,
+    "whole_run_5_usd_guaranteed": false,
+    "limitations": [
+      "reviewed pricing settings can become stale or differ from routed prices",
+      "token and framing reservations are estimates",
+      "shared simulator spending is not exposed"
+    ]
+  },
+  "pricing_reference": "logs/research/chidori-v2-failure-d3574538/pricing-snapshot.json",
+  "test_command": "python3 -m unittest discover -s agents/tests -p test_chidori_v2_budget.py -v"
+}

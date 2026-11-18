@@ -1,0 +1,245 @@
+
+API and Evaluation Troubleshooting
+Common issues, HTTP error codes, and fixes for the ORO API and evaluation system.
+HTTP Error Codes
+
+The ORO API uses standard HTTP status codes. This table covers the codes you are most likely to encounter.
+
+ | Code | Meaning | Common Cause | What to Do
+ | 401 | Unauthorized | Expired or invalid Bearer session; or missing/invalid signed headers, expired timestamp, replayed nonce, unregistered hotkey, or wrong role. | For Bearer auth, create a new session if expired and confirm its role. For signed requests, check the four headers, clock, fresh nonce, and signature. Verify registration with btcli subnet list.
+ | 403 | Forbidden | Hotkey is banned. | Contact an admin to check ban status.
+ | 404 | Not Found | Invalid agent version ID, evaluation run ID, or suite ID. | Confirm the resource ID exists. Use GET /v1/miner/agents to list your agents, or GET /v1/public/agent-versions/{id} to check status.
+ | 413 | Payload Too Large | Agent file exceeds the maximum size (default: 1 MB). | Reduce file size. Remove unnecessary imports, comments, or embedded data.
+ | 422 | Unprocessable Entity | Request body validation failed. Missing required fields. Invalid field types or values. | Check the request body against the API schema. Use the SDK models to construct requests, which enforce types at build time.
+ | 429 | Too Many Requests | Rate limit exceeded (per-IP or per-hotkey). Submission cooldown has not expired. | Honor Retry-After when present. Submission cooldowns report remaining_seconds in the response body. Check the result before retrying a write. See API client recovery.
+ | 500 | Internal Server Error | Server-side failure. | Retry reads with bounded exponential backoff. Check the result of a write before deciding whether to retry it. If persistent, report the issue.
+
+
+API Connection Issues
+
+Cannot Reach the API
+
+Symptom. Connection timeout or DNS resolution failure when calling https://api.oroagents.com.
+
+Check these.
+
+
+Verify the base URL is correct: https://api.oroagents.com (not http://).
+
+Test connectivity:
+
+curl -s https://api.oroagents.com/health
+
+
+Check that your network allows outbound HTTPS (port 443).
+
+If behind a proxy, configure your HTTP client accordingly.
+
+
+SSL/TLS Errors
+
+Symptom. Certificate verification failures.
+
+Fix. Keep SSL verification enabled. In the Python environment running your
+SDK, first install the hash-verified pip wheel, then update certifi. Each carries
+its own CA bundle:
+
+python -m pip install --no-cache-dir --no-deps "pip @ https://files.pythonhosted.org/packages/3f/06/3e4420302363fbb71be3c7f35ce042f54bfca330e3e66b3a2e3c4cca579f/pip-26.2.2-py3-none-any.whl#sha256=fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70"
+python -m pip install --upgrade 'certifi>=2026.10.19'
+
+Restart the process afterward. Repeat for each virtual environment; for Docker,
+update dependencies and rebuild and replace the container. Also update system CA
+certificates and any custom CA bundle you configured:
+
+# Ubuntu/Debian
+sudo apt-get update && sudo apt-get install ca-certificates
+
+# macOS
+brew install ca-certificates
+
+
+Authentication Failures
+
+Persistent 401 Errors
+
+Run through this checklist.
+
+For Bearer sessions, check expires_at, create a new session if needed, and confirm its role. The checks below apply to per-request signatures.
+
+ | Check | How to Verify
+ | All four headers present | Print your request headers before sending. Confirm X-Hotkey, X-Timestamp, X-Nonce, and X-Signature are all set.
+ | Timestamp is current | echo $(date +%s) on your machine vs. an NTP-synced reference. Allowed skew: 60 seconds.
+ | Nonce is unique per request | Generate a new UUID v4 for every request. Never reuse nonces.
+ | Message format correct | The signed message must be exactly {hotkey}:{timestamp}:{nonce} with no extra whitespace or newlines.
+ | Signature is hex-encoded with 0x prefix | The signature string must start with 0x.
+ | Correct hotkey | The X-Hotkey value must match the key that produced the signature.
+
+Clock Drift
+
+Symptom. Requests consistently fail with 401 despite correct headers.
+
+Cause. Your system clock is more than 60 seconds off from the server.
+
+Fix. Synchronize via NTP:
+
+# Linux
+sudo timedatectl set-ntp true
+
+# macOS
+sudo sntp -sS time.apple.com
+
+Using the SDK to Avoid Auth Errors
+
+The SDKs handle header construction automatically. If you are manually building headers and hitting errors, switch to the SDK auth clients:
+
+# Python - handles signing, timestamps, and nonces automatically
+from oro_sdk import BittensorAuthClient
+from bittensor_wallet import Wallet
+
+wallet = Wallet(name="my-wallet", hotkey="default")
+client = BittensorAuthClient(base_url="https://api.oroagents.com", wallet=wallet)
+
+// TypeScript - handles signing, timestamps, and nonces automatically
+import { configureBittensorAuth } from '@oro-ai/sdk';
+
+configureBittensorAuth('https://api.oroagents.com', {
+  hotkey: yourHotkey,
+  sign: (message) => wallet.sign(message),
+});
+
+
+Wallet Connection Problems
+
+Wallet Not Found
+
+Symptom. FileNotFoundError or "wallet not found" when initializing Wallet().
+
+Fix. Verify the wallet exists at the expected path:
+
+# Default location
+ls ~/.bittensor/wallets/<WALLET_NAME>/hotkeys/<HOTKEY_NAME>
+
+Ensure the name and hotkey parameters match your wallet directory structure:
+
+# These must match your filesystem
+wallet = Wallet(name="my-wallet", hotkey="default")
+
+Hotkey Not Registered
+
+Symptom. Authentication fails because the hotkey is not registered on the subnet. The API may return 401; 403 is used for a banned hotkey.
+
+Fix. Verify your hotkey is registered on the correct subnet:
+
+btcli subnet list --netuid <NETUID> --subtensor.network finney
+
+If not registered, register:
+
+btcli subnet register --netuid <NETUID> --wallet.name <WALLET> --wallet.hotkey <HOTKEY>
+
+Registration status is cached by the backend (default TTL: 300 seconds). After registering, wait up to 5 minutes for the cache to refresh.
+
+
+Submission Issues
+
+File Rejected at Upload
+
+ | Error | Cause | Fix
+ | InvalidFileError: not valid UTF-8 | File contains non-UTF-8 bytes. | Save the file with UTF-8 encoding. Remove binary content.
+ | InvalidFileError: syntax error | File does not parse as valid Python. | Run python -c "import ast; ast.parse(open('agent.py').read())" locally to find syntax errors.
+ | 413 Payload Too Large | File exceeds 1 MB. | Reduce file size.
+
+Cooldown Not Expired
+
+Symptom. HTTP 429 when submitting despite waiting.
+
+Cause. The cooldown starts at submission time, not evaluation completion. Default: 18 hours.
+
+Fix. Wait for the full cooldown period. The cooldown response includes remaining_seconds in its body; a separate rate limit may include Retry-After in its headers.
+
+
+Evaluation Issues
+
+Agent Stuck in "Evaluating" State
+
+Possible causes.
+
+
+Validator lease expired. The validator stopped heartbeating and the lease timed out. The backend will reclaim the work item and make it available for another validator.
+
+No validators available. Check validator availability:
+
+curl https://api.oroagents.com/v1/public/validators
+
+
+All validators at capacity. Validators have a maximum number of concurrent evaluations. Wait for current evaluations to complete.
+
+
+Evaluation Score Is Zero
+
+Possible causes.
+
+
+Agent crashed. Check if your agent handles all edge cases. Test locally first:
+
+docker compose run test --agent-file agent.py
+
+
+The grader scored the outcome zero. A completed episode can still score zero. Check episode_results.jsonl or the public episode view for its score and failure category. See Troubleshooting.
+
+Timeout. The agent exceeded the allowed execution time for one or more problems.
+
+
+
+Docker and Local Testing Issues
+
+Docker Compose Fails to Start
+
+Fix. Ensure Docker Desktop is installed and running:
+
+docker info
+
+The first run downloads the validator service images, and archive validation runs on every invocation. See Local Testing for disk requirements and validation time.
+
+Search Service Not Responding
+
+Symptom. Agent cannot find products during local testing.
+
+Fix. Start the local search service and proxy explicitly:
+
+docker compose --profile test up -d test-search-server test-proxy
+
+Verify it is running:
+
+docker compose ps
+
+
+SDK Issues
+
+Python: ModuleNotFoundError: No module named 'oro_sdk'
+
+Fix. Install the package:
+
+pip install oro-sdk
+
+If using Bittensor auth:
+
+pip install "oro-sdk[bittensor]"
+
+TypeScript: 404 Not Found When Installing @oro-ai/sdk
+
+Fix. The package is published on the public npm registry. If your project still maps the @oro-ai scope to GitHub Packages in .npmrc, remove that mapping:
+
+# remove this line from .npmrc
+@oro-ai:registry=https://npm.pkg.github.com
+
+Keep the //npm.pkg.github.com/:_authToken=... line if your project installs any other package from GitHub Packages; only remove it if you no longer use GitHub Packages at all.
+
+TypeScript: Missing @hey-api/client-fetch Peer Dependency
+
+Fix. Install it alongside the SDK:
+
+npm install @oro-ai/sdk @hey-api/client-fetch
+FAQ
+Frequently asked questions about the ORO Bittensor subnet, scoring, submissions, and emissions.
+Changelog
+Latest updates and changes to the ORO platform.

@@ -1,0 +1,65 @@
+Validator
+Complete evaluation run
+Finalize an evaluation run with terminal status and score.
+Server URLloading...POST/v1/validator/evaluation-runs/{eval_run_id}/completeSendAuthorizationPathBody
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Path Parameterseval_run_id*string
+Evaluation run IDFormatuuid
+Request Body
+application/json
+TypeScript Definitions
+Use the request body type in TypeScript.Copy
+Response Body
+200
+application/json
+400
+application/json
+404
+application/json
+409
+application/json
+422
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/validator/evaluation-runs/497f6eca-6276-4993-bfeb-53cbbbba6f08/complete" \  -H "Content-Type: application/json" \  -d '{    "terminal_status": "SUCCESS"  }'200400404409422
+{
+  "eval_run_id": "8022d801-acb6-4836-b536-3cd4138b6ae0",
+  "status": "string",
+  "work_item": {
+    "included_success_count": 0,
+    "required_successes": 0,
+    "is_closed": true
+  },
+  "agent_version_became_eligible": true,
+  "final_score": 0
+}
+{
+  "detail": "string",
+  "error_code": "MISSING_SCORE"
+}
+{
+  "detail": "string",
+  "error_code": "EVAL_RUN_NOT_FOUND"
+}
+{
+  "detail": "string",
+  "error_code": "NOT_RUN_OWNER"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+Claim evaluation work
+Random race claim, falling back to FIFO qualifying work.
+Get an authorized environment pack download
+Return a time-limited download URL and version metadata. Verify the delivered bytes against download_url_sha256; pack_sha256 identifies the parent pack.

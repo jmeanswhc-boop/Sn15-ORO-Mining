@@ -1,0 +1,129 @@
+The evaluated source is exactly ICDI_chidori_v3.py, SHA-256 951f15e83b3230db2c00f01c73611b295fe116358dfd501f767ffbfeb417d52d. It scored 21/30 on the same signed practice pack and the same thirty request texts as v2's 16/30. This establishes an improvement in this supplied run, accompanied by three regressions. It does not establish a race score, a repeatable five-point causal gain, or a score for the budget variant.
+
+The next important weakness is the transition from a blocked decision to a completed repair. V3 can recognize a stockout or preserve a negative review, but it has no dependable, affordable way to resolve the resulting state once the full conversation becomes too expensive. Its guards can therefore prevent a bad purchase while leaving the session unfinished. Other branches force an unchecked replacement or decline with an empty cart. Raising the monetary limit or weakening the guards would not resolve these opposing behaviors.
+
+The comparison is:
+
+Metric                              v2                 v3
+Correct tasks                       16/30              21/30
+Observed paired gains/losses         baseline           8 gains, 3 losses
+Did not finish                      0                  5
+Changes missed                      8                  0
+Request not met                     6                  3
+Needs not found                     0                  1
+Agent model POSTs                    405                562
+Recorded agent inference USD         0.50111707         0.630495595
+Agent USD per correct task           0.03131982         0.03002360
+Median episode seconds              64.26              85.61
+Maximum episode seconds             91.86              155.40
+
+Agent charges rose 25.8%, model requests rose 38.8%, and median task time rose 33.2%. Cost per correct task improved only 4.1%. All 562 recorded inference requests returned HTTP 200, all have reported costs, and replay shows no task globally credit-stopped at the end. This run does not show a remote $5-key failure. Its largest task-level agent bill was $0.02687684, below the configured $0.035 allocation. No task reached the five-minute agent deadline.
+
+The apparent disappearance of changes-missed failures needs care. Of v2's eight such failures, four now pass; four remain incorrect under other categories. The new guards have not solved all stockout/change cases. V3 preserves thirteen of v2's sixteen passing tasks and gains eight other tasks. The three losses are t-9fc67ee841, t-a6d85e34f3 and t-b9f98ac0cc. Variation in model output and shopper replies means these observed differences cannot all be attributed to one source edit. In the older ICDI_cn3 verification on this pack, 24/30 passed at $1.02543997 agent cost; v3 has not yet matched that historical accuracy, though its observed agent charge is 38.5% lower.
+
+I reproduced all thirty captured sessions offline through the real ProxyClient implementation with HTTP mocked, preserving the supplied public request/response sequences and final states. Request payloads are compared; reply-cap differences are permitted only when the recorded completion still fits. No model-generated replacement answers were invented. This validates the state reconstruction and accounting analysis, not new decisions or a new score. No paid inference, new evaluation, submission or agent modification was performed. Grading payloads were not used to derive answers or rules; the analysis uses public requests, tool observations, model responses and final verdict categories.
+
+Five tasks did not finish:
+
+1. t-13e82f2c08, wrap skirt: contradictory reviews become a permanent checkout block.
+
+The first review rejects a 230-cent cart because a 98-cent skirt, and another cheaper listing, allegedly satisfy the wrap requirement. The planner swaps to the 98-cent listing. The next review rejects that listing, treating its skirt_style value as a different property from its general-style field. The planner disagrees and repeatedly proposes checkout of the same cart. These proposals are locally held; they are not repeated real store checkout failures. The planner nevertheless describes them as store refusals.
+
+At the end, the negative review remains cached, five environment steps remain, $0.009087545 remains in the agent allocation, and no new public action is executed. Eleven model calls occur after the final environment action, costing $0.009003195; this includes the final diagnostic review, so not every one of these calls is intrinsically unnecessary. The observed fault is lack of resolution/progress once the decision is disputed. These traces do not establish which conflicting property interpretation is correct.
+
+The relevant functions are G5A.cart_check, BudgetControls.cart_review_context, BudgetControls.terminal_recovery_hold, E9.turn_loop and E9.run. Caching a boolean plus prose does not record the proposition that was rejected or a dependency on an allegedly better candidate. Repeating the same negative cart_check returns the previous objection without producing a new way forward. A negative verdict should remain protective while a bounded dispute-resolution path evaluates its specific basis.
+
+2. t-350bf2a022, chiffon top: the system rejects both sides of an alternative comparison.
+
+The first 98-cent accepted item sells out. A later 297-cent cart is rejected because 75-cent alternatives allegedly qualify through clothing.material=chiffon. After the planner swaps to one of those alternatives, a subsequent review rejects it because material=net yarn takes precedence. The planner returns to the 297-cent cart, but its previous optimality rejection remains cached. The agent finishes neither by ordering nor by declining: three environment steps and $0.008712210 remain.
+
+This is not evidence that the 297-cent item is definitely the answer. It is evidence that one review's claim that an alternative qualifies conflicts with a later review's claim that it does not, and that the cache has no explicit representation of this contradiction. cart_review_context includes the current cart's requirements, quantities and records; it excludes the records/availability/verdicts of the alternatives supporting an optimality rejection. Thus a claim about another candidate can outlive the evidence on which it depends.
+
+A scoped solution is to distinguish rejection reasons and their dependencies. An optimality rejection should name the cheaper candidate and the public evidence that it qualifies. If that evidence changes or becomes disputed, mark the comparison unresolved and allow one compact adjudication. Do not automatically approve the expensive cart or discard every negative review simply because the planner objects.
+
+3. t-abf1c45838, square clock: replacement is added, but the unavailable old line remains.
+
+The accepted 53-cent clock sells out. The planner adds the earlier 62-cent candidate without removing the unavailable 53-cent line. Reconstructed final cart state contains both. terminal_recovery_hold correctly refuses to order the unavailable line, but finish repeatedly returns that instruction to the same unaffordable full-history planner. Seven steps and $0.008123160 remain. There is no transaction-shaped recovery that performs removal, verifies the repaired basket and finishes.
+
+The fix should retain the stockout guard and execute a small, schema-validated recovery sequence through the world's existing cart tools. It should preserve requested quantities, remove the actually unavailable line, validate the replacement, and require real successful observations before treating repair as done. All calls must remain subject to the same monetary, step and message limits. No fixed tool names or product IDs should enter production logic.
+
+4. t-b9e9292a88, facial cleanser: the last planner response is truncated before valid cart arguments are complete.
+
+After an accepted cleanser sells out, the replacement planner names another candidate. Its admitted reply cap is only 609 tokens. It stops with finish_reason=length and an incomplete cart tool-call argument string. The planning loop normalizes the failed parse to an empty object, and schema validation prevents execution. Final state still contains the unavailable original line. Five steps and $0.008817095 remain. The unavailable-line guard is working; the recovery-output and follow-up path are not.
+
+The safe response is a compact, bounded retry with enough visible-output capacity, rather than executing malformed arguments or sending another large conversation with a shrinking output allowance. The existing argument validation must remain intact. This case illustrates why admitting a request financially does not establish that the resulting token cap is sufficient for a usable action.
+
+5. t-eb5b2c8367, monitor: the required-procedure decision has no visible output.
+
+The cart receives a positive product review. One publicly sourced duty remains: tell the shopper what is worth checking before committing savings. procedure_gate requests max(700, 200+180*pending_duties), which is 700 for this one-duty state. Six calls each consume all 700 completion tokens as reasoning, return finish_reason=length, and contain no usable decision. No required message is executed. The gate remains closed; unrelated cart inspection and remove/re-add activity allow another attempt key without resolving the duty. Final state has eighteen environment steps and $0.018498970 remaining.
+
+These six empty replies cost $0.0033858. More importantly, they keep the otherwise accepted cart from finishing. Offline quotes show a 2048-token call at the first procedure state fits at about $0.002302344 reserved, within the existing $0.010 protected procedure allowance. All six recorded prefix states can admit the prospective larger reply cap. This proves admission feasibility, not that one larger call will produce the correct message or proof.
+
+A local fix should provide adequate answer capacity for this procedure role, explicitly control reasoning where supported, and bound retries by relevant duty/cart/evidence state rather than allowing unrelated step changes to restart identical failures. It must still require an executed, successful procedure and actual evidence. Bypassing the gate, silently deleting the duty or trusting a proposed message as completed would sacrifice the original procedure protections.
+
+OpenRouter's current reasoning documentation explains that reasoning consumes the same output budget and can leave empty content while still being billed. Its Haiku page documents adaptive thinking by default and support for disabling it. That makes a role-specific low/disabled-thinking option technically plausible for mechanical procedure execution; it needs transport compatibility and quality checks before adoption. It is not justification for disabling reasoning across the shopping agent. References:
+https://openrouter.ai/docs/guides/best-practices/reasoning-tokens
+https://openrouter.ai/anthropic/claude-haiku-5.5
+
+The common budget/context defect is directly measurable in all five unfinished states. The full-history prompt estimates are 58,050-77,956 tokens, while the trim function waits for 150,000 content characters. Their actual content-character counts are only 47,492-62,372, so normal trimming has not activated. Under the remaining allowance the full planner is refused. An offline compact repair-prompt specimen, containing current requirements/cart/changes/reviews and a bounded sample of public candidate records, admits a 2000-token output at approximately $0.00243-$0.00284 reserved. It is a feasibility specimen, not a validated decision policy; a production snapshot must retain the particular candidates and alternative evidence required for the pending repair, including cheapest-choice obligations.
+
+Therefore a budget-aware recovery snapshot can fit without raising the allocation or relaxing the existing conservative token estimate. A lower universal history threshold would be a broader change and could discard evidence in passing cases. Prefer a recovery path triggered by an actual blocked/no-progress state, with explicit required evidence, while keeping the healthy planner unchanged.
+
+Four tasks finish but fail:
+
+6. t-9fc67ee841, logo-pattern fall/winter clothing: an explicit requirement is lost at initial extraction.
+
+The raw briefing response includes only collar != crew neck. It omits the request's positive logo-pattern requirement entirely; it does not put that requirement in wishes or rules either. This response ends normally at 1559 completion tokens under a 4000-token cap. Thus the omission is not output truncation and not a downstream parser dropping a supplied item. The final purchased listing has pattern=solid color and fa.pattern=plain. Its collar satisfies the exclusion, but the omitted pattern requirement is not met. The final review still reports ok=true.
+
+The original request remains available to the planner and reviewer, so this is not literally a missing-input problem. It shows that both accepted an incomplete derived checklist despite having the source text. The prior passing v2 run extracted both pattern and collar constraints. A general source-to-ledger coverage check is needed: record each stated constraint with its source span, item, property and polarity, distinguish alternatives from exclusions, and flag uncovered clauses before selection or finalization. The source-span validation should use the actual request, not benchmark keyword lists. It must be tested separately because changing the briefing prompt affects the healthy path too.
+
+7. t-86888552db, long-sleeve top: fallback orders a new replacement without reviewing it.
+
+The original accepted tunic sells out. The planner later adds a butterfly-print replacement. Its public records include sleeve.length=long sleeve and sleeve.style=kimono sleeve. The main conversation then no longer fits; finish orders the replacement after reading its listing, without a fresh cart_check. The task ends request not met. The public verdict does not establish which property, category or other condition caused this failure; the property distinction is a plausible concern, not a recovered private answer.
+
+What is certain is the control gap: terminal_recovery_hold blocks an explicitly false review, but permits an unknown review for a newly changed cart. In contrast, the normal dispatch path invokes cart_check. Add a bounded current-cart delta review to fallback after a material change, reusing evidence already available. Introduce the affordable repair path first; adding another refusal-only guard would recreate v3's unfinished-session problem.
+
+8. t-b9f98ac0cc, tunik: blind empty-cart checkout is followed by an unsupported decline.
+
+The valid reviewed tunic sells out and is removed. Later the agent reads another candidate whose public attributes include type=tunic, with a listing title and earlier search record that make it a credible in-budget alternative. This is not a claim that it is the sealed answer. Before the planner can assess and cart it, the full request becomes unaffordable. Fallback sends checkout with an empty cart, receives issue=BARE, and then declines at step 28 despite ten steps remaining. The final cart is empty.
+
+The inherited blind-checkout fallback does not properly distinguish an unknown server basket from a basket the agent has explicitly emptied. It should never use the latter as evidence that no fitting listing exists. Its replacement is a bounded feasibility/review/cart sequence on the known pending candidate, or a decline supported by actual remaining-candidate evidence. This should share the same compact recovery mechanism as the stockout cases, not add a second independent search loop.
+
+9. t-a6d85e34f3, trench coat: no unstated preference is discovered.
+
+All three shopper messages receive indifferent replies. The first question asks about jacket/coat style even though the request already settles style. The final question bundles nine properties. The result category is needs not found. In the prior passing v2 run, a similar but differently ordered third question elicited gender=girls. The current public trace does not reveal a corresponding hidden value, and the different shopper/model responses prevent a claim that asking a particular word would certainly fix this run.
+
+The supported diagnosis is an interview coverage problem, with redundant known-property questioning as a contributing issue. Improve dynamic matching between explicit requirements and candidate question labels, and track which properties a reply actually addresses. Do not bake gender, girls or any task-specific topic ranking into the agent. Do not change question breadth globally based on one stochastic case; use this regression plus all existing successful disclosures as controls.
+
+Cost and output usefulness need a separate correction. Sonnet makes only 29/562 requests but costs $0.339916, or 53.9% of the agent bill. These requests are question planning, not the successful final cart reviews, which use Haiku. Eight Sonnet replies produce no parseable JSON object: four are empty reasoning-only replies and four contain truncated JSON. Those eight cost $0.105464. Together with the six empty procedure replies, $0.1088498, or 17.3% of this bill, produces no usable JSON for its consuming component. Replacement requests would still cost money, so this is identified gross waste rather than a guaranteed saving.
+
+An arbitrary minimum reply threshold is not a safe solution. Eighteen Sonnet calls have caps below 1024, and eleven of those nevertheless return parseable objects. The smallest successful cap is 764. A rule that skips all such calls would discard successful existing behavior along with the failures. Preserve the model policy initially. Explore shorter role-specific prompts and controlled reasoning for question planning in a separate experiment, with actual parseability and disclosure quality as metrics. Removing all heavy planning or changing all models at once is not justified.
+
+The most rational update sequence is:
+
+A. Repair the full agent's procedure-output contract first. It affects only the one recorded pending-duty case; twenty-nine tasks have no duties. Use a sufficiently sized, budget-admitted decision, bounded retries, correctly identified local blocking status and actual action/proof verification. Test the six recorded truncations, malformed/unsupported responses, real-client compatibility, real 402 handling and existing procedure-proof tests. Preserve empty-duty behavior exactly. This issue is specific to the full ProcedureControls implementation; the budget-only variant retains the earlier procedure strategy.
+
+B1. Add one budget-aware compact recovery handoff. Trigger it only when a genuine pending repair/no-progress state cannot advance through the ordinary planner. Preserve all active requirements, quantities, unavailable lines, relevant alternatives, duties and remaining resources. Execute only schema-valid supplied tools. Give it a small action/model-attempt bound and account each physical call through the existing ledger. Stop repeating an identical local hold through the same oversized conversation. This is the main shared improvement area.
+
+B2. Resolve review dependencies and disagreements within that handoff. Keep negative reviews protective. Represent property failure separately from an optimality comparison, retain the evidence/candidate dependencies, invalidate only conclusions whose support changed, and allow one compact conflict resolution when appropriate. Never turn a planner assertion into checkout permission. Test the two contradictory-review histories and unchanged-context cache reuse separately from stockout repair.
+
+B3. Close fallback gaps only after recovery is reachable. Distinguish a known empty cart from unknown cart state, require a current-cart review after material replacement, and do not treat a monetary refusal as proof that no item fits. Verify the clock's two-line cart, the cleanser's truncated arguments, the empty-cart BARE response and the unchecked long-sleeve replacement. This ordering prevents another update consisting solely of stricter guards and more unfinished tasks.
+
+C. Add source-to-ledger requirement coverage as its own change. Validate the logo/exclusion omission against the actual request, plus multi-item constraints, alternatives, negations and withdrawals in the passing corpus. If a separate coverage call is needed, budget it explicitly; extending extraction metadata must not silently invalidate all old valid brief responses. Do not combine this prompt change with model routing or question-policy changes.
+
+D. Study interview redundancy and wasted question-planning output separately. Keep all prior successful preference disclosures as controls and retain the existing planner while testing a narrowly changed role. The one needs-not-found trace does not justify a general ranking table or a wholesale interviewing rewrite.
+
+Every step needs the current twenty-one passing tasks as mandatory preservation controls, plus the three observed v2-to-v3 regressions and the exact relevant failure snapshots. Test one component at a time and keep a source/hash checkpoint for each. Healthy paths should stay unchanged for the recovery-only stages. A recorded response cannot validate a new model decision; replay must stop and label that branch unobserved, rather than borrowing another run's answer. Any scored comparison must record paired wins/losses, completion, meaningful outputs, cost per correct task, physical attempts and latency tails, with world/shopper variation acknowledged.
+
+The $5 constraint still covers the complete ninety-problem shared bill. This report's $0.630495595 covers only thirty practice tasks' agent inference. It excludes separately billed simulator usage and is not a ninety-task race forecast. Retaining $0.035 per task gives a configured $3.15 agent allocation across ninety tasks, leaving $1.85 under $5 for all other charges, but that arithmetic is not a measured shared-run guarantee. None of the proposed main repairs requires increasing this allocation; compact recovery and usable outputs should be evaluated within it.
+
+My prior v3 correction was incomplete: it improved detection and prevented some invalid terminal actions without providing a sufficiently reliable route to resolve the blocked state. Its mocked tests did not cover the observed contradictory reviews, incomplete extraction, late truncated action or full-history-budget deadlock. The countermeasure is to require a tested repair/progress path for every new hold and to retain live passing cases, rather than equating a blocked bad action or a passing mock suite with success.
+
+No agent files were changed during this analysis. The evaluated v3 remains the reference checkpoint. The 70% result is supported only for the full agent in this run. Shared-budget/recovery findings map to the budget variant's corresponding source, but no new score for that variant is available here.
+
+Evidence files:
+- analysis.json and analyze_run.py: metrics, per-task costs, paired outcomes and model usage.
+- cases/: each failed task's public chronology, actions and responses.
+- replay-states.json, replay_states.py and replay-output.txt: all thirty reconstructed states, fallback return reasons and compact/full admission probes.
+- feasibility.json and feasibility.py: prospective procedure quotes, heavy-response parseability, billing by purpose and inference tails.
+- preservation-cases.json: immutable source/pack references and the current preservation/failure controls. These IDs are analysis fixtures, not production routing rules.

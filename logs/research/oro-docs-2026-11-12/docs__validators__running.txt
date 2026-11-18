@@ -1,0 +1,134 @@
+
+Running the Validator
+Start the validator stack, understand the service architecture, and verify it is working.
+Start the Validator
+
+One command starts the validator and all required services:
+
+WALLET_NAME=my-validator docker compose --profile validator up
+
+To run in the background (detached mode):
+
+WALLET_NAME=my-validator docker compose --profile validator up -d
+
+The first run pulls pre-built images from GHCR (~8 GB total). Subsequent starts are instant.
+
+Verifying startup
+
+Follow the logs to confirm all services start correctly:
+
+docker compose --profile validator logs -f
+
+A healthy startup produces output similar to this:
+
+search-server  | Search server ready on port 5632
+proxy          | Proxy connected to search-server:5632
+validator      | Validator registered on subnet 15 (hotkey: 5Gx7...)
+validator      | Claiming work from Backend...
+validator      | Claimed work: <eval_run_id>
+
+Look for these key lines in order:
+
+
+Search server ready: the Pyserini search engine has loaded its index and is accepting requests.
+
+Proxy connected: the proxy can reach the upstream services required by the deployed evaluation path.
+
+Validator registered: the validator found its hotkey on the subnet and authenticated with the Backend.
+
+Claiming work: the evaluation loop has started polling for pending work.
+
+
+If no evaluations are pending, the validator idles with:
+
+validator      | No work available, sleeping Ns
+
+This is normal. The validator picks up work as miners submit agents.
+
+If you see these lines, the validator is running correctly.
+
+Service Architecture
+
+The validator stack consists of three services:
+
+ | Service | Purpose | Port
+ | search-server | Product search engine (Pyserini/Lucene) | 5632
+ | proxy | Routes sandbox requests to allowed inference, search, and generated-environment services | 8080
+ | validator | Core validator process | -
+
+Check service status:
+
+docker compose --profile validator ps
+
+All three services should show a healthy or running state.
+
+Evaluation Loop
+
+The validator runs a continuous loop:
+
+
+Claim work - poll the Backend API for pending agent evaluations.
+
+Download agent code - fetch the miner's submitted Python file.
+
+Select the deployed runner - current ORO Bench validator deployments use the generated runner. Historical deployments used the ShoppingBench runner that preceded ORO Bench.
+
+Verify the pack for ORO Bench - require the frozen work-item env_pack_sha256, download the qualifying or race subarchive, verify its download_url_sha256, and validate its parent identity, roster, search identity, and contract versions.
+
+Provision ORO Bench sessions - start one generated runtime session per selected task and expose only the public bootstrap to the sandbox.
+
+Run sandbox - execute the agent against the selected tasks and route actions through the proxy. Historical work follows the legacy static-suite runner instead.
+
+Finalize ORO Bench receipts - seal sessions and collect authoritative verifier verdicts and rewards.
+
+Persist results - upload permitted episode artifacts and submit generated episode summaries, or report historical problem results for legacy work.
+
+Complete run - report the aggregate score and terminal status.
+
+Set weights - periodically update on-chain weights from the Backend's released standings.
+
+
+The validator fails closed when ORO Bench work lacks a pack binding or the pack fails verification. It does not replace the claimed pack with a different release.
+
+Verify It Works
+
+Follow the logs to confirm the validator is running:
+
+docker compose --profile validator logs -f validator
+
+A healthy startup produces output like:
+
+Claiming work from Backend...
+Claimed work: <eval_run_id>
+Downloading agent from <url> for eval_run <eval_run_id>
+Provisioned N sessions for evaluation <eval_run_id> (delivery=<delivery_id>)
+Running sandbox for eval_run <eval_run_id>
+Persisted episode results for <eval_run_id>: {...}
+
+If no evaluations are pending, the validator idles with:
+
+No work available, sleeping Ns
+
+This is normal. The validator will pick up work as miners submit agents.
+
+Stop the Validator
+
+To stop all services:
+
+docker compose --profile validator down
+
+To stop without removing containers (faster restart):
+
+docker compose --profile validator stop
+
+Next steps
+
+
+Monitoring: View logs, filter evaluation events, and inspect the retry queue.
+
+Automatic Updates: Configure Watchtower for automatic Docker image updates.
+
+Configuration
+Environment variables, wallet setup, and CLI arguments for the ORO validator.
+Automatic Updates
+Watchtower configuration for automatic Docker image updates between evaluation cycles.

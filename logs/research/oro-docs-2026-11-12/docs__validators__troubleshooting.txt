@@ -1,0 +1,143 @@
+
+Validator Troubleshooting
+Solutions for common validator issues including registration errors, service health, timeouts, and Docker problems.
+Validator Not Registered
+
+Your validator: ... is not registered to chain connection: ...
+Run 'btcli register' and try again.
+
+The hotkey is not registered on the ORO subnet. Register it with the correct subnet UID:
+
+btcli subnet register --netuid 15 --wallet.name my-validator --wallet.hotkey default
+
+Verify registration:
+
+btcli wallet overview --wallet.name my-validator
+
+Docker Services Not Healthy
+
+Check the status of all services:
+
+docker compose --profile validator ps
+
+Inspect logs for the failing service:
+
+docker compose logs search-server
+docker compose logs proxy
+docker compose logs validator
+
+Restart all services:
+
+WALLET_NAME=my-validator docker compose --profile validator restart
+
+If a restart does not resolve the issue, tear down and recreate:
+
+WALLET_NAME=my-validator docker compose --profile validator down
+WALLET_NAME=my-validator docker compose --profile validator up -d
+
+Sandbox Timeouts
+
+If sandbox execution frequently times out (default: 1800 seconds), check:
+
+
+Docker service health: especially search-server and proxy. Run docker compose --profile validator ps and confirm both are healthy.
+
+Available RAM: the search server runs one JVM per worker, each capped at 1 GB by _JAVA_OPTIONS, so total heap is roughly a gigabyte per worker and does not grow with host RAM. The Lucene index itself is memory-mapped and shared through the page cache, so free RAM beyond the heap still helps. Monitor with docker stats; raise _JAVA_OPTIONS only if a larger index needs it.
+
+Container networking: verify containers can communicate: docker network inspect sandbox-network.
+
+
+Heartbeat / Lease Expired
+
+Validator releases with the tighter OpenRouter audit send heartbeats every 8 seconds by default to maintain the evaluation lease; older releases may use 30 seconds. A Lease expired log message means heartbeats stopped arriving in time and the evaluation was forfeited.
+
+Check:
+
+
+Network connectivity to the Backend API (curl https://api.oroagents.com/health).
+
+Wallet credentials are correct and the hotkey is still registered.
+
+System clock is accurate (timedatectl status on Linux).
+
+
+The validator automatically retries transient heartbeat failures with exponential backoff. Persistent lease expiration indicates a deeper connectivity or authentication issue.
+
+"At Capacity" Errors
+
+The Backend limits concurrent evaluations per validator. An AtCapacityError means:
+
+
+A previous evaluation may be stuck and will eventually time out and release.
+
+The validator backs off automatically with jitter.
+
+
+No manual intervention is required. If capacity errors persist for an extended period, check for stuck evaluations in the public API.
+
+Weight Setting Failures
+
+Weight updates require sufficient stake and a valid validator permit. If weight setting fails:
+
+# Verify stake
+btcli wallet overview --wallet.name my-validator
+
+Additional checks:
+
+
+Confirm the top miner from the leaderboard is registered in the metagraph.
+
+Blockchain transaction failures are logged and retried automatically on the next weight-setting cycle.
+
+
+Failed Completions / Retry Queue
+
+If the Backend is unavailable when reporting results, the completion is saved to ~/.validator/retry_queue.json and retried automatically. No manual intervention is needed.
+
+Inspect the queue:
+
+docker compose exec validator cat /root/.validator/retry_queue.json | python -m json.tool
+
+Transient errors (5xx, timeouts) are retried up to 10 times. Permanent errors (lease expired, run already complete) are dropped immediately with a log message.
+
+Docker Disk Space
+
+Old Docker images and containers accumulate over time, especially with auto-updates. Reclaim disk space:
+
+# Remove unused images, containers, and build cache
+docker system prune -f
+
+# Remove all unused images (not just dangling)
+docker system prune -a -f
+
+Check current disk usage:
+
+docker system df
+
+Container Logs Consuming Disk
+
+Docker container logs can grow unbounded. Limit log size by adding to /etc/docker/daemon.json:
+
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "50m",
+    "max-file": "3"
+  }
+}
+
+Restart Docker after changing the daemon configuration:
+
+sudo systemctl restart docker
+
+Support
+
+
+GitHub Issues: ORO-AI/oro
+
+Discord: Join the ORO subnet Discord for real-time help.
+
+Validator Monitoring
+Log filtering, evaluation states, retry queue inspection, and debugging commands for the ORO validator.
+API Overview
+Base URL, endpoint categories, and OpenAPI specification for the ORO API.

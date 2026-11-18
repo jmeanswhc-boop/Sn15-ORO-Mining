@@ -1,0 +1,453 @@
+Tosky_v4 review of the supplied 20-task and 30-task verification runs
+2026-11-14
+
+Tosky_v4 has not demonstrated an accuracy improvement. The full run is 21/30
+(70%), compared with Tosky_v3's 23/30 on the same practice pack. Its mean task
+time is substantially lower and its inference cost is slightly lower. The
+remaining problems concern preserving requirements, discovering preferences,
+interpreting product properties consistently, and retaining good candidates
+during recovery. They are not explained by an OpenRouter credit outage.
+
+The additional full run changes the priority of the diagnosis: the narrow
+interview is a confirmed new weakness, but loss of explicit requirements is
+also a substantial, separate failure cluster. A broad rewrite or simply
+increasing the dollar allowance would not address either mechanism reliably.
+
+This is analysis only. No agent, previous version, test suite, deployment or
+submission was changed. No paid evaluation, inference call or external message
+was made. The new files in this directory are research artifacts. Existing
+offline loader utilities blocked unscripted transport during diagnostic probes.
+
+Evidence and comparability
+
+The two supplied v4 runs are:
+  A: local-4efab7fafd3d4cc0be7418b3ceca0e54 — 20 sampled tasks.
+  B: local-c99b5b2fddef4178bd9903e1d0786a16 — all 30 tasks.
+Both used exactly agents/Tosky_v4.py, SHA-256:
+  1b0cf66b4d0cd03b3aad4b904bab908023f4a516c28d3f089313d17b16e032c8
+Both identify world w-095308155916 and pack SHA-256:
+  deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4
+The same world, pack and shared request texts were verified for the two older
+Tosky_v3 runs used as comparators. The comparator source hashes were also
+verified against agents/Tosky_v3.py. These are public local practice results,
+not the frozen public qualifier score or hidden-race score.
+
+                    v3 full run        v4 A              v4 B
+Tasks               30                 20                30
+Correct             23                 14                21
+Score               76.67%             70.00%            70.00%
+Inference cost      $0.643581875        $0.423395660       $0.619709590
+Model requests      602                354               522
+Mean task seconds   85.18              72.43             67.99
+Maximum seconds     128.77             121.10            128.74
+Failed API calls    0                  0                 0
+Missing charges     0                  0                 0
+
+The 30-to-30 comparison is a 6.67 percentage-point score decline, 3.71% lower
+inference cost, 13.29% fewer requests, and 20.18% lower mean task duration.
+Cost per correct task rises from about $0.02798 to $0.02951, a 5.46% increase.
+Mean task duration is not the elapsed wall time of a concurrent full run.
+
+All 50 v4 executions reached an order or decline; no unfinished episode, model
+transport failure, missing billing field or budget-breach trace was recorded.
+Their model finish reasons were stop or tool_calls, never length. The 162
+non-planner JSON responses in A parsed successfully with the agent's parser.
+The full-run parser audit and other reconciliation assertions are in
+verification.json. All cost totals agree between final cumulative inference
+counters, sandbox shadow usage and individual request usage. Cumulative rows
+were not summed repeatedly, and episodes were joined by session rather than
+file order.
+
+The identical 70% scores conceal different outcomes. On the 20 shared tasks:
+  - 12 pass in both A and B.
+  - 4 fail in both: wedding mules, hoodie, watch, trench coat.
+  - Wrap skirt and cleanser change from failure to success.
+  - Logo-pattern clothing and square clock change from success to failure.
+The 10 additional tasks in B contain 7 passes and 3 failures: long-sleeved top,
+baggy pants/jeans, and tunik. Thus 4/20 shared outcomes changed with unchanged
+source. These 50 executions are not 50 independent task specifications.
+
+Against the earlier 30-task v3 run, B has 19 shared passes, 5 shared failures,
+2 gains (wrap skirt, monitor), and 4 losses (mules, hoodie, watch, tunik).
+Against the older 19/20 v3 run, B scores 14/20 on those exact 20 tasks, with
+five pass-to-fail changes and no gains. The v3 source itself varied between its
+two earlier runs, so these observations do not isolate a causal effect for
+every code change. No paid PIRATE baseline was run on this same practice pack.
+
+Detailed failure evidence
+
+1. Wedding mules — t-559c052a99, fails in A and B.
+
+The original request says the mules are for a wedding. Both v4 brief responses
+contain an empty musts list. The shopper then successfully discloses pattern:
+animal print. Both runs buy p-904371f2b08b for 595 cents: its pattern matches,
+but its own occasion is casual. The internal cart review returns OK.
+
+Both older v3 runs preserve occasion: wedding and pass with p-a556ba22bad6 at
+605 cents. That candidate was also present in v4 A's review context. V4's
+cheaper choice is not a valid saving if it drops the requested use/occasion.
+An offline probe of the existing key checker rejects the chosen casual product
+when occasion: wedding is supplied. The omission is therefore directly
+actionable; the checker already has the machinery to reject this contradiction.
+
+The root defect is loss of an explicit requirement during request extraction,
+followed by a review that fails to reconcile its simplified ledger with the raw
+request. The CHECK prompt does include the raw request; merely including it
+again is demonstrably insufficient. A Sonnet review was locally denied in each
+run, but the missing requirement exists before that denial. A more expensive
+review might react differently; that outcome has not been measured.
+
+2. Youth-fashion hoodie — t-70ef000b3f, fails in A and B.
+
+In A the questions are gender, pattern, hoodie style. In B they are gender,
+hoodie style, season. Every reply is indifferent. Both older v3 runs ask about
+material within their question coverage, elicit nylon, and successfully decline
+after searching. V4 instead buys a product with the requested youth-fashion
+style, without discovering the material requirement.
+
+The new ranker is directly implicated in B: the next proposed question was
+material, and question_focus changes it to season. Replaying the actual read
+catalog and recorded plan reproduces that override offline. There is no local
+budget denial in either v4 hoodie execution.
+
+The recorded failure category is request not met, not needs not found. The
+documented category includes ordering when a decline was required. The prior
+successful decline after discovering nylon strongly supports an interview and
+feasibility-decision failure; the public verdict does not expose the individual
+predicate needed to prove that entire counterfactual. The visible youth-fashion
+property itself is not missing from the chosen products.
+
+3. Luxury/formal watch — t-82a9890683, fails in A and B.
+
+A asks color, options and dial glass. B asks strap, dial glass and options.
+Neither asks case shape or gender. Prior successful v3 traces elicited case
+shape: rectangle; one also elicited gender: female. The current verdict is
+needs not found in both runs. Color-family relaxation and stockout recovery
+occur, but neither substitutes for discovering the missing preference.
+
+Offline reproduction with A's six read records gives:
+  options:    coverage 5/6, value diversity 0.80, product 0.6667
+  dial glass: coverage 5/6, value diversity 0.56, product 0.4667
+  gender:     coverage 5/6, value diversity 0.48, product 0.4000
+  case shape: coverage 4/6, value diversity 0.375, product 0.2500
+
+The ranker selects options. Existing NOT_PROPERTY already identifies options
+as metadata, but focus_question does not apply that eligibility rule. Earlier
+lane construction puts metadata behind meaningful properties; the new ranker
+can promote it again. The formula measures variation among products, not the
+probability that a shopper has an undisclosed requirement about that property.
+This is a reproduced implementation flaw, not just an unfavorable model answer.
+
+4. Trench coat — t-a6d85e34f3, fails in A and B.
+
+A asks pattern, collar type and length. B asks material, collar and jacket coat
+styles. Neither asks gender. An earlier passing v3 trace elicited gender: girls.
+The intervening v3 full run also missed that preference and failed. Both v4
+verdicts are needs not found. A ends after 34 steps; B ends after 17, leaving
+considerable step/time room but no messages. This is an irreversible interview
+budget failure, not an exhausted inference-dollar budget.
+
+The new single-property policy reduces coverage, and the diversity rule favors
+other catalog fields. However, this weakness also existed in v3: broad lists
+were not uniformly reliable either. Restoring every old question verbatim is
+not a demonstrated complete solution.
+
+5. Logo-pattern winter clothing — t-9fc67ee841, passes A, fails B.
+
+B's parsed hard requirements contain only collar: not crew neck. The requested
+logo pattern disappears entirely from musts, wishes and rules. B buys
+p-00e4e97823f5 at 496 cents, whose collar is hooded and pattern is solid color.
+Its internal review returns OK. An offline probe rejects the same product when
+pattern: logo is included. A passed by choosing a different product. The new B
+failure is a concrete instance of the same extraction/coverage defect as the
+wedding request; it is not evidence that the collar exclusion should be relaxed.
+
+6. Baggy pants OR jeans — t-9ab5c575f5, fails B; not sampled in A.
+
+The request explicitly accepts pants or jeans. The raw brief reduces that to
+name: pants. At about 31.6 seconds, line_hold rejects p-028af8354258 solely
+because its category is Jeans. Its price is 173 cents, below the 395 cap, and
+its read fit attributes say baggy fit. Offline replay confirms owner_of('Jeans')
+returns 0 for the narrowed item while key_verdict(fit: baggy) is true.
+
+The agent continues searching, finally carts a 354-cent candidate at step 36,
+and first attempts checkout at step 37. That candidate sells out. The agent
+identifies a 355-cent alternative but has only one move left and declines at
+step 38. An earlier audit also names the 173-cent Jeans candidate as fitting.
+
+There are two linked defects: dropping an explicit category alternative and
+spending the action budget before attempting a recoverable purchase. The new
+stockout handling recognizes the sold-out line; it cannot recover steps already
+spent rejecting permitted alternatives and searching. The requested OR must be
+preserved, not repaired with a task-specific list of product IDs.
+
+7. Tunik — t-b9f98ac0cc, fails B; not sampled in A.
+
+The request specifies top type: tunik. The brief turns tunik into the item name
+and leaves musts empty. Consequently the cart ledger literally says there are
+no requirements beyond the kind of product. After a stockout, replacement
+selection accepts p-02d14c7e9b88 at 637 cents because mus_top_styles and
+muslim_top_style say tunik. It does not establish the requested top-type field.
+The checker returns OK and the final verdict is request not met.
+
+The earlier v3 full run also had an empty musts list but happened to pass with
+a different replacement, p-2610c21f6e2a, whose top.type is tunic. An older v3
+run failed this task. That contrast supports a type-versus-style evidence
+problem; it does not prove every related catalog key is always invalid. The
+confirmed defect is the lost typed predicate and lack of a consistent proof
+requirement across selection, replacement and review.
+
+8. Cheapest square clock — t-abf1c45838, passes A, fails B.
+
+B reads and reviews a 62-cent candidate, p-180b10b52cb0. Its own review names
+that candidate among cheaper fitting clocks. It first tries a 53-cent clock,
+which sells out at step 33, then replaces it with a 67-cent clock and orders at
+step 37. The result is not the best option.
+
+The replacement prompt omitted the known 62-cent product. The code takes only
+the newest 25 seen records. Offline reconstruction puts the 62-cent candidate
+42nd in that ordering, so it is excluded. The extra cheapest-row recovery then
+only considers unopened rows; this candidate was already opened, so that path
+cannot restore it. Sorting the model's returned fits by observed price cannot
+recover a candidate the model was never shown.
+
+At the final checkout only two actions remain. run_calls' substantial review
+block is conditional on left() > 2, so the replacement is not given another
+recorded CHECK before ordering. The defect is not lack of price information;
+it is loss of an already-known candidate plus insufficient recovery/review room.
+A passed with the 62-cent product, but only after conflicting checks and 37
+steps. Its pass did not mean the underlying selection logic was repaired.
+
+9. Long-sleeved top — t-86888552db, fails B; not sampled in A.
+
+The brief retains sleeve length: long. A line classifier first rejects a
+Fall/Winter Clothing candidate, then the agent selects a Tops candidate. After
+that item sells out, it orders p-077e3cbd7819 for 605 cents. The final observed
+category is Tops, stock is true, quantity is one, and sleeve.length is long
+sleeve. The internal review returns OK; the evaluator returns request not met.
+
+There is an observable category-model disagreement earlier in the trace, but
+the final public record appears to meet the stated category, sleeve, budget and
+stock constraints. Its specific failing evaluator predicate is not exposed.
+It would be unjustified to claim the final product has short sleeves, blame a
+credit failure, or assert a scoring bug. This case needs a focused trace-based
+investigation of category/property semantics and any undiscovered feasibility
+condition before a targeted patch can be justified. It is not diagnosed to the
+same confidence as the mules, logo, category-alternative or clock defects.
+
+Two additional cases qualify the conclusions
+
+The wrap skirt (t-13e82f2c08) fails A and passes B at the final allowed step.
+The known 89-cent product has generic style: casual and skirt style: wrap
+skirts. key_verdict('style: wrap') rejects it because an exact generic key ranks
+above an item-scoped key. The CHECK and SWAP prompts instead explicitly allow
+an item-scoped property to establish the value. The same input therefore gets
+opposite answers from different components. Offline probes reproduce false for
+style: wrap and true for skirt style: wrap. A cycles between 89- and 98-cent
+products, then falsely declines after the 98-cent one sells out. B first loses
+the 89-cent one to stockout and ends successfully with the 98-cent alternative.
+The changed outcome does not remove the internal semantic contradiction.
+
+The cleanser (t-b9e9292a88) fails A and passes B. A's final product is 139 cents,
+in stock, in Facial Cleanser, and its visible skin benefit literally says acne
+care; the internal checker agrees. B passes with a different, anti-pimple
+cleanser, even though the code's literal key checker flags that value as not
+matching acne care. This demonstrates code/semantic-review inconsistency, but
+does not establish which undisclosed predicate caused A's failure. It would be
+incorrect to claim that asking skin type is proven to fix A: neither B nor the
+older passing v3 full run elicited a new skin-type preference. The opaque verdict
+supports a failure, not a precise explanation for every matching-looking record.
+
+Common structure of the defects
+
+The controller does not enforce one complete, consistent task contract through
+the whole sequence of decisions. The relevant stages are:
+  original request -> parsed items/musts -> questions -> candidate eligibility
+  -> stockout replacement -> internal review -> terminal action.
+
+At different stages it can:
+  - lose an explicit predicate or one side of an OR;
+  - spend all interview messages without discovering consequential preferences;
+  - treat generic and item-scoped keys differently in code and model prompts;
+  - forget a previously validated cheaper candidate when packing a new prompt;
+  - reach a terminal deadline with too little room for recovery or rechecking.
+
+These are related evidence-consistency failures, but they do not all have a
+single safe one-line fix. A new architecture is not justified by these logs.
+The useful narrow work is to repair each broken handoff and test it separately.
+
+The request-preservation cluster now deserves first attention: mules and logo
+are direct omitted predicates, pants is an explicit lost alternative, and
+tunik loses its typed predicate. Interview selection is the next separate
+priority, with three strongly supported affected tasks. Those counts identify
+exposed failure paths; they are not a promise of recovering seven scores.
+
+Budget, cost allocation and runtime
+
+There was no $5 credit outage. A has 9 local Sonnet denials across 5 tasks;
+B has 10 across 7 tasks. Three of those A tasks and five B tasks still pass.
+Four of A's six failures and seven of B's nine have no local denial. No charge
+is missing; no request is logged as failing; no reservation breach is recorded.
+B's most expensive task costs $0.03795042, below the configured $0.050 allowance.
+
+These are local admission denials, distinct from provider HTTP failures. The
+guard intentionally counts serialized input bytes as an upper estimate of
+tokens, includes framing overhead and adds a 25% margin. In A the median input
+estimate is about 3.01 times the actual prompt-token count. In the mules case,
+Sonnet is denied at $0.01885 spent despite $0.03115 nominal allowance remaining;
+the corresponding fallback prompt has 4,402 actual input tokens versus a
+12,376-token admission estimate. The fallback still executes successfully.
+This is conservative model routing, not evidence that the account ran dry.
+
+The more important allocation issue is:
+  A question planning: 20 Sonnet calls, $0.221422, 52.30% of total spend.
+  B question planning: 30 Sonnet calls, $0.329148, 53.11% of total spend.
+  A cart review: 36 calls, $0.0223409, 5.28% of total spend.
+  B cart review: 49 calls, $0.0334155, 5.39% of total spend.
+Only one of A's and two of B's successful cart-review calls use Sonnet. The
+agent pays for a strong question planner, then its local diversity heuristic
+overrides parts of that plan, sometimes to ask metadata or already-covered
+properties. More expensive planning therefore does not guarantee better
+preference discovery.
+
+Among A's 59 preference questions (the 60th shopper message is an explanation),
+the HEAR parser extracts just two new requirements, in two tasks. B's 89
+preference questions extract three in three tasks. Negative answers can be
+useful, so these counts alone are not an accuracy metric. Together with the
+prior disclosed hoodie/watch/coat requirements, they show why spending more on
+the same question policy is unlikely to be the first productive intervention.
+
+At this practice-task average, simple scaling gives about $1.86-$1.91 for 90
+executions. That is arithmetic under an identical task mix, not a hidden-race
+cost forecast or guarantee. The configured $0.050 per invocation allocates
+$4.50 across 90, or $1.50 across 30. Its safeguards depend on the configured
+rate envelope, billing fidelity and number of executions; reruns and unexpected
+provider prices are not made free. The present evidence does not justify
+raising the overall cap. First reduce repeated prompts, preserve good
+candidates, and reserve concise review capacity within the existing envelope.
+
+There is one smaller observed efficiency issue: in A the monitor procedure
+receives five gate reviews, costing $0.0041519 and 25.04 seconds of model time.
+After stockout, two of those reviews spend $0.0018945 and 11.46 seconds verifying
+the same earlier explanation again. procedure_key includes the global version,
+so a stock change can invalidate a non-cart-dependent explanation. B uses three
+gate reviews and passes too. Dependency-aware reuse is a later optimization,
+not a reason to weaken proof requirements or combine another speculative change
+with the accuracy fixes.
+
+What should be preserved
+
+The monitor task passes in both v4 runs. Its third message is actually reserved
+for the requested explanation, and the gate eventually recognizes the recorded
+proof. That is stronger evidence than the earlier scripted fixture alone,
+although one task does not establish all hidden procedure behavior.
+
+The new unnamed-stockout scope logic activates eight times in A (six of those
+tasks pass) and fourteen times in B. In the examined failures it recognizes the
+unavailable cart line; downstream selection or action-budget problems remain.
+Retain that scoping, the prevention of stale/unavailable terminal orders, the
+evidence-sensitive review cache, physical-call accounting, missing-charge
+reservation and immediate credit-error stop. A score failure does not imply
+every component involved should be reverted.
+
+The public checks exercised no multi-item stockout ambiguity and no live
+cross-unit reference-resolution example sufficient to assess the corresponding
+new safeguards. Offline tests remain evidence of those mechanisms, not measured
+race improvements. There is no observed AST, import or sandbox rejection in
+these completed runs, and this analysis makes no new submission-compliance claim.
+
+Concrete next-update sequence (proposed, not implemented)
+
+1. Repair request-to-ledger coverage, with no search/interview rewrite.
+   Preserve explicit use/occasion, required pattern/type, exclusions, and OR
+   alternatives as distinct structured constraints. Tie constraints to the
+   shopper's actual text; distinguish requirements from background anecdotes.
+   Make an extraction omission or contradiction detectable before spending on
+   catalog search. Reuse the existing extraction/review path where possible;
+   do not add an unconditional expensive judge to every task.
+   Review on recorded mules, logo, pants and tunik cases plus paraphrases and
+   negative controls where the same words are merely background. A repair is
+   not accepted if it invents new requirements or rejects either allowed OR arm.
+
+2. Isolate the interview change in a separate checkpoint.
+   Filter metadata unless explicitly requested, preserve meaningful planner
+   priority, and avoid asking settled properties again. Treat catalog diversity
+   as a limited tie-breaker, not the sole proxy for unknown shopper needs.
+   Evaluate bounded multi-property coverage when messages are scarce and prior
+   questions are unproductive, while retaining single questions when required
+   or when the shopper rejects lists. Simply restoring unlimited old lists is
+   not justified. Preserve the message reserved for required procedures.
+   Replay actual watch and hoodie ranking inputs and use held-out/mutated
+   catalogs with nuisance metadata. Never insert nylon, rectangle or girls as
+   default answers: those values must come from the current shopper.
+
+3. Reconcile candidate evidence and stockout recovery separately.
+   Establish a consistent, item-scoped property interpretation shared by code
+   checks and semantic review. Do not blindly prefer every scoped key: top type
+   and Muslim top style can describe different predicates. Preserve raw keys
+   and their evidence when resolving ambiguities and synonyms.
+   Protect previously validated fitting/best candidates when constructing a
+   bounded replacement context. Do not let recency remove the known minimum.
+   Apply the same current requirements and ordering objective to replacements.
+   Reserve enough actions for an observed cart mutation and another checkout
+   before a late first purchase attempt. Exercise clock, skirt and pants
+   traces, including explicit relaxations and alternatives that really fail.
+
+4. Resolve the two public-evidence gaps before claiming complete remediation.
+   Keep minimal reproductions for the failing long-sleeved top and first-run
+   cleanser. Check their observed records and policy against any available
+   public diagnostic clarification. If a future paid, narrowly selected probe
+   is authorized, use it to discriminate competing explanations, not to rerun
+   the full suite blindly. Do not reverse-engineer private grading state or
+   hardcode the winning product from an older run.
+
+5. Optimize spending after the accuracy paths are correct.
+   Compact reviews around unresolved predicates and strongest candidates so
+   the existing admission guard can afford them. Consider dependency-specific
+   reuse of completed non-cart procedures. Verify 90-invocation reservations,
+   missing billing, retry and fallback accounting again for any budget change.
+   Do not relax the cap or mandate Sonnet everywhere based on these traces.
+
+For every checkpoint, keep the previous source, capture the exact delta, replay
+both the failure and passing counterexamples, and report which behavior changes
+without pretending the replay yields a new benchmark score. Subsequent paid
+validation, if requested, should first isolate the changed stage and then run
+the fixed full task roster, recording all per-task gains and losses. A faster
+70% run is not evidence that the accuracy target was met.
+
+Review-process shortcoming
+
+The earlier 50 offline checks verified execution and safety mechanics, but the
+interview fixture effectively assumed that a varied catalog property was the
+useful property. It did not challenge the ranker with real metadata, already
+settled fields, or a relevant low-diversity property under a three-message cap.
+The integrated scripted examples also did not establish extraction completeness
+or consistent interpretation of generic versus scoped catalog keys. The build
+report disclosed that limitation, but the review still left too much accuracy
+risk in a combined candidate. These real traces now supply concrete regressions
+that the next isolated reviews must cover. Passing more synthetic tests alone
+will not demonstrate a score improvement.
+
+Reproduction and evidence files
+
+analyze.py reconciles all four main runs, checks source/world/request identity,
+and saves only selected agent-visible trace fields. It excludes transport
+headers, private grading records and model reasoning payloads.
+analysis.json contains per-task scores, costs, times, calls, model/purpose
+breakdowns and exact paired outcome lists.
+tasks/<run>/<task>.json contains sanitized public observations, diagnostics and
+visible model JSON/tool outputs, with request prompts for relevant review calls.
+probe.py reproduces question overrides, the property conflict, lost predicates,
+category rejection and the missing clock candidate with transport blocked.
+probes.json and probe-output.txt record those results. They are diagnostic
+replays, not new scored episodes.
+verification.json records final source preservation and artifact checks.
+
+Commands (offline):
+  python3 logs/research/tosky-v4-local-review-2026-11-14/analyze.py
+  python3 logs/research/tosky-v4-local-review-2026-11-14/probe.py
+
+The workspace miner guide describes failure categories and explicitly notes
+that a zero-scoring episode exposes a category rather than individual checks.
+That evidence limit is why this report distinguishes reproduced defects from
+supported causal explanations and unresolved evaluator disagreements.

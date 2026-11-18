@@ -1,0 +1,36 @@
+FFF
+======================================================================
+FAIL: test_ambiguous_list_answer_does_not_settle_unanswered_properties (agents.tests.test_tosky_v6.AtomicQuestionContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 340, in test_ambiguous_list_answer_does_not_settle_unanswered_properties
+    self.assertNotIn('form', e.lane_used[1])
+AssertionError: 'form' unexpectedly found in {'form', 'material', 'size'}
+
+======================================================================
+FAIL: test_conservative_shopper_discloses_only_for_a_single_property (agents.tests.test_tosky_v6.AtomicQuestionContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 358, in test_conservative_shopper_discloses_only_for_a_single_property
+    self.assertTrue(world.finished and world.contract_satisfied, trace[-12:])
+AssertionError: False is not true : [{'kind': 'inference_budget', 'model': 'anthropic/claude-haiku-5.5', 'attempt': 8, 'reserved_usd': 0.0073670312499999994, 'reported_usd': 1e-05, 'uncertain_usd': 0.0, 'cap': 8000, 'prompt_estimate': 15149, 'breached': False, 'at': 0.0}, {'kind': 'turn', 'text': '', 'calls': [{'name': 'fixture_buy', 'arguments': '{}'}], 'at': 0.0}, {'kind': 'reread', 'ids': ['sample-A01'], 'changed': 0, 'at': 0.0}, {'kind': 'inference_budget', 'model': 'anthropic/claude-haiku-5.5', 'attempt': 9, 'reserved_usd': 0.00258671875, 'reported_usd': 1e-05, 'uncertain_usd': 0.0, 'cap': 3000, 'prompt_estimate': 4555, 'breached': False, 'at': 0.0}, {'kind': 'check', 'cart': ['sample-A01'], 'got': {'ok': True, 'problems': [], 'better': []}, 'at': 0.0}, {'kind': 'inference_budget', 'model': 'anthropic/claude-haiku-5.5', 'attempt': 10, 'reserved_usd': 0.00294078125, 'reported_usd': 1e-05, 'uncertain_usd': 0.0, 'cap': 3500, 'prompt_estimate': 4821, 'breached': False, 'at': 0.0}, {'kind': 'gate', 'stage': 'order', 'call': {'tool': 'fixture_ask', 'args': {'text': 'Check the supplied details before committing.'}}, 'steps': [{'duty': 1, 'done': False, 'lines': []}], 'hold': '', 'told': [], 'at': 0.0}, {'kind': 'ask', 'q': 'Check the supplied details before committing.', 'a': 'Thank you for explaining the checks.', 'at': 0.0}, {'kind': 'inference_budget', 'model': 'anthropic/claude-haiku-5.5', 'attempt': 11, 'reserved_usd': 0.0029665625, 'reported_usd': 1e-05, 'uncertain_usd': 0.0, 'cap': 3500, 'prompt_estimate': 4986, 'breached': False, 'at': 0.0}, {'kind': 'gate', 'stage': 'order', 'call': None, 'steps': [{'duty': 1, 'step': 'Explain the checks before purchasing', 'done': True, 'lines': [1, 2, 6]}], 'hold': '', 'told': [], 'at': 0.0}, {'kind': 'procedure_complete', 'stage': 'order', 'at': 0.0}, {'kind': 'end', 'finished': True, 'steps': 7, 'cost': 0.00011, 'calls': 11, 'at': 0.0}]
+
+======================================================================
+FAIL: test_one_unsuccessful_question_does_not_trigger_a_property_list (agents.tests.test_tosky_v6.AtomicQuestionContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 334, in test_one_unsuccessful_question_does_not_trigger_a_property_list
+    self.assertEqual(e.next_ask(e.lanes, e.lane_found, e.lane_spent, e.lane_used), (1, ['material']))
+AssertionError: Tuples differ: (1, ['material', 'form', 'size']) != (1, ['material'])
+
+First differing element 1:
+['material', 'form', 'size']
+['material']
+
+- (1, ['material', 'form', 'size'])
++ (1, ['material'])
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.683s
+
+FAILED (failures=3)

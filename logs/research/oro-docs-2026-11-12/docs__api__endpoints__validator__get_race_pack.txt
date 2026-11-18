@@ -1,0 +1,90 @@
+Validator
+Get an environment download for assigned work
+Return a time-limited download for the selected tasks. Requires active assigned work. Verify the delivered bytes against download_url_sha256.
+Server URLloading...POST/v1/validator/race/{race_id}/packSendAuthorizationPath
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Path Parametersrace_id*string
+Identifier of the evaluation group containing the assigned work.Formatuuid
+Response Body
+200
+application/json
+401
+application/json
+403
+application/json
+404
+application/json
+409
+application/json
+422
+application/json
+429
+application/json
+500
+application/json
+503
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/validator/race/497f6eca-6276-4993-bfeb-53cbbbba6f08/pack"200401403404409422429500503
+{
+  "race_id": "d1564aae-aeb2-4c94-8bf5-aba05249811c",
+  "pack_sha256": "string",
+  "download_url": "string",
+  "download_url_expires_at": "2019-08-24T14:15:22Z",
+  "download_url_sha256": "stringstringstringstringstringstringstringstringstringstringstri",
+  "download_url_size_bytes": 0,
+  "delivery_scope": "race",
+  "delivery_id": "string",
+  "delivery_task_ids": [
+    "string"
+  ],
+  "pack_format": 0,
+  "runtime_contract": 0,
+  "world_id": "string",
+  "result_schema_version": "string",
+  "catalog_sha256": "string",
+  "task_count": 0,
+  "family_counts": {
+    "property1": 0,
+    "property2": 0
+  }
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+Get an authorized environment pack download
+Return a time-limited download URL and version metadata. Verify the delivered bytes against download_url_sha256; pack_sha256 identifies the parent pack.
+Get problems for an evaluation run
+Returns the problems that should be evaluated for a given run.

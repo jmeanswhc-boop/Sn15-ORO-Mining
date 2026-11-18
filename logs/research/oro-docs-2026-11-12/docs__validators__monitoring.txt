@@ -1,0 +1,105 @@
+
+Validator Monitoring
+Log filtering, evaluation states, retry queue inspection, and debugging commands for the ORO validator.
+Viewing Logs
+
+All validator output streams to Docker logs:
+
+# Follow logs in real time
+docker compose --profile validator logs -f validator
+
+# Last 200 lines
+docker compose --profile validator logs --tail=200 validator
+
+# Logs since last 30 minutes
+docker compose --profile validator logs --since=30m validator
+
+If running as a systemd service:
+
+journalctl -u oro-validator -f
+
+Evaluation Lifecycle
+
+A healthy evaluation cycle produces this log sequence:
+
+Claiming work from Backend...
+Claimed work: <eval_run_id>
+Downloading agent from <url> for eval_run <eval_run_id>
+Provisioned N sessions for evaluation <eval_run_id> (delivery=<delivery_id>)
+Running sandbox for eval_run <eval_run_id>
+Sandbox completed successfully for eval_run <eval_run_id>
+Persisted episode results for <eval_run_id>: {...}
+Completed <eval_run_id>: SUCCESS
+
+Key Log Messages
+
+ | Message | Meaning
+ | No work available, sleeping Ns | No pending evaluations. Normal idle state
+ | Claimed work: <eval_run_id> | Started evaluating an agent
+ | Provisioned N sessions | Delivery validated and one session started per task
+ | Sandbox completed successfully | Agent execution finished cleanly
+ | Persisted episode results | Episode artifacts and summaries reached the Backend
+ | Episode result persistence failed | Artifact upload or result submission failed; scoring is unaffected
+ | Successfully set weights | On-chain weight update succeeded
+ | Backend unavailable | Transient error, will retry with backoff
+ | Lease expired | Heartbeat was too late. Evaluation forfeited
+ | At capacity | Already running the maximum concurrent evaluations
+
+Filtering Logs
+
+Filter log output to isolate specific events:
+
+# Generated evaluation results only
+docker compose --profile validator logs validator | grep "Provisioned\|Persisted episode results\|Completed"
+
+# Errors and failures
+docker compose --profile validator logs validator | grep -i "error\|fail\|timeout\|expired"
+
+# Heartbeat health
+docker compose --profile validator logs validator | grep "Heartbeat"
+
+# Weight setting activity
+docker compose --profile validator logs validator | grep "weight"
+
+# Sandbox stderr (agent crashes, import errors)
+docker compose --profile validator logs validator | grep -A 20 "Sandbox stderr"
+
+Retry Queue
+
+If the Backend is unavailable when the validator reports results, completions are queued to ~/.validator/retry_queue.json and retried automatically. No manual intervention is needed.
+
+Inspect the queue:
+
+# Inside the validator container
+docker compose exec validator cat /root/.validator/retry_queue.json | python -m json.tool
+
+# From the host (if the volume is mounted)
+cat ~/.validator/retry_queue.json 2>/dev/null | python -m json.tool
+
+An empty file or a No such file error means the queue is clear.
+
+Public API
+
+Check your validator's status using the public API (no authentication required):
+
+# List all validators and their status
+curl https://api.oroagents.com/v1/public/validators
+
+# See currently running evaluations
+curl https://api.oroagents.com/v1/public/evaluations/running
+
+Service Health
+
+Check the status of all Docker services in the stack:
+
+docker compose --profile validator ps
+
+Inspect individual service logs when a specific service is unhealthy:
+
+docker compose logs search-server
+docker compose logs proxy
+docker compose logs validator
+Running as a Service
+systemd unit file for running the ORO validator as a background service with automatic restarts.
+Validator Troubleshooting
+Solutions for common validator issues including registration errors, service health, timeouts, and Docker problems.

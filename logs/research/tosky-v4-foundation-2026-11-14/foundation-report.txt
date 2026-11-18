@@ -1,0 +1,457 @@
+Recommendation: use the released PIRATE v1 source as the foundation for Tosky_v4.
+
+This is a foundation decision, not approval to submit an unchanged copy and not a
+claim that PIRATE has already beaten Tosky_v3 in a controlled test. Keep Tosky_v3
+as the budget-accounting and regression reference. Do not merge its whole stack
+of controllers into PIRATE. No agent was changed, no Tosky_v4 was created, and
+no paid evaluation or submission was run during this analysis.
+
+Public metadata snapshot: 2026-11-14 at 00:06:31 America/New_York
+(05:06:31 UTC). Later standings may differ.
+
+The strongest evidence for this choice is PIRATE's better performance on the
+same released hidden-race tasks, with measured bills below $5, plus a relatively
+coherent implementation of search, requirement interpretation and cart repair.
+The additional local result weakens the earlier argument for continuing v3:
+its 19/20 result did not repeat, and the full 30-task run exposes failures outside
+the negative-review correction that defines v3. Confidence in the engineering
+choice is moderate; confidence that it guarantees a future win is not justified.
+
+1. Scope, identity and reproducibility
+
+Reviewed both supplied local runs, including the newly supplied result:
+  local-71b9db485e8b423d986df21dacab6c2d
+  local-cb574c03f70841abb0efec38dba1f2f0
+
+Both summaries identify the exact current agents/Tosky_v3.py bytes:
+  SHA-256 3b8b73ca3a2675b60fbbac5e86145af3fd3ece52ad69b69557305475b3dc5b50
+Both identify public practice pack:
+  SHA-256 deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4
+  world w-095308155916
+
+PIRATE source:
+  champions/PIRATE_v1_06af6030-67a0-754e-8000-beacfd741adb/agent.py
+  SHA-256 ea169847a7c61efc9957d1190e8751e134b6c7bbfb30089284facb979cc22e27
+
+The public race participant Tosky v1 is version
+06af5d7e-bfd4-761c-8000-575e592cb36b. Earlier project records associate it with
+ICDI_chidori_v4. It is NOT the current Tosky_v3 file. Its uploaded source remains
+release-gated in the snapshot, so that local-to-upload association is not a
+newly verified byte-for-byte identity. No hidden-race result for the current
+Tosky_v3 hash was identified. agents/TOSKY.py is a separate architecture and was
+left outside this decision, as requested.
+
+The research reconciles:
+  - Full public rosters/results for completed races 18 through 23.
+  - 46 included validator runs and 4,020 scored episode outcomes for six versions.
+  - 1,140 detailed public episode feedback records: all 420 PIRATE qualifier/race
+    episodes, and 360 each for submitted Tosky and Pooh in races 22 and 23.
+    471 records were reused, 669 downloaded; all 1,140 are available, zero errors.
+  - All 244 released race-18 source files in the existing registry, hash checked
+    and AST parsed without executing them; 244 unique source hashes.
+  - Static comparisons against 44 other archived champion source entries.
+  - 50 supplied local episode executions covering 30 distinct practice tasks.
+
+Race-18 source verification does not mean every possible public artifact for
+every historical participant was downloaded. The saved race-18 archive manifest
+still has other artifact jobs pending. The targeted evidence needed for this
+foundation comparison is complete. Race prompts and accepted-answer sets are
+not made public by source release; the public feedback inspected here has null
+query fields. Do not infer private requests or claim exact grading criteria from
+tool traces. Failure categories identify one failure, not every defect present.
+
+2. PIRATE's actual chronology and the last five completed races
+
+PIRATE was submitted November 12 at 13:18:47 New York time. It became champion
+and its source was released November 13 at 21:55:33. The elapsed interval was
+32 hours 36 minutes. It participated in two races, but did not finish first in
+both: race 22 raw rank 15, race 23 raw rank 1, tied on the displayed raw score
+with SAMSUNG v15. Race 21 is a seeded baseline entry, not a third participation.
+
+The snapshot's PIRATE Overall score is 0.3594. This is not its raw race-23
+accuracy, 0.3834. Titles use the difficulty-adjusted three-race Overall and
+challenge margin; a day's raw leader need not be the titleholder.
+
+The five most recent completed races, dates in New York:
+
+Race  Date    Highest displayed raw score / raw leaders       Title afterward
+19    Nov 09  0.4333 Rose v1                                  Cairn v2
+20    Nov 10  0.3889 Elsa v6, Quill v3, BlackPig v1             Giyu v17
+21    Nov 11  0.2834 Saturday v1, RANDOM v2                    CHIDORI v11
+22    Nov 12  0.2500 Left v1, Leorio v2                        Pooh v1
+23    Nov 13  0.3834 PIRATE v1, SAMSUNG v15                    PIRATE v1
+
+Comparable versions' displayed raw scores:
+
+Race    Cairn v2   Giyu v17   CHIDORI v11   Pooh v1   Tosky v1   PIRATE v1
+19      .3889     .3834      .4000         --        --         --
+20      .3278     .3667      .3500         .3723     --         --
+21      .2222     .2167      .2723         .2556     --         --
+22      --        .1778      .1945         .2222     .2111      .2278
+23      --        --        .3389         .3000     .2500      .3834
+
+Giyu v18 in race 23 is a different version; it is not substituted for Giyu v17.
+Scores vary with the task draw. PIRATE's increase between races 22 and 23 used
+the same source and cannot be credited to a code update between those races.
+
+The extra release window is race 18, completed November 8 at 22:08 New York.
+JeinStar v1 led its raw scores at .4333, followed by Giyu v17 at .3945; Cairn
+retained the title. All 244 archived participant sources passed the source scan.
+Giyu v17 remains the closest structural match to PIRATE among these sources;
+the highest-scoring source is not automatically its apparent implementation base.
+Official source release is immediate for an emissions recipient and otherwise
+five days after submission, not universally five days after a race.
+
+3. What the two local validations establish
+
+Run suffix       Tasks passed   Score       Inference cost   Calls   Failed calls
+71b9...          19/20          95.00%      $0.423716310      378     0
+cb574...         23/30          76.67%      $0.643581875      602     0
+
+Mean actual agent execution was 85.13 and 85.18 seconds per task; maxima were
+144.30 and 128.77 seconds. These are task execution times, not full-run wall
+times, and should not be compared directly with the public concurrent-run
+durations below. Neither run has missing cost fields or failed model requests.
+Costs use the last cumulative inference-stat record per execution and were
+reconciled with sandbox output. Summing every cumulative row would overcount.
+
+On the 20 shared tasks with identical request text:
+  16 passed in both runs; 3 changed from pass to fail; 1 changed from fail to pass.
+  The second run therefore passed 17/20 of the shared tasks, plus 6/10 new tasks.
+  There were no shared tasks that failed both runs.
+
+The source and pack are unchanged, but selection seeds, dialogue and execution
+paths differ. This is observed run-to-run variability, not evidence of a source
+regression. The first result was also an incomplete sample. Do not treat 42/50
+as 50 independent tasks or use 95% as a stable expected score. This practice
+world is different from suite-160 qualifiers and from the hidden race worlds.
+
+Detailed failures in the new 30-task run:
+
+a. t-13e82f2c08, cheapest wrap skirt: not the best option, $0.025027, 38 steps.
+   The 89-cent selected skirt became unavailable at checkout. At the last three
+   steps, the new run removed it and bought a 230-cent replacement. In the earlier
+   passing run, the same stockout boundary led to a different replacement and a
+   passing order. The repair path did not preserve the cheapest valid choice.
+   The trace supports late replacement/optimality failure; it does not justify
+   claiming all unseen products were evaluated. Needed component: objective
+   preservation during stockout repair, with replacement work reserved earlier.
+
+b. t-86888552db, long-sleeved top: request not met, $0.028371, 37 steps.
+   The agent first found and reviewed a fitting-looking top, but checkout reported
+   it sold out. It removed the line and spent the remainder searching and reading
+   alternatives, then declined. The last audit still proposed an unread candidate
+   while reporting no match. The authoritative category says the decline was
+   wrong. Needed component: replacement search coverage and a defensible no-match
+   decision; the public trace alone does not identify the exact missing accepted
+   replacement. This is not a failed API call or an empty-account incident.
+
+c. t-9ab5c575f5, baggy pants or jeans: request not met, $0.023342, 28 steps.
+   A checkout notice said the selected item was gone from the shelves. The notice
+   parser returned sold_out:true with gone:[] because no identifier was named.
+   The next attempt reread attributes and bought exactly the same item. Earlier
+   validation replaced its unavailable selection and passed.
+   read_note() marks unavailable IDs only when the response names known IDs;
+   an unnamed notice sets note_sold but can leave sold_out(id) false. The terminal
+   guard checks the latter. Resolving the notice therefore is not equivalent to
+   invalidating the affected cart line. Needed component: attach a checkout
+   stockout to the attempted cart and invalidate availability/review evidence
+   before every terminal path. Do not merely increase the inference allowance.
+
+d. t-9fc67ee841, logo-pattern winter clothing excluding crew neck: request not
+   met, $0.025865, 36 steps. Repeated searches for logo/brand-logo and page reads
+   ended in a false decline. The explicit constraints were present in the brief.
+   The trace indicates search/eligibility coverage, rather than omitted request
+   parsing, as the area to inspect. It does not expose a private accepted product.
+   Needed component: establish what the search actually covered and discriminate
+   an observed mismatch from an unexamined candidate before ending.
+
+e. t-a6d85e34f3, trench coat with alternative closures: needs not found,
+   $0.023365, 26 steps. Three preference messages got indifference. In the earlier
+   passing run, a bundled question disclosed a girls gender requirement, leading
+   to a different choice. In the failing run, a similar broad bundle did not
+   disclose it. Both the stock/requirement-change note and final cart check were
+   processed, but the missing preference had never entered the ledger. The
+   evidence does not support blaming the delivery hint. Needed component:
+   interview coverage; a general indifferent reply does not prove every field
+   in a long question was resolved.
+
+f. t-abf1c45838, cheapest square clock: did not finish, $0.031256, 37 steps.
+   Following a stockout, the repair selected a 67-cent candidate. A late review
+   then preferred a 62-cent candidate whose clock_shape field said square while
+   its bare shape field said rectangle. The ordinary and repair decisions lacked
+   a settled policy for that conflicting evidence, leaving insufficient room
+   for a replacement and final action. Local admission denials compounded it.
+   Needed components: consistent property scope and cheapest replacement planning.
+   A reviewer's claim of a better option is not itself proof of a correct answer.
+
+g. t-eb5b2c8367, monitor: did not finish, $0.016261, 16 steps, 36 model calls.
+   The parsed duty was to tell the shopper what to check before committing money.
+   The agent sent such a message at step 14. Subsequent procedure reviews returned
+   done:false, no evidence and no next action. Checkout was held locally and the
+   planner repeatedly requested it without resolving the hold. Additional reads
+   changed the evidence set and permitted more review attempts, but no progress.
+   The final planner response was token-truncated and subsequent larger requests
+   were denied locally despite $0.018739 remaining in the nominal task allowance.
+   This is a procedure-interpretation/completion deadlock with ineffective retry
+   progress detection. It is NOT evidence that the account exhausted $5. Needed
+   components: distinguish informing from obtaining approval, explain unmet
+   duties precisely, and stop/replan unchanged failed actions. Do not simply
+   remove the gate and allow an unchecked purchase.
+
+The earlier run's sole failure, t-b9f98ac0cc, adds an eighth observed mechanism:
+an out-of-stock tunik was replaced by a candidate with a generic blouse type and
+a tunik-specific style. Review and planner disagreed over which property defined
+the request. The brief had an empty musts ledger, so v3's new typed review path
+did not apply and the old adjudicator upheld the negative review. It stopped at
+27 world steps, $0.030223, despite 11 steps remaining. The same task passed in
+the new run. This supports an interpretation/recovery vulnerability, not a claim
+that the product is universally correct or that the task is unsolvable.
+
+The shared problem is maintaining the same live constraints, evidence and
+workflow state through search, review, late shopper changes and final action.
+A new negative-review decoder cannot fix discovery omissions, stale availability
+or a separate procedure deadlock. Conversely, allowing more terminal attempts
+does not establish correctness. Any future implementation needs one trustworthy
+terminal decision path plus bounded, state-changing repair.
+
+4. Race evidence, including cost and the cases Tosky still wins
+
+Numbers below aggregate two included 90-task validator executions. The 180
+outcomes are repeated evaluations of 90 tasks, not 180 independent questions.
+Cost and duration are means per full 90-task execution, not sums across validators.
+
+Race  Agent               Passed    Accuracy    Mean cost   Mean run seconds
+22    submitted Tosky v1  38/180    21.11%       $2.0302     386.2
+22    Pooh v1             40/180    22.22%       $4.8104     531.6
+22    PIRATE v1           41/180    22.78%       $4.2093     533.4
+23    submitted Tosky v1  45/180    25.00%       $1.9072     348.0
+23    Pooh v1             54/180    30.00%       $4.9872     406.2
+23    CHIDORI v11         61/180    33.89%       $4.4306     411.9
+23    PIRATE v1           69/180    38.33%       $4.0814     442.2
+
+The race API displays rounded means such as .3834; exact episode counts give
+38.333...%. In race 23 PIRATE gained 13.33 percentage points over submitted Tosky,
+at 2.14 times its inference cost and about 27% longer full-run time. It gained
+8.33 points over Pooh while costing about 18% less, but ran about 9% longer.
+It is not universally faster or cheaper. Race 22's advantage over Tosky was only
+1.67 points, so the second race is stronger evidence than the first.
+
+For a stricter comparison, match world, task and validator, rather than pairing
+arbitrary executions from different machines:
+
+Race  Pair                         Shared episodes   PIRATE-only  Other-only
+22    PIRATE / submitted Tosky     90                5            2
+23    PIRATE / submitted Tosky     90                13           2
+22    PIRATE / Pooh                180               13           12
+23    PIRATE / Pooh                90                12           4
+22    PIRATE / Giyu v17            90                7            1
+23    PIRATE / CHIDORI v11         90                8            4
+
+In race 23, six of the 13 PIRATE-only wins correspond to Tosky procedure failures,
+five to request failures, and two to unfinished episodes. Its gain therefore
+cannot be explained solely by forcing unfinished tasks to terminate. Conversely,
+the two Tosky-only wins are real preservation cases:
+  t-6405620e6d: PIRATE ordered a different laptop/phone combination and failed.
+  t-ed68aef83c: PIRATE removed a pants candidate and declined; Tosky ordered that
+  candidate and passed. PIRATE still has false-decline/interpretation weaknesses.
+Private requests are unavailable, so these observations do not prove which
+particular PIRATE function caused either outcome.
+
+Published race-23 failure categories:
+
+Agent                  Request   Procedure   Not best   Unfinished   Passed
+submitted Tosky v1      73        36          15         11           45
+Pooh v1                 36        73          16         1            54
+PIRATE v1               42        51          18         0            69
+
+Across PIRATE's two races, procedure failures total 112/360 and request failures
+111/360. In race 23 alone, procedures are 51/111 of its failed episodes. These
+counts make procedure correctness a high-priority target, but they are not a
+promise of 51 recoverable points: each episode exposes only one failure category.
+No unfinished episode is not the same thing as correct completion.
+
+5. Public qualifiers do not show an overall PIRATE advantage
+
+PIRATE passed 24/30 and 26/30: 50/60 total. Submitted Tosky passed 25/30 twice:
+also 50/60. The public UI may display .8334 versus .8333 because of rounding.
+That tiny display difference is not another correct answer.
+
+For Tosky's six previously problematic public qualifier cases:
+
+Case                              Submitted Tosky   PIRATE
+Bench dining set                  0/2               0/2
+Single-pack cola                  0/2               1/2
+Sugar-free cola                   0/2               0/2
+Prescription lens capability      0/2               0/2
+Polyester sweater                1/2               1/2
+Slip-on winter footwear           1/2               1/2
+
+PIRATE also loses one execution of the large-hoodie/short-sleeve exclusion task,
+which submitted Tosky passed twice. PIRATE's qualifier cost is $0.6539-$0.7208
+per 30-task run, versus about $0.515 for submitted Tosky. Its case for adoption
+rests on hidden-race performance and maintainability, not solving all six hard
+qualifiers. The Tosky_v3 local practice result is not directly comparable to these
+public qualifier scores.
+
+6. What PIRATE actually changed
+
+Closest archived implementation: Giyu v17. All 249 Giyu top-level/method names
+occur in PIRATE; 217 have identical AST bodies, 32 are modified, and 56 functions
+are added, giving 305 top-level/method definitions excluding nested functions.
+136 top-level assignments are identical. HEAR, NOTE and PLAN prompts changed;
+16 assignments/constants were added. This is a preserved core with several
+coordinated capability additions, not a replacement architecture.
+
+Giyu's source release preceded PIRATE's submission by 38 hours 2 minutes 55
+seconds. The structure and timing are consistent with derivation from Giyu or
+the same public branch. They do not prove authorship, a direct parent, or how
+many development hours were spent. Against Giyu in race 22, PIRATE passed nine
+more aggregate episodes at almost identical mean cost ($4.2093 vs $4.2080).
+No ablation isolates how much each modification contributed.
+
+The important change groups are:
+
+  Request/quantity interpretation: read_request, quoted_count and name_needs
+  recover values embedded in item names and require quantity evidence. This can
+  address omissions such as subtype values absent from an explicit musts list.
+  The inference is still heuristic; a token in a name is not automatically a
+  binding attribute in every context.
+
+  Evidence interpretation: key_verdict, bound_verdict, key_carriers and code_fit
+  attach decisions to the matching observed field, handle same-unit numerical
+  bounds and reject incompatible references. Unknown is represented separately
+  in several branches. Property aliases, conflicting fields and differing units
+  remain difficult, and not all shortcuts are safe.
+
+  Discovery: keys_first, interview, settle, read_on, value_pages, noun_search,
+  need_search and open_promising change question choice and broaden search before
+  a decline. These are relevant to missing preferences and false absence claims.
+  PIRATE's own qualifier failures show they do not solve discovery universally.
+
+  Cart/objective repair: price_swap, cap_cart, cheap_swap and short_items repair
+  price limits, missing lines and cheaper eligible replacements. They connect
+  search to the live cart, rather than only producing another review response.
+
+  Completion: decline_guard, direct_order and finish prevent repeated declines
+  or stalled plans from leaving an episode open. Measured completion is strong,
+  but some fallback paths bypass the result of the procedure gate.
+
+PIRATE is 6,553 lines / 415,484 bytes versus v3's 11,997 lines / 581,167 bytes.
+It has one main Cairn controller, whereas v3's Episode combines 21 direct bases.
+Shorter lines and fewer classes do not establish accuracy or scalability by
+themselves. The practical advantage is that the next intervention can be reviewed
+across fewer interacting override layers. Its single large controller also has
+shared mutable state and requires careful tests.
+
+7. Offline-confirmed PIRATE hazards and budget implications
+
+Six isolated method probes were run with synthetic dependencies, no network and
+no execution of the archived module's top-level code:
+
+  - direct_order sends buy even when gate('order') returns False.
+  - finish likewise sends buy after a negative gate result.
+  - gate returns (True, '') if its model response is unavailable.
+  - Persistent HTTP 402 causes four physical attempts and 34 nominal seconds of
+    waiting before no_credit is latched; the logical call counter increases once.
+  - A successful response with missing usage.cost adds zero recorded cost.
+  - scaled_same('1000 mAh', '10 V') returns True. This reference-mismatch helper
+    compares stripped digits across different units without proving equivalence.
+
+These demonstrate reachable control-flow/helper defects under the stated inputs,
+not that every branch fired in a particular public race. In particular, the
+procedure-category count cannot be assigned entirely to the forced-checkout bug.
+
+PIRATE's four measured 90-task bills were:
+  race 22: $4.120608085 and $4.298073725
+  race 23: $4.035243455 and $4.127490265
+The most expensive observed run left $0.701926275 below $5. This is encouraging
+measured headroom, not a guaranteed future cap. SPEND_SOFT=.055 and
+SPEND_HARD=.078 guide model selection; they are not prospective per-request
+reservations. Ninety soft allowances already total $4.95; ninety hard allowances
+total $7.02. Some calls can bypass the model-selection helper, and the response
+is billed before recorded cost changes. The current code cannot certify $5.
+
+V3 is better at financial admission: reservation before each physical request,
+conservative accounting for missing costs, immediate 402 stop, and .035 per-task
+allocation with .010 protected for procedures within it. Ninety allocations
+total $3.15. Its estimator deliberately treats serialized bytes and overhead as
+a conservative token envelope; long context can therefore be denied while real
+spent dollars remain low. The monitor trace demonstrates why simply retaining
+all of v3's admission/repair behavior is not a sufficient solution.
+
+For a future PIRATE-based candidate, preserve the accounting principles but
+validate the reservation estimator and compact request shapes separately. A
+common $0.05 per-episode target would allocate $4.50 for 90 and $1.50 for 30,
+leaving margin under the user's $5/$2 requirements without phase detection.
+This is a candidate design bound, not a validated performance setting. It could
+cut off expensive useful episodes; no automatic cap change is recommended until
+offline cost/admission replay and later authorized evaluation support it. Runtime
+pricing, unknown costs and in-flight charges require explicit handling. Do not
+derive a hidden-race bill by multiplying the easier practice cost by three.
+
+8. Decision boundary and next development gates
+
+Choose PIRATE as the source tree. Keep v3's successful flows and accounting tests
+as comparison material, and keep its originals intact. Continue with v3 only if
+a controlled comparison later shows that this exact v3 source retains better
+accuracy under the same total budget. Such a head-to-head result is absent now.
+
+When development is authorized, stage the work separately:
+
+  1. Freeze and verify both baseline hashes and the analysis fixtures. Record
+     normal-case public tool sequences, terminal outcomes, paid requests and
+     costs before changing any shopping logic.
+
+  2. Implement one central inference admission/accounting path in the PIRATE
+     candidate. Count physical retries, stop immediately on 402, retain uncertain
+     reservations, and keep sufficient completion resources. Test boundary,
+     missing-cost and retry cases offline. Healthy affordable calls must preserve
+     their models, request content and normal sequence.
+
+  3. Fix one coherent terminal/procedure contract: all checkout and decline paths
+     must honor an unresolved duty or changed cart, and failed reviews must yield
+     an actionable repair or a bounded stop. Include a synthetic analogue of
+     v3's monitor deadlock so the fix cannot merely exchange false permission
+     for repeated noncompletion. Preserve completed duties when their relevant
+     state has not changed. Do not transplant the whole v3 procedure class.
+
+  4. Independently quarantine unproven numeric-equivalence decisions and verify
+     stockout/cheapest-replacement cases, using synthetic products and runtime
+     schemas. Keep this separate from the budget and procedure changes so that
+     any regression has an identifiable cause. Do not import answer tables.
+
+  5. Run local security/AST checks and evaluate meaningful reachable originality.
+     ORO permits building on released code, but cosmetic forks may be rejected.
+     An archived champion's acceptance does not preapprove a new submission.
+     Only after offline gates pass should separately authorized, bounded paid
+     comparison of the exact originals and candidate establish score, cost and
+     timing. No paid test was run or promised as part of this selection analysis.
+
+The foundation recommendation does not claim that changing one gate guarantees
+a championship or zero regressions. It identifies the stronger observed starting
+point and the specific risks that would otherwise repeat the earlier failures.
+
+Primary references and local evidence
+
+https://api.oroagents.com/v1/public/agent-versions/06af6030-67a0-754e-8000-beacfd741adb/status
+https://api.oroagents.com/v1/public/agent-versions/06af6030-67a0-754e-8000-beacfd741adb/runs
+https://api.oroagents.com/v1/public/races/50c9c9e5-335e-4964-bd6d-98af7178d3dd
+https://api.oroagents.com/v1/public/races/43b10a31-a0be-4d09-bf70-aeb7f61ae1f1
+https://oroagents.com/docs/miners/scoring
+https://oroagents.com/docs/miners/evaluation-lifecycle
+https://oroagents.com/docs/miners/code-requirements
+
+public-analysis.json: checked full-run metrics, per-race rosters, matched pairs.
+public-task-results.json: 4,020 task outcomes keyed by agent/run/world/validator.
+local-analysis.json: both exact-source runs, reconciled costs and shared tasks.
+local-failures/: selected local diagnostics, outputs and public tool observations.
+ast-comparison.json: method-level identities and changed/added method inventories.
+released-source-scan.json: 244 race-18 source hashes and structural comparison.
+offline-contract-probes.json: six offline behavior probes and their limitations.
+verification.json: final integrity and arithmetic checks.
+
+Reproduce without paid inference:
+  python3 logs/research/tosky-v4-foundation-2026-11-14/analyze_local.py
+  python3 logs/research/tosky-v4-foundation-2026-11-14/analyze_public.py
+  python3 logs/research/tosky-v4-foundation-2026-11-14/offline_contract_probes.py

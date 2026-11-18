@@ -1,0 +1,60 @@
+TOSKY.py — ORO SUBMISSION AND RUNTIME LIMIT CHECK
+Checked 2026-11-13 against the current published ORO documentation.
+
+Source: agents/TOSKY.py
+SHA-256: 31b083e8ac95bc6863a4a01f9768a61879914fed4eb9116ea0f27b394d825a18
+The agent was not changed, submitted or evaluated with paid inference.
+
+Conclusion
+
+The source passes the local technical preflight and has no obvious violation of the published security/integrity restrictions. This is a reasoned source review, not an official ORO acceptance decision. The agent has unresolved operational risks under the spending, time, message and rate limits. Those risks are distinct from prohibited code or cap evasion.
+
+Verified locally
+
+- Size: 82,547 bytes, below the published 1 MB limit.
+- UTF-8 decoding, ast.parse and compilation succeeded. Local parsing took about 0.013 seconds; this does not measure the full server analysis, which must finish within 30 seconds.
+- Exactly one synchronous agent_main exists at line 1498.
+- The repository's working-tree loader accepted the dataclasses/future-annotation implementation. An already-finished input returned an empty dialogue without network access.
+- Imports are ordinary Python helpers and the provided ProxyClient. No prohibited direct-network, process-execution, encoding or filesystem-mutation import was found.
+- from os import getenv is an explicit policy exception. The only environment read selects SANDBOX_MODEL; supported model configuration is permitted. No phase, validator, hostname or time-of-day routing was found.
+- No eval, exec, dynamic import or source-level filesystem write/delete call was found.
+- Literal network paths are /inference/chat/completions and /environment/call through the provided proxy.
+- Environment requests copy the complete binding and use consecutive steps; retries retain the same action and step. New environment calls stop after finished.
+
+Integrity assessment
+
+No obvious benchmark task/product identifiers, encoded answers, fixed answer mappings, task-specific wording, fixed product-kind/property/value/unit registries or private grader imports were found in the reviewed source. The literal collections are protocol/JSON-schema fields, generic tool verbs, action/duty types and stock-status descriptions. These are not a fixed product-attribute conversion registry. unit_factors is populated from runtime interpretation, rather than a built-in conversion table.
+
+The exact server integrity/plagiarism decision is unavailable locally. Comparing a few public sources or successfully parsing the file cannot certify all private similarity checks or establish provenance. No official submission was made.
+
+Default models
+
+The public ORO allowlist was refreshed at 2026-11-13T14:26:04.707124+00:00. All three default IDs were present:
+- anthropic/claude-haiku-5.5
+- anthropic/claude-sonnet-5.5
+- deepseek/deepseek-v3.2
+
+An operator-supplied SANDBOX_MODEL must also be allowed; its actual runtime value was not read or tested here. Allowlist presence does not establish provider availability or a measured inference cost.
+
+Operational limits requiring correction or measurement
+
+1. Spending: ORO documents $2 per qualifier run and $5 per race run. infer records model_cost after responses but never uses it for admission. There is no prospective reservation, uncertain-cost charge, procedure reserve or global stop on 402. Ninety tasks completing below $5 is unverified. This is a reliability gap; the code does not attempt to replace, rotate or bypass ORO's scoped key.
+2. Time: ORO documents default limits of five minutes per task and thirty minutes per sandbox run, set by the validator. There is no elapsed-time deadline or finalization reserve in this agent. Its 45-second model timeout and repeated 70-second environment waits can exhaust those limits.
+3. Messages/steps: execute enforces the public world-step ceiling, but the mandatory-question branch at lines 1386-1389 can attempt a message without checking the remaining message quota. The world can refuse it; this is a task-execution problem rather than proof of static-policy rejection.
+4. Rate limits: ORO documents 30 requests/second per client IP with burst 50. The agent is sequential within an episode but has no explicit pacing or 429 backoff at its own retry layer. Compliance across parallel episodes is unverified. ProxyClient is configured with max_retries=1, so its ordinary between-attempt backoff cannot be relied on for those calls.
+
+Published references
+
+https://oroagents.com/docs/miners/code-requirements
+https://oroagents.com/docs/miners/agent-interface
+https://oroagents.com/docs/miners/inference-providers
+https://oroagents.com/docs/miners/scoring
+https://api.oroagents.com/v1/public/inference/models?provider=openrouter
+
+Evidence files
+
+submission-preflight-local.json — fresh syntax/import/call/literal-collection inventory and offline loader check.
+submission-allowlist-refresh.json — fresh public model-list check.
+source-audit.json and counterexamples.json — the earlier same-hash source analysis and controlled runtime findings.
+
+No change to the agent or its previous versions was performed.

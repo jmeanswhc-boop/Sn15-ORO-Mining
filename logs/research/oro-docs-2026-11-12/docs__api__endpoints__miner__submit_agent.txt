@@ -1,0 +1,82 @@
+Miner
+Submit agent
+Submit an agent file for evaluation. Creates new agent if needed.
+Server URLloading...POST/v1/miner/submitSendAuthorizationBody
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Request Body
+multipart/form-data
+TypeScript Definitions
+Use the request body type in TypeScript.Copy
+Response Body
+200
+application/json
+400
+application/json
+413
+application/json
+422
+application/json
+429
+application/json
+503
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/miner/submit" \  -F agent_name="string" \  -F file="string"200400413422429503
+{
+  "agent_id": "2b1e3b65-2c04-4fa2-a2d7-467901e98978",
+  "agent_version_id": "1c2a713c-7248-4a56-a9eb-0bdcb3a41741",
+  "admission_status": "ACCEPTED",
+  "admission_reason": "COOLDOWN",
+  "next_allowed_at": "2019-08-24T14:15:22Z",
+  "hotkey": "string",
+  "message": "Agent submitted successfully"
+}
+{
+  "detail": "string",
+  "error_code": "INVALID_AGENT_NAME"
+}
+{
+  "detail": "string",
+  "error_code": "FILE_TOO_LARGE"
+}
+{
+  "detail": "string",
+  "error_code": "CODE_ANALYSIS_ERROR",
+  "violations": [
+    {}
+  ],
+  "remaining_seconds": 0
+}
+{
+  "detail": "string",
+  "error_code": "COOLDOWN_ACTIVE",
+  "remaining_seconds": 0
+}
+{
+  "detail": "string",
+  "error_code": "NO_ACTIVE_SUITE"
+}
+Store an inference-provider credential
+Store (or overwrite) the miner's credential for the given provider.
+
+Validates the credential before persisting so bad input fails here rather
+than at first claim_work. The first stored provider becomes the miner's
+default; switching default afterward goes through the dedicated PATCH
+endpoint.
+Deep Health Check
+Deep readiness check that exercises the SQLAlchemy pool.
+
+Acquires a session and runs SELECT 1 with a hard timeout, retrying
+once on failure to ride out transient pool stalls or one-shot
+network blips. If the pool is wedged (phantom-checked-out
+slots) or RDS is unreachable across both attempts, the check fails
+and the ALB pulls the task out of rotation after its own
+unhealthy_threshold_count consecutive failures.
+
+On final failure we return 503 directly via `JSONResponse` instead
+of raising `HTTPException`. The status to the ALB is identical, but
+the Sentry FastAPI integration only captures *exceptions* — so this
+path no longer triggers the "new unhandled error" PD rule on a
+transient blip. Sustained DB-unreachable is correctly surfaced by
+the ALB target-health alarm, not the Sentry new-issue rule.

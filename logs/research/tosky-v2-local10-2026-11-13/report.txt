@@ -1,0 +1,117 @@
+TOSKY V2: TEN-CASE LOCAL FAILURE ANALYSIS AND CORRECTION SPECIFICATION
+Input: local-48ea2d82b735402084cd09cc2fcc2f39. Prepared 2026-11-13.
+Scope: diagnosis, recorded-response replay and request-admission feasibility only. Agent source unchanged; no paid calls.
+
+DEFINITIVE FINDING
+
+This run provides the internal evidence that was unavailable in the public qualifying incident. The exact tested source hash is 526f7badf9dd20dd671ee4b089bb5a9c400af305bccae6980c87048128872173, matching agents/Tosky_v2.py. All ten executions scored zero and stopped without sending an order or decline. All 322 inference requests succeeded. There were no agent crashes. Only two cases encountered local request-admission denials, so those denials do not explain the common failure in the other eight.
+
+The central defect is an inconsistent review boundary and incorrect error routing. A model can say that the chosen product meets the request, but return evidence in the wrong data shape. The program then rejects that representation, stores a negative cart verdict, and sends the model's shopping commentary to the shopping planner as though the product had failed. It never tells the planner the actual failing JSON field. The planner searches, swaps products or rereads pages rather than repairing the review representation. Other reviews refuse to certify an unnecessarily broad notion of completeness, including global limits, unrequested objectives and irrelevant unknown alternatives. The combination prevents completion.
+
+The correction must distinguish three separate questions: whether the response follows the protocol, whether the selected product meets the active requirements, and whether the agent has performed a required action. A formatting error is not evidence of a bad product. A warning about unrelated catalog information is not an unmet request. A fully opened attribute page and a fresh price offer are separate observations.
+
+WHAT IS VERIFIED
+
+The source file and all inputs were read without modification. The run selected ten of thirty tasks, seed 514152267, from world w-095308155916 and pack deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4. This is the local practice world, distinct from the public qualifying world in the preceding incident. Its score must not be pooled with the public qualifying score or treated as a race forecast.
+
+A network-blocked replay uses all 322 actual model replies and 242 actual environment replies captured in this run. All 564 outgoing request bodies match the recorded requests exactly for all ten cases, including model parameters and environment actions. Recorded final steps, spend, call counts and unfinished status also match. The replay clock follows RequestLog's completion timestamps. It does not invent replacement model responses or terminal receipts.
+
+Python return-line tracing establishes every first rejection:
+
+Source audit:
+20 calls; 20 complete=false responses; 20 rejected at apply_source_audit line 11736; zero source corrections accepted.
+
+Final cart review:
+42 responses; all terminate normally with finish_reason=stop and parse as JSON.
+29 reject at validate_cart_proof line 12467, before assignment checks.
+13 reject at validate_cart_proof line 12482, inside assignment checks.
+No call reaches validate_requirement_proof, key_scope_ok or scalar_check in this replay. No final review reaches the independent objective-comparison code.
+
+The 13 assignment rejections are:
+6 evidence fields are prose strings where the validator requires a list of citation objects.
+3 evidence lists contain values such as "true" or "1514" instead of the observed boolean true or numeric 1514.
+3 fail page_read even though the record was previously opened and full attributes remain available.
+1 reports type_ok=false for the chosen chiffon garment.
+
+The last item is a content judgment requiring product-selection investigation. It must not be converted into a format error or automatically accepted. The other counts characterize first-failing predicates; additional faults can remain masked behind them.
+
+This revises the priority of the earlier seven-defect incident plan. Its alias, spelling, cheaper-subtype and decline counterexamples remain genuine source defects, but those lower checks were never reached in these ten executions. Changing those matchers first would leave all forty-two recorded first rejection points in place.
+
+TEN-CASE ACCOUNT
+
+Task           Subject                      Steps  Reviews  Observed blocking behavior
+t-069a67a0c4 UHT milk in cans                  34      5     All fail completeness. The reviewer recognizes an eligible can but demands cheaper-alternative proof despite pick=any. Large-history admission also fails later.
+t-18396ebe94 Wedge mules                       20      3     All fail completeness. Wedge evidence is met, but an unverified more-expensive alternative, blanket clipping metadata and subjective wardrobe context become blockers despite indifference replies and pick=any.
+t-350bf2a022 Chiffon tops                      36      6     One assignment is rejected as the wrong type; five fail completeness. Conflicting material fields and eligible product type need a concrete content decision, rather than more generic review calls.
+t-5a9d1682ae Military-style bomber             33      3     The first review says complete=true, source_complete=true, objective.ok=true and style=met. Assignment evidence is prose, so it is rejected before its valid-looking product judgment is examined. Two later reviews fail completeness.
+t-5ae33c1dde Sapphire watch after changes       25      3     The first review judges the changed constraints met, but stringified stock/price citations fail exact typing. Two later reviews fail completeness. Its rewritten need wording is another masked contract problem.
+t-6be2dc60b6 Party mules                       17      3     An affirmative review fails stringified stock evidence. It also adds indifferent topics as missing requirements, which would fail later exact ledger coverage. Two later reviews fail completeness.
+t-82a9890683 Green formal watch                16      4     Two affirmative reviews use prose evidence. A later review fails the required-view condition. One review fails completeness. Wording changes from the live requirement would remain a later problem.
+t-d4e2bc9e66 Sweet-style skirt                 22      5     The active ledger is empty. Both failed audits propose a style correction but use invalid prior-constraint references and reject their own completeness. Reviews see an unmet style, while no source correction is installed.
+t-eb5b2c8367 Monitor, response time >=1 ms      22      5     Four completeness rejections and one stringified stock citation. The reviewer also treats 4 ms as failing >=1 ms and discusses cheaper options despite pick=any. Local budget admission later blocks long requests.
+t-f3ca299b9f Sleeveless bomber                 17      5     Every review is complete/source-complete/objective-ok. Three fail prose evidence and two fail the required-view condition. The selected record still has full sleeveless attributes. No purchase is sent.
+
+For the required-view failures, the captured state is explicit: ever_opened=true, attributes_recorded=true, views contains datasheet_for_item, while the dynamically learned offer role is view_listing. E8.page_read requires the offer role once it exists. Tosky_v2 uses that reference-oriented predicate as a universal cart proof condition. A role-discovery change therefore makes an already-opened record fail a newly imposed requirement. Reference/procedure requirements must retain their own strict checks; ordinary product-attribute evidence should not be invalidated merely because an offer role was learned later.
+
+SOURCE AUDIT FAILURE IS A CONTRACT PROBLEM
+
+All twenty responses are valid JSON and explicitly complete=false. Examples turn the ceilings of three messages and thirty-eight moves into owed workflow actions, such as messages=3 or actions=38. Budget and stock obligations are also proposed as textual product attributes even though the existing brief already carries them separately. The audit combines product normalization, global ceilings, workflow duties and conversational context into one certificate, then discards the entire response when it cannot certify all of them.
+
+The skirt case shows the cost of that coupling: its real style requirement is not in the active ledger, but a useful proposed style normalization is never installed. Simply forcing complete=true would still be unsafe: the response's previous field invents constraint text rather than identifying an actual existing ledger entry, and some proposed duties confuse maxima with required work. The existing v4 product-coverage mechanism should be preserved during recovery; the broader v2 audit should not be ported wholesale.
+
+FINAL REVIEW FAILURE IS MORE THAN A CAUTIOUS MODEL
+
+The bomber and watch examples contain affirmative product judgments that the program rejects for representation errors. The exact invalid field is not returned to the repairer. cart_check instead uses answer.problems as its error message, even when those strings merely note that the style is correct, that alternatives fail, or that unrelated text may be clipped. That feedback cannot tell the next model to change assignments[0].evidence from a string to an array.
+
+The producer and consumer also disagree about requirement identity. The program requires exact copying of a live need string, while responses rewrite it, add stock/budget rows or list indifferent topics as missing. A response saying "sleeveless" does not match a live key "sleeves: none". After fixing evidence typing, these other contract failures would become active. This is why a one-line coercion or deleting a completeness check is insufficient.
+
+For pick=any, the new packet unnecessarily supplies alternative candidates and asks for broad objective verification. In the milk and wedge cases, the reviewer demands proof about cheaper or unread alternatives even though any eligible selected item is acceptable. It also treats an unconditional listing_text_may_be_clipped=true as evidence that every record is incomplete. That flag is set even for small fully visible records and known empty descriptions. Indifference is recorded in the original replies but is not supplied as an authoritative typed state, allowing aesthetic hints to become hard requirements again.
+
+The monitor response contains the distinct content error that 4 ms fails an "at least 1 ms" requirement. It has not yet reached numeric validation in this run, so it must be retained as a semantic negative-control fixture for subsequent work, rather than being counted as the current first rejection.
+
+COST AND LIMITS
+
+The ten cases spend $0.188691155 in recorded agent inference, average $0.0188691155 each. Mean per-case agent execution time is 133.98 seconds. These are recorded costs and per-case durations, not a total batch wall time or an estimate of a future race bill.
+
+The twenty source audits cost $0.0077055, and forty-two cart proofs cost $0.0408316. Together they consume about 25.7% of this run's inference bill, before counting the shopping/repair calls induced by their rejection. All source audits were discarded and no final proof was accepted. Some reviews identify substantive concerns, so this is not a justification for removing all review logic.
+
+Only the milk and monitor cases have local allocation_exhausted denials. Their final long-request byte envelopes are approximately 88,005 and 71,630, respectively. They retain $0.01146327 and $0.0125744 in their overall local ledgers; the monitor also protects $0.010 for a real pending procedure, leaving $0.0025744 for ordinary work. This is a request-size/reservation problem, not evidence that the provider account has no funds. The source's $0.035 task allowance and $0.010 internal procedure reserve should remain unchanged initially.
+
+An offline proposed format-only packet uses generated requirement/evidence references and preserves JSON fact types. Under those two recorded denial states, the existing estimator admits a 768-token request with reservations of $0.001222344 and $0.001206875, with prompt envelopes of 4,751 and 4,652. Even two such reservations fit the monitor's unprotected balance. This establishes admission feasibility for the proposed mechanical repair shape. No model response, correct ending or score improvement has been measured for it.
+
+MATCHING HISTORICAL CONTROLS
+
+The same ten task IDs exist in genuine earlier runs with the identical world and pack digest:
+local-f6809126cbb043e6a3b152a7582d982e: 9/10 on this subset.
+local-57eb955c7dcc48dc8d62f192a5d8760e: 8/10 on this subset.
+local-0e47aedee480429ba19d94c1909dd7f3: 8/10 on this subset.
+Every one of these ten tasks has at least one historical passing execution across those controls.
+
+The latest Chidori v3 control is not a measurement of v4 on this sample, and the older 9/10 result is not an expected guaranteed score. They establish that this subset is not intrinsically unsolvable and provide preserved passing receipts for case-by-case comparison. The counterfeit/invalid earlier zero-score material is not used as a performance control here.
+
+CONCRETE COUNTERMEASURES AND ORDER
+
+The established decision to recover from unchanged v4 remains appropriate. The new evidence narrows the first component to repair: the model-to-program review contract and its error-routing boundary. Do not begin by changing alias maps, choosing larger models, increasing spending, or combining another source parser, interviewer and reference resolver.
+
+Stage A, completed in this analysis: freeze the source; join all ten sessions; replay every captured request; identify the first rejecting line and exact invalid field; retain both passing and failing historical controls. The replay and data-admission experiments are reusable artifacts, not new accuracy tests.
+
+Stage B, first implementation scope: create a new candidate from the full v4 baseline. Retain its existing intake, product-coverage audit, interview, reference behavior, financial accounting, cart receipts and procedure gates. Add only a typed boundary for the proposed corrective review. Do not copy the entire 56-method Tosky_v2 controller into it. The detailed producer/consumer contract and rejection-routing tests are specified in correction-specification.txt.
+
+Stage C, verify the boundary before changing shopping behavior: raw prose evidence must produce a format error with the exact field path, never a negative product verdict; observed boolean/number values must retain their types; generated requirement/evidence IDs must prevent free-text identity drift and invented obligations; missing format must get one targeted bounded repair path using existing facts, with a total of at most two physical transmissions for that decision. The code must preserve unknown rather than fabricate a positive match. Existing v4 finalization safeguards remain authoritative while this additional boundary is unvalidated.
+
+Stage D, verify content and observation semantics separately: pick=any must not require ranking unrelated alternatives; only actual truncation should be reported; indifference and withdrawn needs must remain inactive; full-detail-read and fresh-offer evidence must remain separate. A real wrong item, unavailable stock, overspend, wrong quantity or unresolved explicit procedure must still be rejected. Do not change the shared reference-page predicate simply to make ordinary cart checks pass.
+
+Stage E, release gates: pass the recorded failure-boundary fixtures and the earlier seven independent counterexamples, then measure a paired unchanged-v4/candidate local comparison on the same ten cases. Every task must finish with an accepted order or justified decline, with no unexplained loss of a previously correct result. Follow with all thirty practice tasks, recording gains and losses separately, completion, requests, per-correct cost and latency. A ten-case score is not evidence of race generalization. Do not submit another version merely because unit tests pass. Any new paid evaluation needs a separately specified run and budget; none was performed here.
+
+No source update has been claimed or implemented during this diagnosis. The deliverables are exact recorded replays, failure classifications, a bounded packet feasibility check, historical controls and an explicit correction specification. Those provide a testable basis for implementation instead of another broad, unmeasured update.
+
+ARTIFACTS
+
+analysis.json: task mapping, metrics, historical controls and per-case first rejections.
+recorded-decisions.json: all actual audit/proof packets and model responses, indexed to source requests.
+recorded-replay.json: actual traced Python rejection lines and complete exact-request replay verification.
+replay_recorded.py: network-blocked replay using existing responses.
+analyze_local.py: reproducible aggregation of this run and same-pack historical controls.
+packet-feasibility.json and check_packet_feasibility.py: existing-ledger admission calculations only.
+correction-specification.txt: exact boundaries, fault routes and acceptance criteria.
+manifest.json: immutable input and generated artifact hashes.

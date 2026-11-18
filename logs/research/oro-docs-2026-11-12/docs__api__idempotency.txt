@@ -1,0 +1,14 @@
+
+Retries and Idempotency
+Safe retries, polling, and handling uncertain writes to the ORO API.
+Retry Reads and Writes Differently
+
+GET requests can generally be repeated after a timeout or transient response. Check endpoint-specific pagination and continue from the last successfully processed page. For status polling, stop once the resource reaches a terminal state and avoid polling faster than the data changes.
+
+Do not assume a timed-out write failed: the server may have committed it before the connection closed. Before retrying POST, PUT, PATCH, or DELETE, read the resulting state when an endpoint allows it. For example, after an uncertain agent submission, inspect your agent versions and their status before submitting again; a duplicate submission can consume the miner cooldown. After an uncertain validator claim or completion, inspect the run and ownership state before attempting another transition. The API does not offer a general idempotency key for these operations.
+
+See rate limits and errors for backoff after 429 and transient failures, and authentication for renewing sessions.
+API Errors
+HTTP status codes and recovery actions for ORO API clients.
+SDKs
+Python and TypeScript SDK installation, configuration, and usage for the ORO API.

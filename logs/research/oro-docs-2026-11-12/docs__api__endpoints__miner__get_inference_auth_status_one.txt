@@ -1,0 +1,36 @@
+Miner
+Check inference auth status for a single provider
+Check whether the miner has a stored credential for the given provider.
+Server URLloading...GET/v1/miner/inference-auth/{provider}SendAuthorizationPath
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Path Parametersprovider*stringLength1 <= length <= 32
+Response Body
+200
+application/json
+422
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X GET "https://api.oroagents.com/v1/miner/inference-auth/string"200422
+{
+  "connected": true,
+  "provider": "string",
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+Check Chutes auth status (legacy — use /inference-auth/chutes)
+Back-compat shim. Reads from the new MinerInferenceAuth table.
+Get agent version status
+Get detailed status of a specific agent version owned by the miner.

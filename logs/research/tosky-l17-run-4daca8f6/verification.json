@@ -1,0 +1,253 @@
+{
+  "investigation_date": "2026-11-17",
+  "agent_source_sha256": "41c2c8363002f5bade4bc49c9ad890b6a979758559e7092c2cadd4f0cf62c526",
+  "agent_unchanged": true,
+  "same_pack_tasks_queries": true,
+  "identical_initial_inference_requests": 30,
+  "outcome_transitions": {
+    "1 -> 1": 18,
+    "0 -> 1": 3,
+    "1 -> 0": 4,
+    "0 -> 0": 5
+  },
+  "full_recorded_response_replay": {
+    "episodes": 30,
+    "complete_matching_action_and_model_role_sequences": 30,
+    "environment_actions": 773,
+    "inference_responses": 575,
+    "crashes": 0,
+    "new_score": null
+  },
+  "diagnostic_contracts": {
+    "before": {
+      "run": 3,
+      "failures": 3,
+      "errors": 0,
+      "failed_cases": [
+        "__main__.SafetyContracts.test_an_unchanged_rejected_cart_remains_blocked_on_repeat_review",
+        "__main__.SafetyContracts.test_emergency_finish_cannot_buy_a_known_rejected_cart",
+        "__main__.SafetyContracts.test_stock_rejection_requires_cart_repair_before_another_checkout"
+      ]
+    },
+    "after": {
+      "run": 3,
+      "failures": 3,
+      "errors": 0,
+      "failed_cases": [
+        "__main__.SafetyContracts.test_an_unchanged_rejected_cart_remains_blocked_on_repeat_review",
+        "__main__.SafetyContracts.test_emergency_finish_cannot_buy_a_known_rejected_cart",
+        "__main__.SafetyContracts.test_stock_rejection_requires_cart_repair_before_another_checkout"
+      ]
+    }
+  },
+  "literal_question_repetition": {
+    "before_followups": 55,
+    "before_with_repetition": 55,
+    "after_followups": 51,
+    "after_with_repetition": 0
+  },
+  "model_cost_by_stage": {
+    "before": {
+      "# Interpret the shopping request": {
+        "calls": 30,
+        "cost": 0.026162800000000003,
+        "prompt_tokens": 127504,
+        "completion_tokens": 42663
+      },
+      "# Tosky shopping agent": {
+        "calls": 294,
+        "cost": 0.21012578999999992,
+        "prompt_tokens": 4693363,
+        "completion_tokens": 152208
+      },
+      "# Read a tool result schema": {
+        "calls": 30,
+        "cost": 0.006569300000000001,
+        "prompt_tokens": 48073,
+        "completion_tokens": 6953
+      },
+      "# Prioritize useful clarification": {
+        "calls": 30,
+        "cost": 0.016948299999999996,
+        "prompt_tokens": 51853,
+        "completion_tokens": 28629
+      },
+      "# Interpret the shopper reply": {
+        "calls": 89,
+        "cost": 0.012073649999999998,
+        "prompt_tokens": 86930,
+        "completion_tokens": 20138
+      },
+      "# Review the cart": {
+        "calls": 47,
+        "cost": 0.025619130000000004,
+        "prompt_tokens": 180114,
+        "completion_tokens": 26205
+      },
+      "# Interpret a shopper or store update": {
+        "calls": 24,
+        "cost": 0.00326042,
+        "prompt_tokens": 26879,
+        "completion_tokens": 4506
+      },
+      "# Replace an unavailable cart line": {
+        "calls": 21,
+        "cost": 0.02479289,
+        "prompt_tokens": 154438,
+        "completion_tokens": 22928
+      },
+      "# Review a proposed no-purchase ending": {
+        "calls": 9,
+        "cost": 0.01639318,
+        "prompt_tokens": 102707,
+        "completion_tokens": 14176
+      },
+      "# Verify the required procedure": {
+        "calls": 3,
+        "cost": 0.00169029,
+        "prompt_tokens": 8978,
+        "completion_tokens": 1846
+      }
+    },
+    "after": {
+      "# Interpret the shopping request": {
+        "calls": 30,
+        "cost": 0.026252095000000003,
+        "prompt_tokens": 127504,
+        "completion_tokens": 42167
+      },
+      "# Tosky shopping agent": {
+        "calls": 293,
+        "cost": 0.22100644499999988,
+        "prompt_tokens": 5084538,
+        "completion_tokens": 158347
+      },
+      "# Read a tool result schema": {
+        "calls": 30,
+        "cost": 0.006845525000000001,
+        "prompt_tokens": 48005,
+        "completion_tokens": 7373
+      },
+      "# Prioritize useful clarification": {
+        "calls": 30,
+        "cost": 0.016323875,
+        "prompt_tokens": 52252,
+        "completion_tokens": 27083
+      },
+      "# Interpret the shopper reply": {
+        "calls": 84,
+        "cost": 0.025916845,
+        "prompt_tokens": 175014,
+        "completion_tokens": 36173
+      },
+      "# Review the cart": {
+        "calls": 50,
+        "cost": 0.02825838499999999,
+        "prompt_tokens": 201380,
+        "completion_tokens": 27633
+      },
+      "# Interpret a shopper or store update": {
+        "calls": 27,
+        "cost": 0.0037313299999999997,
+        "prompt_tokens": 29989,
+        "completion_tokens": 5067
+      },
+      "# Replace an unavailable cart line": {
+        "calls": 22,
+        "cost": 0.028350364999999995,
+        "prompt_tokens": 167293,
+        "completion_tokens": 27416
+      },
+      "# Review a proposed no-purchase ending": {
+        "calls": 5,
+        "cost": 0.01104378,
+        "prompt_tokens": 61211,
+        "completion_tokens": 10644
+      },
+      "# Verify the required procedure": {
+        "calls": 4,
+        "cost": 0.00321751,
+        "prompt_tokens": 12358,
+        "completion_tokens": 4376
+      }
+    }
+  },
+  "confirmed_instrumented_budget_cases": {
+    "t-5a9d1682ae": [
+      {
+        "model": "anthropic/claude-haiku-5.5",
+        "at": 94.97069978713989,
+        "spent": 0.014940309999999998,
+        "remaining_total": 0.035059690000000004,
+        "remaining_regular": 0.029059690000000006,
+        "reasoning": {
+          "effort": "low"
+        },
+        "body_bytes": 97994,
+        "cold_prompt_bound": 103498,
+        "cold_reserved_usd": 0.08876846000000002,
+        "previous_prompt_tokens": 35730,
+        "matching_previous_messages": true,
+        "matching_previous_signature": false,
+        "quote_without_effort": [
+          0.008257898000000001,
+          41837
+        ],
+        "in_recovery": false
+      }
+    ],
+    "t-abf1c45838": [
+      {
+        "model": "anthropic/claude-haiku-5.5",
+        "at": 107.26010012626648,
+        "spent": 0.01787198,
+        "remaining_total": 0.03212802000000001,
+        "remaining_regular": 0.02612802000000001,
+        "reasoning": {
+          "effort": "low"
+        },
+        "body_bytes": 108703,
+        "cold_prompt_bound": 114015,
+        "cold_reserved_usd": 0.09686655,
+        "previous_prompt_tokens": 41880,
+        "matching_previous_messages": true,
+        "matching_previous_signature": false,
+        "quote_without_effort": [
+          0.008847718000000003,
+          45667
+        ],
+        "in_recovery": false
+      },
+      {
+        "model": "anthropic/claude-haiku-5.5",
+        "at": 109.15610027313232,
+        "spent": 0.01798646,
+        "remaining_total": 0.03201354000000001,
+        "remaining_regular": 0.02601354000000001,
+        "reasoning": {
+          "effort": "low"
+        },
+        "body_bytes": 113003,
+        "cold_prompt_bound": 118507,
+        "cold_reserved_usd": 0.10032539000000001,
+        "previous_prompt_tokens": 41880,
+        "matching_previous_messages": true,
+        "matching_previous_signature": false,
+        "quote_without_effort": [
+          0.009539486000000002,
+          50159
+        ],
+        "in_recovery": true
+      }
+    ]
+  },
+  "new_paid_calls": 0,
+  "ORO_external_submission_or_validation": false,
+  "limits": [
+    "No private task answers were used.",
+    "Replayed model responses are fixed; no new policy accuracy was measured.",
+    "Inference role sequence matching does not assert byte-identical replayed prompts.",
+    "Several exact sealed criteria remain undisclosed.",
+    "Rejection persistence must follow consistent active/retired context to avoid binding stale reviews."
+  ]
+}

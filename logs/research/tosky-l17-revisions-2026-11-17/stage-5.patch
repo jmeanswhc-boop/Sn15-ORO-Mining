@@ -1,0 +1,93 @@
+--- before
++++ after
+@@ -245,6 +245,7 @@
+ A must whose value is read from another listing is ONE must holding the whole description of that listing ("rim colour: unlike the rim colour of the kettle Ovarno sells with a glass lid"): words that describe that other listing (its shop, its kind, "with &lt;property&gt; &lt;value&gt; and &lt;property&gt; &lt;value&gt;" after it) stay inside that one must and are never musts of this product; keep the request's own relation words in it ("the partner piece for", "goes with", "the same as", "different from"), since they decide which value is wanted}.
+ Never put price, budget, stock or quantity into musts.
+ The story around the request (the person meant to use it, where it will stand, what went wrong before, the occasion behind it) is context, not a must, unless it states a property's value or limit outright; and never turn words that are part of what the product is called (a season or an audience named with the product) into musts: those belong to "name".
++An explicit property/value assignment remains a must even when its value is also used as the product's name. Keep the named property; a different style, kind or aspect does not establish that property.
+ A use or occasion the request makes a property of the product itself ("blazers for business wear", "a dress made for parties", "a bag, and it is for a wedding", "the occasion has to be party") IS a must on that property ("occasion: business"), unless the store's category label already names it; a particular person's event, a person or a setting the product is bought for ("to wear at his wedding", "for a colleague"), and how it should sit, feel or look in use, stay context.
+ A product the request names in one phrase joined by "and" (one "I want ..." with one quantity, often the name of one store department) is ONE item; make separate items only when the request gives each product its own quantity or its own requirements.
+ Two requested products can have look-alike names (one name's words inside the other's, such as "rakes" and "rake heads", or "hoses" and "garden hoses and reels"); a sentence that names one of them (often by its category name, "the colour of the garden hoses and reels is ...") gives its requirement to the item that name fits most fully and to no other item, and that name is the item's "shelf".
+@@ -412,6 +413,7 @@
+ - nor does a bare figure whose text does not say what it measures);
+ - a requirement the category label itself states is met by that category;
+ - the category label must match the requested item as a whole;
++- for a request allowing alternatives joined by OR, an allowed alternative satisfies the kind; do not invent a combined-category requirement. An explicitly requested store category still applies;
+ - a rule of being unlike another listing's value counts as met unless the records show that same value;
+ - a key that names the requirement's own property exactly beats a broader key (a 'type' key does not overrule a 'blade type' key);
+ - a dimension's name decides which one it is (a length or a height does not state a width);
+@@ -1622,9 +1624,9 @@
+ #
+ # One product per message, a ranked list of its likeliest unstated properties. The ranking is the model's guess
+ # from the request and the product first (a 0-5 score per property), and how many of the product's listings carry
+-# the property second (ties). A crowded reply (the shopper wants fewer subjects per message) switches to single properties. The same
+-# product asked again uses only topics not settled by the reply. Unqualified indifference settles the listed
+-# focus; other mentioned topics remain open. Named indifference stays narrow, while an explicit broader
++# the property second (ties). Each message has a primary focus; a crowded reply removes the optional topics.
++# A follow-up uses only unsettled topics. Unqualified indifference settles the primary focus;
++# other mentioned topics remain open. Named indifference stays narrow, while an explicit broader
+ # opt-out closes that product or order.
+ #
+ # Everything outside is injected (SendoAsk(request, io)): io.llm(model, messages, max_tokens, timeout) -> text,
+@@ -1978,6 +1980,8 @@
+         if it.last_kind == 'lost' and it.lost == 1 and it.last and it.last[0] in it.open_props():
+             return {'kind': 'reword', 'parts': [(it, it.last[:1])], 'focus': (it, it.last[0])}
+         props = _sd_distinct(it.open_props(), SD_LIST_LEN) if fresh else self.again_list(it)
++        if self.crowded:
++            props = props[:1]
+         return {'kind': 'list' if fresh else 'again', 'parts': [(it, props)], 'focus': (it, props[0])}
+ 
+     def again_list(self, it):
+@@ -2942,6 +2946,7 @@
+                 self.refs.append((number, text))
+         self.unmix()
+         self.quote_refs()  # G16
++        self.restore_named_bindings()
+         budget = brief.get('budget')
+         if isinstance(budget, str) and re.fullmatch('\\s*\\d+(\\.\\d+)?\\s*', budget):
+             budget = float(budget)
+@@ -3010,6 +3015,32 @@
+             if len(counts) == 1 and item.qty == 1 and 2 <= count <= 20:
+                 item.qty = count
+                 self.trace.append({'kind': 'request_count', 'item': number, 'qty': count})
++
++    def restore_named_bindings(self) -> None:
++        """Retain an explicit assignment when its value was used as the item name."""
++        if self.refs:
++            return
++        pattern = (r'\s*(?:and\s+)?the\s+([a-z]+(?:[ -][a-z]+){0,3}?)\s+of\s+'
++                   r'(?:the\s+|an?\s+)?(.+?)\s+(?:is|must be|should be)\s+(?:an?\s+)?(.+?)\s*')
++        for clause in re.split(r'[.!?;,\n()]', self.request):
++            match = re.fullmatch(pattern, clause, re.I)
++            if not match:
++                continue
++            prop, subject, value = (part.strip() for part in match.groups())
++            owners = [(n, item) for n, item in enumerate(self.items, 1)
++                      if item.shelf and _sd_same_topic(subject, item.shelf)]
++            if len(owners) != 1:
++                continue
++            number, item = owners[0]
++            if not _sd_same_topic(value, item.name):
++                continue
++            key = prop + ' of ' + subject
++            if any(_sd_same_topic(need.split(':', 1)[0], known)
++                   for need in item.musts for known in (prop, key)):
++                continue
++            need = key + ': ' + value
++            item.musts.append(need)
++            self.trace.append({'kind': 'request_binding', 'item': number, 'need': need, 'source': clause.strip()})
+ 
+     def quote_refs(self) -> None:
+         # G16: a requirement read off another listing keeps the request's own sentence beside it: the relation it asks
+@@ -5401,7 +5432,10 @@
+ 
+     def fuller_label(self, number: int, label: str) -> str:
+         cat_key = self.category_key()
+-        mine = _roots(self.items[number - 1].name)
++        item = self.items[number - 1]
++        if not item.shelf and re.search(r'\bor\b', item.name, re.I):
++            return ''
++        mine = _roots(item.name)
+         if len(mine) < 2 or mine <= _roots(label) or not cat_key or (self.items[number - 1].shelf and _roots(label) == _roots(self.items[number - 1].shelf)):
+             return ''
+         return next((seen for seen in sorted({str(r.get(cat_key) or '') for r in self.rows.values()}) if seen and mine <= _roots(seen)), '')

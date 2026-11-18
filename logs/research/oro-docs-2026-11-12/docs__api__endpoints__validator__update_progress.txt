@@ -1,0 +1,57 @@
+Validator
+Update progress
+Report per-problem progress during evaluation.
+Server URLloading...POST/v1/validator/evaluation-runs/{eval_run_id}/progressSendAuthorizationPathBody
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Path Parameterseval_run_id*string
+Evaluation run IDFormatuuid
+Request Body
+application/json
+TypeScript Definitions
+Use the request body type in TypeScript.Copy
+Response Body
+200
+application/json
+400
+application/json
+404
+application/json
+409
+application/json
+422
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/validator/evaluation-runs/497f6eca-6276-4993-bfeb-53cbbbba6f08/progress" \  -H "Content-Type: application/json" \  -d '{    "problems": [      {        "problem_id": "9edf0a7c-64c3-4960-a497-d801a548ec4c",        "status": "PENDING"      }    ]  }'200400404409422
+{
+  "accepted": true
+}
+{
+  "detail": "string",
+  "error_code": "INVALID_PROBLEM_ID"
+}
+{
+  "detail": "string",
+  "error_code": "EVAL_RUN_NOT_FOUND"
+}
+{
+  "detail": "string",
+  "error_code": "NOT_RUN_OWNER"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+Submit environment episode results
+Submit up to 500 episode results for evaluations owned by the caller. HTTP 200 is a batch acknowledgement: inspect each item's status for acceptance (201), an already-recorded task (409), or rejection (404/422).
+Vulnerability Disclosure
+How to privately report a security vulnerability affecting ORO's website, API, or SDKs.

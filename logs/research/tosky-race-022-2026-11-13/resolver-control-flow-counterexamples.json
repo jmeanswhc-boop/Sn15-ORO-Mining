@@ -1,0 +1,60 @@
+[
+  {
+    "mechanism": "Exhausted work counter is not proof of completion",
+    "method": "G5B.trail",
+    "source": "agents/ICDI_chidori_v4.py",
+    "lines": [
+      8869,
+      8879,
+      9031,
+      9040
+    ],
+    "analysis_type": "static control-flow counterexample; no agent code executed",
+    "state": {
+      "pending_refs": [
+        "a live unresolved requirement"
+      ],
+      "chain_rounds": 6,
+      "chain_room": null,
+      "steps_left": 20,
+      "spend_below_HARD": true,
+      "ref_values": {},
+      "limit": null
+    },
+    "path": [
+      "Initialize lost=[] and seen=[]",
+      "Enter while because pending refs exist and spend is available",
+      "cap=6; chain_rounds>=cap, so break before populating lost",
+      "ref_values is empty",
+      "lost is empty, so hold condition is false",
+      "Return empty text and hold=false despite pending reference"
+    ],
+    "required_new_behavior": "Report unresolved reference independently of work/hold counters; expose an affordable next action rather than treating this as proof or adding an unbounded hold."
+  },
+  {
+    "mechanism": "An empty find field can suppress pending status without proof",
+    "method": "G5B.trail / E8.pending_refs",
+    "source": "agents/ICDI_chidori_v4.py",
+    "lines": [
+      8975,
+      8977,
+      5519,
+      5521
+    ],
+    "analysis_type": "static branch counterexample; no model response or grader outcome inferred",
+    "state": {
+      "chains_entry_done": false,
+      "allread": true,
+      "last_link_find": "",
+      "value": ""
+    },
+    "path": [
+      "The done=true branch does not apply",
+      "The allread and empty last find branch applies",
+      "Store a PLACEHOLDER_LEAD entry in ref_values",
+      "pending_refs excludes a requirement based on dictionary membership",
+      "Other consumers such as resolved may reject the placeholder, producing inconsistent views of completion"
+    ],
+    "required_new_behavior": "One authoritative proof state; only verified terminal values populate the compatibility view."
+  }
+]

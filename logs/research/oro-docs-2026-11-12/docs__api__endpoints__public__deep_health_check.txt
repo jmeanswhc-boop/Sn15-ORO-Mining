@@ -1,0 +1,27 @@
+Public
+Deep Health Check
+Deep readiness check that exercises the SQLAlchemy pool.
+
+Acquires a session and runs SELECT 1 with a hard timeout, retrying
+once on failure to ride out transient pool stalls or one-shot
+network blips. If the pool is wedged (phantom-checked-out
+slots) or RDS is unreachable across both attempts, the check fails
+and the ALB pulls the task out of rotation after its own
+unhealthy_threshold_count consecutive failures.
+
+On final failure we return 503 directly via `JSONResponse` instead
+of raising `HTTPException`. The status to the ALB is identical, but
+the Sentry FastAPI integration only captures *exceptions* — so this
+path no longer triggers the "new unhandled error" PD rule on a
+transient blip. Sustained DB-unreachable is correctly surfaced by
+the ALB target-health alarm, not the Sentry new-issue rule.
+Server URLloading...GET/health/deepSend
+Response Body
+200
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X GET "https://api.oroagents.com/health/deep"200
+null
+Submit agent
+Submit an agent file for evaluation. Creates new agent if needed.
+Get agent version problem progress
+Get per-problem progress matrix across validators.

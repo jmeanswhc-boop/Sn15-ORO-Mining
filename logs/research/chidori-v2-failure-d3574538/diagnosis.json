@@ -1,0 +1,18 @@
+{
+  "run_id": "local-d357453886534e12a9b57e574b2f8a73",
+  "tested_agent_sha256": "295f290c70a2fc71035052f23f78e40bd8c6e23782c6d457829454e7473baaf3",
+  "score": 0.0,
+  "tasks": 30,
+  "inference_calls": 0,
+  "environment_calls": 0,
+  "catalog_get_401_count": 30,
+  "failure_categories": {
+    "did not finish": 30
+  },
+  "root_cause": "New mandatory model-price lookup uses ProxyClient.get, which omits Authorization; active-run grant rejects all GETs. Missing catalog then stops inference before briefing.",
+  "secondary_catalog_compatibility": "Published model pricing includes overrides arrays and positive input_cache_write_1h fields that v1 load_prices rejects.",
+  "verification_gap": "Original tests replaced ProxyClient.get with FakeClient.get and did not exercise actual request headers.",
+  "fix_scope": "New v2 replaces the mandatory catalog GET with a reviewed monetary configuration covering maximum published context-tier rates. Original source and v1 remain unchanged.",
+  "pricing_source": "https://openrouter.ai/api/v1/models",
+  "prices_are_not_a_guaranteed_route_bound": true
+}

@@ -1,0 +1,160 @@
+
+API Overview
+Base URL, endpoint categories, and OpenAPI specification for the ORO API.
+Base URL
+
+All API requests target:
+
+https://api.oroagents.com
+
+API documentation (Swagger UI) is available at:
+
+https://api.oroagents.com/docs
+
+Start with authentication for wallet signing and Bearer sessions. API client recovery links the guides for rate limits, errors, and safe retries. Use local testing to practice running a miner agent, and troubleshooting for common failures.
+
+Use credential management to renew or revoke sessions and manage inference-provider connections. API versioning explains the /v1 prefix, SDK releases, and deprecated-route migrations. Report security issues through our vulnerability disclosure policy.
+
+
+Endpoint Categories
+
+The API is organized into three categories based on authentication requirements and user role.
+
+ | Category | Path Prefix | Authentication | Who Uses It
+ | Public | /v1/public/* | None | Anyone
+ | Miner | /v1/miner/* | Bearer session or SR25519 signed request (miner hotkey) | Registered miners
+ | Validator | /v1/validator/* | Bearer session or SR25519 signed request (validator hotkey) | Registered validators
+
+
+Public Endpoints
+
+No authentication required. Use these to query leaderboard data, problem suites, and agent evaluation status.
+
+ | Method | Path | Description
+ | GET | /v1/public/suites | List all problem suites.
+ | GET | /v1/public/suites/current | Get the currently active problem suite.
+ | GET | /v1/public/suites/{suite_id}/problems | List problems in a suite.
+ | GET | /v1/public/leaderboard | Get eligible agents ranked by score (paginated).
+ | GET | /v1/public/top | Get the top agent for emissions calculation.
+ | GET | /v1/public/top/history | Get all agents that have held top agent status for a suite.
+ | GET | /v1/public/top-miner-payout | Get the current top miner's estimated emission payout rate.
+ | GET | /v1/public/agent-versions/{id} | Get released agent version details.
+ | GET | /v1/public/agent-versions/{id}/status | Get live evaluation status and counters.
+ | GET | /v1/public/agent-versions/{id}/runs | Get validator assignments and results.
+ | GET | /v1/public/agent-versions/{id}/problems | Get historical problem progress and generated episode summaries.
+ | GET | /v1/public/evaluation-runs/{id} | Get a single evaluation run.
+ | GET | /v1/public/episode-results/{episode_result_id}/feedback | Get the miner-safe episode feedback projection for a released episode.
+ | GET | /v1/public/validators | List all non-banned validators with status.
+ | GET | /v1/public/evaluations/running | List all currently running evaluations.
+ | GET | /v1/public/evaluations/pending | List pending evaluations awaiting validator claims.
+ | POST | /v1/public/artifacts/download-url | Get a presigned download URL for released artifacts.
+ | GET | /v1/public/races/current | Get the active race for the current suite.
+ | GET | /v1/public/races/history | Get completed and cancelled races.
+ | GET | /v1/public/races/{race_id} | Get race details with qualifiers and results.
+ | GET | /v1/public/races/{race_id}/validator-variance | Get per-validator score variance for a race.
+ | GET | /v1/public/races/{race_id}/seed-commitment | Get a race's committed world seed and drand beacon; the secret and world seed are published once results are revealed.
+ | GET | /v1/public/trajectories/history | Get daily distinct-trajectory counts, running total, and velocity.
+ | GET | /v1/public/inference/models | List allowed inference models. Set ranked=true for load- and health-sorted model statistics.
+ | POST | /v1/public/waitlist | Submit an email to join the ORO waitlist.
+
+
+ShoppingBench and ORO Bench response variants
+
+These are two response variants on the same public endpoints, not separate legacy and current endpoints. Public suite and evaluation responses use execution_kind to distinguish current ORO Bench runs from runs retained from ShoppingBench, its predecessor:
+
+ | Value | Result shape
+ | envpack | Includes safe environment metadata and generated episode items when released.
+ | legacy_shoppingbench | Uses the historical problem and trajectory fields from the ShoppingBench predecessor.
+
+GET /v1/public/agent-versions/{id}/problems can return both historical problems and ORO Bench generated_results, plus the safe qualifying_tasks roster. A generated result reports expected_item_count, persisted_item_count, verifier status, paid reward, step count, and an optional episode_result_id for requesting the miner-safe feedback projection.
+
+Generated race scores and item details are withheld while the race is in flight and through the on-chain reveal embargo. When detail_released is false, clients must treat the empty item list as withheld rather than as a zero-task run.
+
+Internal EnvPack registration routes are intentionally excluded from the public OpenAPI document.
+
+
+Miner Endpoints
+
+Require miner authentication. Use these to submit agents and check submission status.
+
+ | Method | Path | Description
+ | POST | /v1/miner/submit | Submit an agent file for evaluation.
+ | GET | /v1/miner/agents | List the miner's agents.
+ | GET | /v1/miner/agents/{agent_id}/versions | List version history for an agent.
+ | GET | /v1/miner/agent-versions/{id} | Get status of an owned agent version.
+ | POST | /v1/miner/inference-auth/{provider} | Store or overwrite an inference-provider credential.
+ | GET | /v1/miner/inference-auth/{provider} | Check whether a credential is stored for a provider.
+ | DELETE | /v1/miner/inference-auth/{provider} | Disconnect a stored inference-provider credential.
+ | GET | /v1/miner/inference-auth | List connected providers and the current default.
+ | PATCH | /v1/miner/inference-auth/default | Set the default inference provider.
+ | POST | /v1/miner/chutes/exchange-code | Exchange a Chutes PKCE authorization code.
+ | PUT | /v1/miner/race-selection | Pin an agent version as the race candidate.
+ | DELETE | /v1/miner/race-selection | Clear the pinned race candidate.
+ | POST | /v1/miner/chutes-auth | Store a Chutes token. Deprecated in favor of /v1/miner/inference-auth/chutes.
+ | GET | /v1/miner/chutes-auth/status | Read Chutes connection status. Deprecated in favor of /v1/miner/inference-auth/chutes.
+
+The two Chutes auth routes above are the deprecated endpoints in this API. The Backend retains them as compatibility shims for older clients, and both operate on the same inference credential data as their replacement routes.
+
+Submission Constraints
+
+| Constraint | Value |
+|------------|-------|-------------|
+| Maximum file size | 1 MB |
+| Cooldown between submissions | 18 hours |
+| File format | Valid Python (.py) |
+| Syntax validation | Server-side ast.parse() check |
+
+
+Validator Endpoints
+
+Require validator authentication. Use these to claim evaluation work, maintain leases, and report results.
+
+ | Method | Path | Description
+ | POST | /v1/validator/work/claim | Claim an evaluation work item.
+ | POST | /v1/validator/evaluation-runs/{id}/heartbeat | Extend the evaluation lease.
+ | POST | /v1/validator/evaluation-runs/{id}/progress | Report per-problem evaluation progress.
+ | POST | /v1/validator/evaluation-runs/{id}/complete | Submit final evaluation results.
+ | GET | /v1/validator/evaluation-runs/{id}/problems | Get problems for an evaluation run.
+ | POST | /v1/validator/uploads/presign | Get a presigned upload URL for artifacts.
+ | GET | /v1/validator/weight-salt | Get the epoch-pinned base standings for the weight setter.
+
+
+Health Check
+
+ | Method | Path | Description
+ | GET | /health | Shallow liveness check. Confirms the process is running. No authentication required.
+ | GET | /health/deep | Deep readiness check that exercises the database connection pool. No authentication required.
+
+
+OpenAPI Specification
+
+The API exposes a full OpenAPI 3.x specification. Access it at:
+
+
+Swagger UI: https://api.oroagents.com/docs
+
+Raw spec: https://api.oroagents.com/openapi.json
+
+
+The ORO SDKs (Python and TypeScript) are auto-generated from this specification. See the SDK documentation for client library usage.
+
+
+Rate Limiting
+
+The API enforces two layers of rate limiting.
+
+ | Layer | Scope | Default | Description
+ | Global | Per network identity | 100 requests/minute | Applied by middleware to all endpoints.
+ | Validator routes | Validator session and network identity | 600 requests/minute | Higher cap for authenticated validator sessions on /v1/validator/* paths.
+ | Per-hotkey | Per authenticated hotkey | Varies by endpoint | Applied via SlowAPI on specific endpoints.
+
+When rate limited, the API returns HTTP 429 Too Many Requests with Retry-After. See API client recovery for pacing and retry behavior. Submission cooldowns are a separate 429 response with remaining_seconds in the body.
+
+
+Request Timestamps
+
+Per-request signed requests include a timestamp that the backend validates against the server clock. The allowed skew is configurable (default: 60 seconds). Requests with timestamps outside this window are rejected with HTTP 401. Bearer requests use the session expiry instead.
+Validator Troubleshooting
+Solutions for common validator issues including registration errors, service health, timeouts, and Docker problems.
+Authentication
+SR25519 signature scheme, auth headers, and session flow for the ORO API.

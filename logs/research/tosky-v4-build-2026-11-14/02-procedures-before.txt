@@ -1,0 +1,101 @@
+.............FE.FFF
+======================================================================
+ERROR: test_lowest_terminal_dispatch_blocks_missing_permission (test_tosky_v4.ProcedureTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 251, in test_lowest_terminal_dispatch_blocks_missing_permission
+    self.assertIsNone(self.e.act('purchase', {}))
+  File "/home/vboxuser/Documents/oro/agents/Tosky_v4.py", line 1289, in act
+    if isinstance(result.data, dict):
+AttributeError: 'NoneType' object has no attribute 'data'
+
+======================================================================
+FAIL: test_both_fallback_order_paths_honor_negative_gate (test_tosky_v4.ProcedureTests) (name='direct_order')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 246, in test_both_fallback_order_paths_honor_negative_gate
+    self.assertEqual(sent, [])
+AssertionError: Lists differ: [('purchase', {})] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+('purchase', {})
+
+- [('purchase', {})]
++ []
+
+======================================================================
+FAIL: test_both_fallback_order_paths_honor_negative_gate (test_tosky_v4.ProcedureTests) (name='finish')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 246, in test_both_fallback_order_paths_honor_negative_gate
+    self.assertEqual(sent, [])
+AssertionError: Lists differ: [('purchase', {})] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+('purchase', {})
+
+- [('purchase', {})]
++ []
+
+======================================================================
+FAIL: test_empty_or_incomplete_review_does_not_grant_permission (test_tosky_v4.ProcedureTests) (answer={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 190, in test_empty_or_incomplete_review_does_not_grant_permission
+    self.assertFalse(e.gate('order')[0])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_empty_or_incomplete_review_does_not_grant_permission (test_tosky_v4.ProcedureTests) (answer={'steps': []})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 190, in test_empty_or_incomplete_review_does_not_grant_permission
+    self.assertFalse(e.gate('order')[0])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_empty_or_incomplete_review_does_not_grant_permission (test_tosky_v4.ProcedureTests) (answer={'steps': [{'duty': 1, 'done': False, 'lines': []}]})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 190, in test_empty_or_incomplete_review_does_not_grant_permission
+    self.assertFalse(e.gate('order')[0])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_invalid_record_line_is_not_completion (test_tosky_v4.ProcedureTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 215, in test_invalid_record_line_is_not_completion
+    self.assertFalse(self.e.gate('order')[0])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_old_cart_approval_is_not_current_cart_approval (test_tosky_v4.ProcedureTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 209, in test_old_cart_approval_is_not_current_cart_approval
+    self.assertFalse(self.e.gate('order')[0])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_unavailable_review_does_not_grant_permission (test_tosky_v4.ProcedureTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 183, in test_unavailable_review_does_not_grant_permission
+    self.assertFalse(self.e.gate('order')[0])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_unchanged_hold_does_not_restart_review_after_unrelated_reads (test_tosky_v4.ProcedureTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 223, in test_unchanged_hold_does_not_restart_review_after_unrelated_reads
+    self.assertFalse(self.e.gate('order')[0])
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 21 tests in 3.692s
+
+FAILED (failures=9, errors=1)

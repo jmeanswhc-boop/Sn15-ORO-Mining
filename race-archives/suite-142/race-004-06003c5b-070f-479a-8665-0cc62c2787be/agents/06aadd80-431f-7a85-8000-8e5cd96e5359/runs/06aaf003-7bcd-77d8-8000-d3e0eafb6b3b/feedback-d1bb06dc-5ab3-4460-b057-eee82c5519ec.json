@@ -1,0 +1,579 @@
+{
+  "schema_version": "oro.episode_feedback.v1",
+  "episode_result_id": "d1bb06dc-5ab3-4460-b057-eee82c5519ec",
+  "task_id": "TF6-recovery-200274",
+  "query": "Find me headphones at or below 140.00 PHP, in stock: proper over-ear or on-ear headphones, not earbuds or in-ear earphones. My preference is the ARTKE in blue. If that exact color and model is gone, keep the budget and stock requirement, and try the same model in another color before changing model.\n\nTask rules:\nYou are a shopping agent. The shopper's critical constraints are category, budget, and in-stock availability; never relax those. The shopper may also name preferred model and color. Those preferences are relaxable only after the exact item becomes unavailable: first try the same model in another color, and only then consider changing models. Prices or stock can change while you shop, so if the exact item disappears after a cart action, recover by finding the least-relaxed in-stock option within budget before ordering. For model identity, use the product's model fact first. Only when that fact is absent may you use an unambiguous model in the title. An unusable or ambiguous model fact cannot be overridden by the title. For color, use the selected variant's options first, then a color fact, then the title. If a source names conflicting colors, treat color as unresolved rather than falling back to another source. A category label alone does not establish model or color. Choose an option with resolved identity. Any eligible listing matching the preferred model and color is a valid first choice. Inspect that actual choice before adding it, and inspect the replacement's identity and current stock after the event.\nThe catalog category_path is available in view and compare. Check that classification against the required category. Reject accessories and non-device listings when a device is requested.\nRead shopper messages returned after cart actions before placing an order. The shopper may clarify requirements or tighten the budget; once stated, those updates apply to later choices. Answer any direct clarification request.\nUnless the shopper asks for a reason, structured justification is optional. If you supply it, use only field/value claims supported by view or compare of the final product and its current price/stock. Specification claims need raw product facts, not title guesses. Do not include summary or evidence free text.",
+  "family": "recovery",
+  "phase": "RACE",
+  "outcome": "completed",
+  "passed": true,
+  "paid_reward": 1.0,
+  "step_count": 13,
+  "tool_call_count": 13,
+  "search_call_count": 2,
+  "termination_code": "placed_order",
+  "interaction": [
+    {
+      "step_index": 0,
+      "turn": 1,
+      "calls": [
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-1-1",
+          "tool_name": "search",
+          "args": {
+            "query": "ARTKE headphones blue over-ear on-ear in stock under 140 PHP"
+          },
+          "observation": {
+            "action": "search",
+            "results": [
+              {
+                "brand": "Kimstore",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 92.0,
+                "product_id": "6854002944032842993",
+                "sku": "1072576442-1",
+                "title": "Equinox Artke Wired Headphones Noise Cancelling Over Ear Surround Sound Audio Monitors With Hd Mic 3.5Mm"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 221.09,
+                "product_id": "2513360921090626007",
+                "sku": "4721361006-4",
+                "title": "Headphone Case Compatible with Sony WH-CH520 Wireless Headphones Bluetooth On-Ear Headset with Microphone Over Ear (Box Only)"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 178.2,
+                "product_id": "1943428140152622313",
+                "sku": "4323733282-1",
+                "title": "Replacement Potein Leather Soft Foam Ear Pads for JBL LIVE500BT Live 500BT Wireless Over-Ear Headphones"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 109.0,
+                "product_id": "3128143762298661611",
+                "sku": "1454614032-1",
+                "title": "XB450 Extra Bass Stereo Over-the-Ear Headphones With Mic"
+              },
+              {
+                "brand": "Tri-Town",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 122.12,
+                "product_id": "1652017569212872656",
+                "sku": "4094317025-3",
+                "title": "Tri-Town Headphones Bluetooth Wireless Y-08 High Configuration Version Y08 Over-ear Headphone Built-in Microphone HiFi Stereo Over Ear Headphone Head Mounted Headset with Mic"
+              },
+              {
+                "brand": "Yoobao",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 1799.0,
+                "product_id": "6925346008646598612",
+                "sku": "4473945534-2",
+                "title": "YOOBAO JBL Tune 660NC Wireless Bluetooth Headphone Over The Ear Foldable Headphone Bluetooth 5.1 30Hrs Playtime Headphone Headset Earphone Handsfree Over Ear Gaming Stereo Super Bass With Mic Sound Quality Wireless Headphones sd card Bluetooth Headphone"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 122.0,
+                "product_id": "6202789884185888541",
+                "sku": "5133162484-3",
+                "title": "P47M Cat Ear Bluetooth 5.0 Headphones Foldable Over-ear Headphones Wired Headset With Microphone LED Light"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 92.8,
+                "product_id": "3339636549330374112",
+                "sku": "5108438376-1",
+                "title": "MZ-08M pink cat ear glowing over-ear Bluetooth headphones LED light wireless card insertion over-ear headphones."
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 92.8,
+                "product_id": "5335237739756761846",
+                "sku": "5044983747-2",
+                "title": "MZ-08M pink cat ear glowing over-ear Bluetooth headphones LED light wireless card insertion over-ear headphones."
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 175.0,
+                "product_id": "301369892344544967",
+                "sku": "4781400143-2",
+                "title": "Bose QuietComfort 45 Over-Ear Headphones Protective Cover Soft Silicone Ear Cushion Replacement Full Enclosure Protective Shell Accessories"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 1,
+      "turn": 2,
+      "calls": [
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-2-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "6854002944032842993"
+          },
+          "observation": {
+            "brand": "Kimstore",
+            "category_path": [
+              "Audio",
+              "Headphones & Headsets",
+              "Over",
+              "Ear Headphones"
+            ],
+            "facts": {
+              "model": "artke",
+              "warranty_type": "local supplier warranty"
+            },
+            "product_id": "6854002944032842993",
+            "title": "Equinox Artke Wired Headphones Noise Cancelling Over Ear Surround Sound Audio Monitors With Hd Mic 3.5Mm",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "blue",
+                "price": 92.0,
+                "sku": "1072576442-1"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 2,
+      "turn": 3,
+      "calls": [
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-3-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "6854002944032842993",
+            "sku": "1072576442-1"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 92.0,
+            "product_id": "6854002944032842993",
+            "sku": "1072576442-1"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 3,
+      "turn": 4,
+      "calls": [
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-4-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "6854002944032842993",
+            "sku": "1072576442-1"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": false,
+              "price": 92.0,
+              "product_id": "6854002944032842993",
+              "sku": "1072576442-1"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 92.0,
+                "in_stock": false,
+                "price_at_add": 92.0,
+                "product_id": "6854002944032842993",
+                "sku": "1072576442-1"
+              }
+            ],
+            "market_event": {
+              "contract_version": "oro_event_v3",
+              "currency": "PHP",
+              "in_stock_after": false,
+              "in_stock_before": true,
+              "kind": "stockout",
+              "new_price": null,
+              "old_price": 92.0,
+              "target": {
+                "product_id": "6854002944032842993",
+                "sku": "1072576442-1"
+              }
+            }
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 4,
+      "turn": 5,
+      "calls": [
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-5-1",
+          "tool_name": "remove_from_cart",
+          "args": {
+            "product_id": "6854002944032842993",
+            "sku": "1072576442-1"
+          },
+          "observation": {
+            "cart": []
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-5-2",
+          "tool_name": "view",
+          "args": {
+            "product_id": "6854002944032842993"
+          },
+          "observation": {
+            "brand": "Kimstore",
+            "category_path": [
+              "Audio",
+              "Headphones & Headsets",
+              "Over",
+              "Ear Headphones"
+            ],
+            "facts": {
+              "model": "artke",
+              "warranty_type": "local supplier warranty"
+            },
+            "product_id": "6854002944032842993",
+            "title": "Equinox Artke Wired Headphones Noise Cancelling Over Ear Surround Sound Audio Monitors With Hd Mic 3.5Mm",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": false,
+                "options": "blue",
+                "price": 92.0,
+                "sku": "1072576442-1"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": "wait, is that still available?",
+      "message": null
+    },
+    {
+      "step_index": 5,
+      "turn": 6,
+      "calls": [
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-6-1",
+          "tool_name": "message",
+          "args": {
+            "content": "No — the blue ARTKE headphones just went out of stock. I'm looking for the same ARTKE model in another color now."
+          },
+          "observation": {
+            "sent": true
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-6-2",
+          "tool_name": "search",
+          "args": {
+            "query": "ARTKE headphones over-ear in stock under 140 PHP"
+          },
+          "observation": {
+            "action": "search",
+            "results": [
+              {
+                "brand": "Kimstore",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 92.0,
+                "product_id": "3013627510356844379",
+                "sku": "1072576442-2",
+                "title": "Equinox Artke Wired Headphones Noise Cancelling Over Ear Surround Sound Audio Monitors With Hd Mic 3.5Mm"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 153.3,
+                "product_id": "3203832584071924595",
+                "sku": "5077783547-2",
+                "title": "Bluetooth Wireless Headset Colorful LED Lights Bass Stereo Wireless Headphones Over-Ear Headphones With Mic Gaming Over-Ear Stereo"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 92.8,
+                "product_id": "3339636549330374112",
+                "sku": "5108438376-1",
+                "title": "MZ-08M pink cat ear glowing over-ear Bluetooth headphones LED light wireless card insertion over-ear headphones."
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 92.8,
+                "product_id": "5335237739756761846",
+                "sku": "5044983747-2",
+                "title": "MZ-08M pink cat ear glowing over-ear Bluetooth headphones LED light wireless card insertion over-ear headphones."
+              },
+              {
+                "brand": "Yoobao",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 1799.0,
+                "product_id": "5418821333797601428",
+                "sku": "4473945534-4",
+                "title": "YOOBAO JBL Tune 660NC Wireless Bluetooth Headphone Over The Ear Foldable Headphone Bluetooth 5.1 30Hrs Playtime Headphone Headset Earphone Handsfree Over Ear Gaming Stereo Super Bass With Mic Sound Quality Wireless Headphones sd card Bluetooth Headphone"
+              },
+              {
+                "brand": "Tri-Town",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 122.12,
+                "product_id": "1652017569212872656",
+                "sku": "4094317025-3",
+                "title": "Tri-Town Headphones Bluetooth Wireless Y-08 High Configuration Version Y08 Over-ear Headphone Built-in Microphone HiFi Stereo Over Ear Headphone Head Mounted Headset with Mic"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 109.0,
+                "product_id": "3128143762298661611",
+                "sku": "1454614032-1",
+                "title": "XB450 Extra Bass Stereo Over-the-Ear Headphones With Mic"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 279.0,
+                "product_id": "938118415685257230",
+                "sku": "924024115-1",
+                "title": "BG TV10 Stereo Bass Over-the-Ear Universal Headphones Headset"
+              },
+              {
+                "brand": "Bose",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 3160.0,
+                "product_id": "3521797150095789749",
+                "sku": "5036098575-1",
+                "title": "Bose 700 Noise Cancelling Noise Cancelling Over Ear Wireless Bluetooth Headphones Headset（In stock ）"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 221.09,
+                "product_id": "2513360921090626007",
+                "sku": "4721361006-4",
+                "title": "Headphone Case Compatible with Sony WH-CH520 Wireless Headphones Bluetooth On-Ear Headset with Microphone Over Ear (Box Only)"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 6,
+      "turn": 7,
+      "calls": [
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-7-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "3013627510356844379"
+          },
+          "observation": {
+            "brand": "Kimstore",
+            "category_path": [
+              "Audio",
+              "Headphones & Headsets",
+              "Over",
+              "Ear Headphones"
+            ],
+            "facts": {
+              "model": "artke",
+              "warranty_type": "local supplier warranty"
+            },
+            "product_id": "3013627510356844379",
+            "title": "Equinox Artke Wired Headphones Noise Cancelling Over Ear Surround Sound Audio Monitors With Hd Mic 3.5Mm",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "black",
+                "price": 92.0,
+                "sku": "1072576442-2"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 7,
+      "turn": 8,
+      "calls": [
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-8-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "3013627510356844379",
+            "sku": "1072576442-2"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 92.0,
+            "product_id": "3013627510356844379",
+            "sku": "1072576442-2"
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-8-2",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "3013627510356844379",
+            "sku": "1072576442-2"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": true,
+              "price": 92.0,
+              "product_id": "3013627510356844379",
+              "sku": "1072576442-2"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 92.0,
+                "in_stock": true,
+                "price_at_add": 92.0,
+                "product_id": "3013627510356844379",
+                "sku": "1072576442-2"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 8,
+      "turn": 9,
+      "calls": [
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-9-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "3013627510356844379",
+            "sku": "1072576442-2"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 92.0,
+            "product_id": "3013627510356844379",
+            "sku": "1072576442-2"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 9,
+      "turn": 10,
+      "calls": [
+        {
+          "call_id": "4d1ca5e629f646bd9c7b07cdd342ee86-turn-10-1",
+          "tool_name": "place_test_order",
+          "args": {
+            "product_id": "3013627510356844379",
+            "sku": "1072576442-2"
+          },
+          "observation": {
+            "order": {
+              "currency": "PHP",
+              "in_stock_at_order": true,
+              "price_at_order": 92.0,
+              "target": {
+                "product_id": "3013627510356844379",
+                "sku": "1072576442-2"
+              }
+            },
+            "status": "placed"
+          },
+          "done": true,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    }
+  ],
+  "observable_issues": [],
+  "diagnostics_state": "available",
+  "failure_category": null,
+  "end_reason": null
+}

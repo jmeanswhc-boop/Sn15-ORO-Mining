@@ -1,0 +1,985 @@
+Miyagi v2 and the Cairn framework
+Investigation recorded on 2026-11-17
+
+The downloaded champion source is
+champions/Miyagi_v2_06af7499-f202-7cf9-8000-3c856a5cf41f/agent.py
+Its SHA-256 is
+69cbf616848f99b0d6dda0e57c44af39b7f4a11e7a347a825cd5b4da69a59b70
+
+Miyagi supplies a suitable Cairn-derived baseline for the next investigation.
+Its strongest mechanisms are tool and observation adaptation, broad preference
+discovery, search driven by newly discovered values, coordinated product sets,
+context reduction, and recovery from an impending failed finish. Its greatest
+observed weakness in the inspected hidden race concerns procedures and customer
+interaction. The selected race run passed 44 of 90 tasks and failed 46. Twenty-
+three failures were process_requirement_missed, exactly half the failures.
+
+The central implementation weakness is the handoff between conversation,
+requirements, evidence, and permission to finish. These representations can
+disagree. A confused answer can be left behind, a review can lose its blocking
+effect, and recovery can submit after a procedure gate returned false. A new
+Cairn-based agent should retain the existing search capabilities while first
+establishing a consistent, bounded way to resolve those disagreements.
+
+1. Download, identity, and evidence coverage
+
+The public leaderboard identified Miyagi VERSION 2 as the champion. Versions 3
+and 4 belong to the same submitting hotkey but were eliminated. The exact version
+identity matters more than the display name. The archive preserves the released
+bytes and metadata. The existing champions/registry.json now indexes this source.
+
+Agent version UUID       06af7499-f202-7cf9-8000-3c856a5cf41f
+Suite                    160, OROBench 6
+Source size              359,054 bytes
+Source lines             5,954
+Direct functions/methods 284
+Including nested helpers 303
+Submitted, UTC           2026-11-13 17:32:16.385153
+Champion/release, UTC    2026-11-17 03:39:47.350850
+Submitted, New York      2026-11-13 12:32:16 EST
+Champion, New York       2026-11-16 22:39:47 EST
+Elapsed to title         3 days, 10 hours, 7 minutes, approximately
+Miner hotkey             5CLjFrXqwgCDFGetZaqoynuYddrtS7u5ohKXRPsnE2RPfmn7
+
+The title-history record reports 0.4305. The live status response separately
+reports weighted_score 0.4302. Its three-entry window has an actual race-26 raw
+score of 0.4834 and seeded entries for races 24 and 25. The fields are preserved
+with their API names in status.json. Seeded entries do not establish actual
+evaluations in those races. The released runs show two actual race numbers,
+23 and 26, with two included validator runs apiece.
+
+All source regions were read, including module helpers, class methods, nested
+helpers, constants, decorators, prompts and call sites. function-index.txt and
+function-index.json cover all 303 function definitions with exact source lines,
+dependencies, and comparison status. configuration.json captures the top-level
+controller configuration. prompt-and-call-inventory.json records the prompt
+constants and 24 model-call expressions. The complete Cairn comparison and
+individual prompt diffs are included beside this report.
+
+The empirical review covers all six released run summaries, all 30 qualifying
+goals, and 120 public episode-feedback files. The feedback comprises one full
+qualifier run and the 90-task race-26 run scoring 0.4889. The transfer saved
+13,894,902 bytes as formatted JSON and completed without download errors. The
+collector and its progress file permit resumption. These were public retrievals.
+No paid inference or new benchmark evaluation was performed.
+
+Public episode feedback returned query=null for all 120 episodes. Qualifying
+goals are separately available in the agent problems response. The race requests
+and model message histories were unavailable in that projection. A request for
+the selected race's EVAL_LOGS_BUNDLE returned HTTP 404. Accordingly, code-derived
+context construction can be described exactly, but the precise model prompts
+sent during those historical race episodes cannot be reconstructed in full.
+Failure categories expose a failing area rather than every rejected predicate.
+
+2. Relationship to Cairn
+
+The reference is the project's archived public Cairn v2 source, submitted on
+2026-11-07, released on 2026-11-08, SHA-256
+2344dcf9218708f75d4ff0dac8f37ea30c3d191a3df71daf1174c08b215ba500.
+It contains 5,181 lines and 240 direct functions/methods.
+
+The AST comparison of direct functions/methods gives
+
+                                Count
+Identical in both                  122
+Present in both, modified           94
+Added in Miyagi                     68
+Removed from the Cairn reference    24
+
+Miyagi retains the Cairn class and self-description. Its transport, state,
+search, review, reference-following, cart and finish machinery show extensive
+structural continuity. This establishes a substantial Cairn code relationship.
+It does not identify the author's immediate starting commit or rule out an
+intermediate public derivative. The source contains comments naming a Sendo
+question engine. That establishes the engine's declared name, while the history
+of its authorship requires additional public provenance.
+
+The largest concentrated replacement is the interviewer. The old collection of
+Cairn question-planning, grouping, wording, reply-reading and settlement methods
+is removed. AskItem, SendoAsk and BodyAsk replace it. Other changes are spread
+across observation restoration, search, pagination, relation tracing, quantities,
+compatibility, context reduction, inference effort and endgame recovery.
+
+Net source growth is 773 lines, about 14.9%. The changed behavior extends well
+beyond question prompts. Comparing only file length or the top-level GUIDE would
+miss most of it. Cairn's title and Miyagi's title demonstrate competitive success
+of specific complete implementations. They do not isolate a framework's causal
+effect from its models, prompts, code changes, task draw and competition field.
+
+3. Measured performance and cost
+
+Included run                     Score    Cost USD       LLM requests  Sandbox seconds
+Qualifier, validator A           25/30    0.512318560          438             83.1
+Qualifier, validator B           25/30    0.461788035          414             88.9
+Race 23, validator A             29/90    3.310439830         1679            416.0
+Race 23, validator B             32/90    3.450999760         1649            358.3
+Race 26, validator A             43/90    3.428542025         1601            399.3
+Race 26, validator B             44/90    3.560565695         1603            486.6
+
+Race 23's mean raw score is approximately 33.89%. Race 26's mean raw score is
+approximately 48.34%. Those races use different worlds. The same source improving
+between them is evidence of different task conditions and run variation. It
+cannot establish a code change, because the version remained the same.
+
+The four race runs average approximately $3.4376 each, or $0.0382 per task. They
+use approximately 18.14 inference requests per task. Their reported inference
+failure counts are 2, 2, 2 and 4. Both qualifier runs average approximately
+$0.4871 and 14.2 requests per task. The run duration covers concurrent tasks and
+must not be interpreted as one task's elapsed time.
+
+The inspected qualifier run contains 25 passes, four request_not_met failures
+and one needs_not_found failure. It ends with 26 purchases and four declines.
+Median environment steps are 14.5, range 9-31. Every task uses three shopper
+messages, for 90 messages in total.
+
+The inspected race-26 run contains
+
+Result                        Tasks   Share of all tasks   Share of failures
+Passed                           44          48.89%
+process_requirement_missed        23          25.56%              50.00%
+request_not_met                  16          17.78%              34.78%
+not_the_best_option               7           7.78%              15.22%
+
+It ends with 78 purchases and 12 declines. Median environment steps are 36.5,
+range 12-99. Every task uses three messages, for 270 in total. All 270 messages
+begin with a product-preference question. Only one lacks a comma-separated list
+of multiple properties. There are no additional messages explicitly asking for
+order approval or supplying a separate explanation in this run's message log.
+The original requests are withheld, so the absence of such messages does not
+identify every omitted procedure.
+
+A disclosed literal text filter identifies 73 replies explicitly expressing
+confusion or requesting repetition, across 33 race tasks. Thirty-eight occur
+in 19 of the 23 procedure-failure tasks. Thirteen occur in six request-mismatch
+tasks, nine in three suboptimal-choice tasks, and thirteen in five passing tasks.
+The filter and its results are in feedback-analysis.json. These counts describe
+observable wording, not Miyagi's internal model classification. The association
+is substantial, but it does not establish the exact omitted procedure in each
+episode. The largest defensible improvement target is interaction and procedure
+handling. A 23-task gain would require every affected task to become fully correct
+and every existing success to survive, which has not been demonstrated.
+
+4. Complete execution workflow
+
+The normal path is
+
+agent_main
+  -> Cairn.__init__
+  -> read_request
+  -> restore and absorb any opening observation
+  -> first_moves for a multi-item task
+  -> construct planner chat
+  -> work / turns
+       -> interview when enough listings are read or a commitment is imminent
+          -> BodyAsk.brief, scout, rank, converse
+          -> take_heard, early_trail, value_search
+       -> planner inference
+       -> run_calls
+          -> validate, adapt and execute calls in order
+          -> refresh offers, resolve references and review a proposed finish
+          -> interpret notes, update cart/listing state and return context
+  -> finish
+       -> fill a short cart, gate, forced purchase
+       -> salvage when appropriate
+       -> forced decline
+  -> up to ten additional planner turns after a refused finish
+  -> final finish attempt
+  -> return timestamped diagnostic dialogue
+
+The active implementation has one shopping controller with several specialized
+model prompts. The interviewer is an in-process component that shares the main
+controller's inference counter, spend accounting, environment session and message
+budget. It is not an independent parallel worker.
+
+5. Initialization, state and transport, source lines 1434-1812
+
+Initialization copies the full opaque binding, accepts dynamic OpenAI-compatible
+tool schemas, obtains the public request and step limit, and starts an elapsed
+monotonic timer. It defaults to 30 steps if the limit cannot be read. The returned
+trace is a list subclass that stamps each appended record with elapsed seconds.
+
+State covers requested items, requirements and withdrawn requirements, overall
+budget and pick rule, messages and procedures, rows and full records, stock
+changes, cart contents and viewed cart, opened pages, reference chains, product
+compatibility, ownership of categories, searches and cached views, inferred
+pagination, evidence about query matches, and endgame attempt counters. Several
+interviewer state fields from the old Cairn implementation remain initialized
+despite the replacement. They should be assessed for actual use before reuse.
+
+act sends one environment action per consecutive step with all binding fields.
+It paces requests by 0.25 seconds, uses a proxy with timeout 95 seconds and three
+retries, and has an outer loop of four attempts. Successful results update step
+and finished state. Non-message observations pass through normalization. It tracks
+which tool and page supplied data. It stops on finishing responses and handles
+selected HTTP 409 sequence errors and credit errors.
+
+The central act method does not enforce product validation, procedural approval,
+remaining steps or model time. Most checks are implemented by callers. Thus each
+helper that calls act needs its own correct preconditions. The main planner path,
+automatic search helpers, gate, completed-cart repair, salvage and forced finish
+do not all enforce the same conditions. The transport retries can also outlast
+the remaining task time because their environment timeout is not shortened by
+the elapsed-time model budget.
+
+6. Request interpretation and its exact prompt inputs, lines 1837-2085
+
+BRIEF receives the complete raw request, every tool's name, description and full
+parameter schema, and an optional opening note clipped per string at 1,500
+characters. It requests JSON for items, shelves, quantities, musts, budget and
+units, stock policy, optimization objective, message and step limits, references,
+rules, wishes, questions explicitly requested, required procedures, quiet decline,
+item-to-item compatibility, tool roles, word-search mode and terminal arguments.
+
+It first uses Haiku with 4,000 output tokens. A missing item or buy role triggers
+Sonnet then Haiku fallback with 2,500 tokens. An apparent duplicated requirement
+on look-alike item names triggers a focused Sonnet rereading. Duplicate shelf
+assignments trigger another Sonnet reading. Empty briefs are retried with a
+10-second delay until the 120-second deadline or inference limits. Incomplete
+nonempty JSON can escape these checks because required fields are not validated
+against a complete brief schema.
+
+The prompt distinguishes product kinds from explicit properties, context from
+firm constraints, combined department names from separate products, and a
+reference listing's identifying description from the requested product's own
+requirements. Miyagi adds specific guidance for requirements assigned to similar
+item names and preservation of relation words such as counterpart versus same.
+It also excludes invitations to ask questions from required procedures. The
+boundary remains vulnerable when the shopper actually requires a check before
+choice but expresses it conversationally.
+
+Same-shelf, equal-quantity items can be merged if no same-named property conflicts.
+This is helpful when extraction duplicates a combined department, but can merge
+two legitimate requested products with different names on one shelf. It keeps
+one quantity rather than summing quantities. The fits relation is remapped after
+merging. Unknown or unmatched reference ownership defaults to item 1.
+
+request_counts repairs certain explicit numeric quantities directly preceding
+the longest matching product name, for counts 2-20 when extraction left quantity
+at one. It does not handle every quantity construction. unmix asks a model to move
+requirements that describe a reference listing into that reference's description.
+quote_refs attaches a matching sentence from the original request to preserve
+the relation. Its lexical match threshold can select a different sentence if
+several discuss similar properties.
+
+Budget zero is not retained as an active monetary limit. A lower step limit read
+from text is applied only if at least ten, although the public policy_view limit
+still supplies the original max_steps. Process entries carry stage and required
+message count. The reserve uses the largest individual order/end procedure count.
+It does not sum multiple procedures on one path and does not reserve messages for
+choose-stage duties. ask_first is requested by BRIEF but has no runtime consumer.
+No normal caller invokes gate('choose'). These are concrete coverage gaps.
+
+ledger renders active requirements, quantities, objective, budget, wishes,
+original rules and procedures. It also identifies the attribute tool and page
+tool. Retired requirements disappear without an explicit retirement explanation,
+while the original request and original rules can remain in model context.
+
+described can mark a long, non-reference requirement as merely descriptive after
+three opened records have no overlapping property keys. This prevents impossible
+literal filtering on story text, but absence in three samples does not establish
+that a genuine shopper constraint is irrelevant. The underlying must remains in
+needs_now while its ledger rendering says it decides nothing. That creates an
+additional disagreement between lexical checks and model-visible requirements.
+
+7. Observation normalization and evidence, lines 121-789 and 1814-1835
+
+The observation adapter handles ordinary dictionaries, JSON inside strings,
+delimited field records, repeated record paragraphs, tables, light HTML markup,
+attribute dictionaries, lists of name/value pairs, column-oriented tables,
+records keyed by IDs, and shallow nested attribute blocks. It learns ID fields,
+restores some numeric identifiers as strings, parses numeric offers, and keeps
+attribute booleans as text when their semantic value matters.
+
+This is a major Cairn strength in unfamiliar worlds. It lets downstream search,
+ownership, ranking and comparison logic reuse a stable representation across
+different tool output formats. The heuristics have bounded recursion and size
+thresholds. They can also choose the wrong field boundary, mistake prose for a
+record, discard a duplicate field, misidentify an ID, or select the largest
+scalar dictionary as the attribute block when it is actually metadata.
+
+_fold_twins normalizes key spelling and combines distinct string values under
+duplicate spellings into a comma-separated value. A synthetic record with
+finish.type=matte and finish_type=glossy becomes a single field containing both
+values when another field keeps the result large enough. This broadens evidence.
+It cannot distinguish conflicting reports from legitimate multivalued properties.
+The model prompt subsequently says one matching list member is sufficient, so
+the interaction between these rules can admit a false match. _FIRST_SPELLING
+retains the first spelling of some merged values, but normal reviews see the
+merged record. The dictionary is module-level and lacks explicit task cleanup.
+
+unspelled can gather new scalar fields from a page into an attributes block when
+those fields were absent in search rows. This supports flat page formats. Three
+additional offer or metadata fields could satisfy the same heuristic.
+
+The evidence helper appends matching attribute keys for at most twelve records,
+eight requirements and three matches per property. This reduces planner effort,
+but names-containing-property is an approximate relation and may favor a nearby
+property. The evidence text warns about different parts/aspects but cannot by
+itself establish semantic equivalence.
+
+8. Scouting and category ownership, lines 2254-3500 and 3690-3764
+
+The controller learns category, title, price, stock and search pagination fields.
+category_key uses enum overlap, cardinality, presence across rows and string
+length rather than a fixed schema. The chosen key requires broad presence, but
+can still be a brand or another low-cardinality field. title_key selects a short,
+distinct, multiword field with high coverage. price/stock keys come from SHAPE
+and are initially retained globally across tools, which can be fragile when
+different tools use different offer fields.
+
+owner_of maps a category to an item using exact shelf equality, exact name
+equality, then shared word roots. A weak positive overlap can assign ownership.
+Ties favor the earlier item. Adoption can assign all stray opened categories to
+the only orphan item. This expands search coverage, but a discovered neighboring
+category can then be treated as the requested category. part_shelves separates
+shared shelves if a better exact category appears. Several cached ownership
+decisions are keyed by label and item count, so changing an item's shelf requires
+deliberate invalidation.
+
+For multi-item tasks with at least twenty allowed steps, first_moves searches
+simple positive requirement values plus a short product noun, then the noun alone.
+It reads another result page if needed, spreads initial observations among items,
+and opens enough records for preference planning. It sets a 0.5-second environment
+gap during opening. It computes a step reserve for questions, later item work and
+finishing. This reduces expensive planner turns, but product-name truncation can
+remove the distinguishing words of a long category. It can also spend a substantial
+part of the environment budget before the first adaptive model plan.
+
+widen and widen_singly acquire attribute coverage across categories, reusing a
+compare tool when it demonstrably includes attributes. The single-item fallback
+ranks promising rows by observed requirement-value words and spreads coverage.
+It usually tries to obtain three to six records per item and preserves explicit
+step reserves. A schema-valid compare tool with an undocumented batch cap is
+learned from successful and empty results.
+
+9. Preference discovery, lines 806-1431 and 3429-3500
+
+BodyAsk constructs an AskItem per current product. It captures the original
+musts, quantity, label, observed property coverage, example values and conversation
+state. It scouts only opened records owned by that item. It filters identifier
+and logistics fields, clips property values to 60 characters, merges some plural
+or joined key spellings, and collects up to four examples per property.
+
+SendoAsk.RANK receives the raw request and per-product stated constraints plus
+up to 28 property names and examples. The model sees properties alphabetically.
+It assigns product odds and property scores from zero to five. It can invent
+eight plausible properties only if no properties were observed. If some fields
+were seen, new scored fields outside the observed set are excluded from ranking.
+Thus a rare or entirely unobserved but important property can be missed even when
+the rank model proposes it.
+
+The ranking prompt favors story hints, properties buyers commonly choose, items
+with few requirements, and higher quantities. The code sorts rare fields after
+common ones once three records were opened, then sorts by score and coverage.
+It zeros exactly normalized stated keys but does not fully reconcile product-
+prefixed or synonymous properties with stated constraints. _sd_key differs from
+the main key normalization, notably around dots and camel case. _sd_distinct
+removes word-subset alternatives, which can erase a genuinely different nearby
+property. Model ranking uses Sonnet first, Haiku fallback, with 2,500 tokens.
+
+The active BodyAsk uses controller time. Its rank threshold is 190 seconds,
+question threshold 210 seconds, and reply-reading threshold 225 seconds. The
+ranking call receives an extended deadline of 230 seconds. Its adapter ignores
+the timeout parameter supplied by SendoAsk and uses the main controller's model
+room instead. A call started before the rank threshold can therefore consume
+most of the remaining question window. The standalone SD_TIME_* constants are
+overridden for this integration.
+
+The default question lists up to eight distinct property names for one product.
+Each environment message still counts as one message. It exposes several possible
+preferences in a constrained budget and reduces the dependence on one perfect
+initial guess. The task's shopper may answer one tracked property, ignore the
+list, or ask for simpler wording. The observed race confirms all those responses.
+
+next_message gives fresh products priority. After all products were asked, it
+returns to one, favoring items with no substantive response. again_list advances
+past an answered property, uses fresh fields after a lost response, and reverses
+the remaining earlier list after indifference. Explicit 'crowded' classification
+switches to single-property questions. A generic 'lost' classification does not
+force immediate clarification of that exchange. With three products and three
+messages, all messages can be used once per product while every answer remains
+confused. Several released race episodes show exactly this pattern.
+
+The source comment describes a shared final message covering up to three items,
+but next_message never creates kind='shared'. Shared-message wording and a
+shared_refused flag remain in the implementation without that active scheduling
+path. The standalone engine's record of an unread raw answer is also not bridged
+into the main ledger by BodyAsk. The interview summary retains raw Q/A for the
+planner, but structured requirement updates and automatic value searches can
+lose the information. A 'single' message marks its property done before its reply
+is successfully understood, which can prevent a needed retry.
+
+10. Reply interpretation and state changes
+
+SendoAsk.HEAR receives only the question, reply clipped to 1,500 characters, and
+product labels. It requests kind, told requirements, indifferent properties and
+the property the reply concerns. The active stated requirements, completed
+procedures, full listing evidence and budget are absent from that prompt. It
+explicitly omits a changed total budget from told requirements, but provides no
+separate budget output. BodyAsk forwards only newly told product requirements.
+There is no normal route for a budget change inside such a reply to update the
+main budget. It also has no reply-delta fields for quantity, objective or a clean
+replacement/withdrawal of an old product requirement.
+
+Product ownership is chosen by overlapping name stems, with preference for an
+item mentioned by this question. A property can be remapped to whichever ranked
+key has the greatest token overlap. This can convert an explicitly stated nearby
+property into the wrong key. The parser requires only that a JSON object contain
+kind. It accepts model-inferred values without exact source quotes. If an item
+number forwarded to take_heard is out of range, that reducer clamps it to the
+first or last existing item instead of rejecting the scope.
+
+Indifferent properties are considered done only if their names occur in the
+reply. A vague 'anything is fine' does not settle the entire list, which protects
+against erasing several unknown preferences. Told properties are recorded as
+done. Duplicate or later changed values are appended without a uniform conflict
+resolution model. Pointer requirements are forwarded for trail resolution.
+The engine tracks told requirements independently of Item.told. Withdrawals or
+new store instructions can therefore leave the interviewer out of date.
+
+take_heard updates needs, limited property withdrawals, free properties and a
+positive budget. The caller, rather than this reducer, usually increments the
+version. In interview, early_trail and value_search run before that final
+version increment. Consequently some cached reads may still be associated with
+an earlier decision version during intermediate helper operations.
+
+For other tool observations, loose_lines extracts longer strings from selected
+shallow wrappers and ignores listing descriptions. It excludes a three-word
+notice such as 'Budget now 20.' and standalone text observations. take_note marks
+lines heard before asking its interpretation model. On a failed interpretation
+those lines are suppressed thereafter. Its NOTE prompt includes the current
+ledger and the new lines, and can add/drop requirements, change budget, report
+stock or price movement. It does not request a complete set of change types.
+Its item-scope clamping and property-name fallback can remove the wrong bound.
+
+run_calls executes all queued calls sequentially but does not invalidate the
+remaining batch after a requirement or budget revision. Our synthetic probe
+executes a basket action after a previous call changes the total budget. The
+model does not receive the revised task until the entire batch returns.
+
+11. Planner prompts and context construction
+
+The main chat starts with GUIDE as the system message. Its first user message
+includes the complete raw request, restored opening observation when present,
+automatic opening searches and record summaries, and a current status/ledger.
+Every planner inference receives this growing message history and the offered
+dynamic tool schemas. The action model is Haiku with Luna fallback, temperature
+zero, 3,000 output tokens and tool_choice='auto'. An otherwise usable text-only
+reply may therefore need another inference. Luna receives an additional rescue
+attempt when the light reply omitted tool calls.
+
+GUIDE describes task success, dynamic schemas, short searches and pagination,
+category membership, property matching, units and ranges, exclusions, reference
+chains, compatible product sets, optimization objectives, stock changes,
+independent interviewing, required procedures and finishing. It urges batched
+independent actions to save model turns. A sentence says thinking costs nothing,
+which is reasonable only as a contrast with environment steps. Inference still
+uses money and time, so that instruction is misleading in a budgeted controller.
+
+GUIDE and the shared reading rules allow a product-prefixed attribute to override
+a contradictory bare property key. They also contain an explicit processor-clock
+exception. These decisions may reflect observed benchmark behavior, but the code
+does not infer their applicability from a new world's schema. They deserve
+generalization review before becoming part of a new agent.
+
+Each executed model call is represented by an assistant tool-call record and a
+tool result. Joined comparison calls receive a result for each original call ID.
+On a crash, answer_open_calls fills missing result entries so the next model call
+has structurally complete history. It correctly tells the planner to inspect
+state before repeating an action whose execution is uncertain.
+
+Observation rendering clips strings in records to 300 characters, ordinary text
+to 3,000, and a result to 15,000. Automatic pagination clips row fields to 200.
+Initial page summaries clip attribute text to 700 total characters and other
+record fields to 300. record_of clips each string to 400 and the whole record to
+3,000. Other-candidate reviews use at most 15 entries of about 900 characters.
+The reference model sees up to 60 records, with opened pages prioritized.
+Decline audits see up to 30 records and replacement selection sees up to 25.
+
+These limits reduce latency and costs but can cut a late compatibility exclusion,
+reference instruction, long closed list or important nested field. Full records
+are retained internally, yet the model can decide from a truncated projection.
+The price of compact context is selective visibility. No token-based relevance
+selection guarantees that each active constraint's supporting evidence survives.
+
+status prints step/time urgency, unread value-search hits, selected candidates,
+reference work, recent changes and a fit plan. It repeats the full ledger when
+it changes or every fourth status call. Otherwise it points back to earlier text.
+trim starts when message content exceeds 120,000 serialized characters, shortens
+the older half of tool messages to roughly 400 characters, and preserves up to
+20 recognized IDs. It does not directly cap tool-call argument bytes or rebuild
+the conversation as one fresh authoritative state. Stale request text and old
+review statements can remain persuasive after a requirement changes.
+
+Anthropic requests mark the system and last message text as ephemeral cache
+boundaries. This can reduce repeated input charges. Most specialized JSON calls
+contain one user message and therefore receive no such cache annotation. The
+cache is a provider optimization, not persistent agent knowledge.
+
+12. Prompt inventory and model allocation
+
+Prompt / source line     Inputs and purpose                         Output / model path
+GUIDE, 99               Main complete action history and tools      Tool calls, Haiku/Luna
+BRIEF, 100              Request, all schemas, opening               Task JSON, Haiku/Sonnet
+NOTE, 101               Current ledger and store/customer notes     Changes, Haiku/Luna
+CHECK, 102              Request, ledger, cart, candidate records     ok/problems/better
+READING, 103            Shared interpretation rules                 Included in audit/swap
+AUDIT, 104              Request, ledger, up to 30 records            fits/open, light then heavy
+UNMIX, 105              Reference needs and other requirements      describe_other
+TRAIL, 106              Pending reference needs and opened/row data Chains, light then heavy
+GATE, 107               Request, due steps, ledger, cart, log/tools  Evidence/call/hold/needs
+SWAP, 108               Lost line, cart, ledger, other records       Fits and prices
+SHAPE, 109              Schema and sample search rows               Field names, light/heavy
+SendoAsk.RANK, 1068     Raw request, item constraints, property list Scores, heavy then light
+SendoAsk.HEAR, 1198     One Q/A and product names                   Reply kind and needs
+
+GUIDE has 9,442 characters, BRIEF 6,735, CHECK 2,735, READING 1,651,
+TRAIL 2,250, GATE 1,240, RANK 1,233 and interviewer HEAR 1,156. AUDIT and
+SWAP are concatenations incorporating READING. Dynamic follow-up prompts also
+repair duplicated brief requirements, shared shelves and combined finish tools.
+
+Typical preprocessing needs one brief inference. Suspicious item scope can add
+one stronger rereading. Each search tool's shape may require one JSON inference
+plus fallback. An interview normally adds one ranking inference and one reply
+interpretation per sent message, with model fallback after invalid JSON. Product
+messages and gate messages share the environment message allowance. Opening
+listings, filtering candidates, price-cap discovery, lexical compatibility,
+pagination and salvage often require environment calls without another planner
+inference. Dynamic review, chain resolution, notes and replacement audits add
+model calls when their triggers occur.
+
+Every model stage ultimately enters the same think/call_model transport. Counters
+and budgets therefore cover the specialized prompts as well as the planner, with
+the retry-count limitation described in section 17. Actual per-stage inference
+usage cannot be recovered from the released feedback projection. Run-wide model
+request totals and billed cost come from the public run summaries.
+
+13. Search, pagination, coverage and objective handling
+
+The value_template first reuses demonstrated search arguments and modes, then
+the BRIEF search_words mapping, then schema heuristics. This supports separate
+word-search/category tools and unusual query-field names. The model is not tied
+to a fixed shop API. The parameter inference can fail when multiple required text
+or mode arguments need disambiguation.
+
+value_words extracts simple positive product values, keeps pointer requirements
+out of lexical queries, and avoids most negations and ranges. Some lower bounds
+introduced by the shopper become search terms. value_forms supplies limited
+joined number/unit spellings, without a general conversion table. After newly
+told needs, value_search searches the fresh value and compatible existing values,
+then opens promising rows, preserving at least eight later steps. It may set
+aside budget filtering when every observed price is over ten times the requested
+cap, reflecting a suspected scale mismatch. That heuristic does not prove a
+currency conversion and should not replace price normalization.
+
+credit_hits records words of successful value searches against every returned
+row. The controller then ranks unread rows by overlap with current required
+values. This can save repeated searches and direct calls to promising records.
+The inference assumes the search respected all query words. A fuzzy or partial
+search can violate it. The opening function still reads attributes before final
+purchase, which reduces but does not eliminate the risk.
+
+SHAPE identifies row/count/next/token/price/stock fields using one model prompt.
+Pagination requires a count, nonempty rows and a usable next argument. A shape
+failure is cached as None for that tool, preventing repeated costly inference
+but also preventing later automatic recovery from an unlucky first sample.
+
+more_pages automatically reads short value-query results and bounded parts of
+larger objective searches. It accounts for remaining questions, items and finish
+steps. A result whose first three prices happen to be increasing can be treated
+as price-sorted even without a schema promise. This can prematurely stop a
+cheapest search when later pages contain a cheaper match.
+
+first_look starts a fresh search at its initial page and limits jumps past rows
+not yet seen. last_page_first learns a paging argument from an accidental last
+page and a first-page retry. The code distinguishes row offsets from page
+numbers using returned next values. However, query_mark removes every integer
+argument, not only the learned paging argument. Two searches with different
+integer price caps can share pagination state. call_mark also drops integer
+arguments matching defaults/minima. These approximations need testing against
+new schemas with several independent numeric filters.
+
+shorter_search retries an empty long query with fewer words, can remove a model
+code and then read a short result in full. codes_dead disables further known-code
+search attempts after two empty trials. That saves time in shops whose index
+excludes codes, but one failed code spelling does not establish that every other
+code will fail. A one-shot read_first_hint prevents a new search when at least
+two previously found candidate rows for that item remain unread.
+
+The cheapest-search branch adds wider_hold, hunt_cheaper, hunt_item, list_below,
+cheaper_rows and cheaper_fit_hint. It mines extra query words from observed
+titles/attributes, tries value forms, walks pages, tests price-cap modes and opens
+cheaper rows. cap_modes infers whether a cap worked from returned prices and an
+empirical probability threshold. list_below progressively lowers the cap, with
+at most four calls per cart line. A price gap between the current cap and the
+lowest row on one unsorted page can remain unexplored. Page and hunt limits also
+make the lowest-known candidate different from a proven global optimum.
+
+cheaper_fit_hint holds a checkout at most twice for an already opened cheaper
+candidate whose simple requirements match lexical evidence. Complex numerical,
+negative, reference and coupled-item constraints are deliberately excluded from
+that shortcut. A 'most' or 'least' objective receives generic pagination and model
+review but lacks an equally developed specialized measure-selection controller.
+Seven inspected race tasks still failed the best-option criterion.
+
+14. Product-set compatibility and reference chains
+
+The compatibility index extracts model codes, part codes, accepted aliases,
+explicit works-with statements, exceptions, linked part pages and recurring code
+families. It can recognize a device family rather than hardcoding each product.
+It supports wildcard x suffixes and can search for a device or part whose code
+fits a previously observed accessory set. link_system requires several carrier
+rows before treating a family pattern as a compatibility system.
+
+fit_faults checks held device/part pairs. fit_plan supplies candidates that cover
+all accessory kinds, complete low-priced sets, and opened sets with simple
+requirements addressed. This counteracts the failure mode of selecting the main
+device first and discovering that no acceptable accessory fits it. It is a
+material advantage over independent per-item choice.
+
+The code patterns and English phrase extraction are heuristic. They may miss
+lowercase codes, nonnumeric models, non-English compatibility prose or different
+negation structures. fit_index caches by record/view counts rather than record
+content, so edited compatibility text with unchanged counts can leave stale
+marks. pair_fits and proven skip or approximate some complex constraints.
+proven_sets can overwrite proven_options for each main-device group, so that
+list alone does not express every coupled group in a larger order.
+
+Reference resolution distinguishes reading attributes from opening the actual
+page when the shop exposes those separately. TRAIL sees pending descriptions,
+opened records first, then rows, and returns ordered links, values and search
+words. quote_refs and TRAIL both emphasize relation wording, whole-description
+matching and counterpart rules. The ledger records a resolved value with the
+partner relation already applied to reduce double application by the planner.
+
+The controller can automatically open known link IDs, recover a unique ID from
+a title code, find shop-specific candidates by values and follow another page.
+It bounds searches, chain rounds, opened pages, time and steps. An unresolved
+chain can hold a finish only a limited number of times. A fallback marks a chain
+resolved even without done=true if every returned link is opened and the last
+link has no find string. If value is absent it stores an 'as stated on' string.
+Opened pages establish access, but this does not prove that the chain is complete
+or that a concrete value was obtained. anchor_view can spend the penultimate step
+opening one remembered link, leaving no inference turn to interpret it before
+checkout. These tradeoffs favor attempting a finish under pressure.
+
+Listing-level override rules can point a selected product's property at another
+listing. override_hint detects some English forms and holds once per line/property.
+That is separate from the original request's refs. It does not construct a full
+new provenance chain in the authoritative requirements state, so later helpers
+can disagree about whether that property was established.
+
+15. Cart operations, ordinary review and procedural gates
+
+The controller adapts single-item add/remove/update schemas and complete basket
+replacement schemas. It infers quantity semantics from enum order and a zero
+minimum, keeps local cart_lines, and refreshes the actual cart before checkout
+when enough steps/time remain. held_units learns certain quantity fields from
+cart rows. whole_removal expands an omitted removal quantity to the full held
+amount. count_fixes can repair mismatches automatically.
+
+These mechanisms reduce waste from invalid tool arguments, but enum order does
+not universally establish add versus remove. A zero minimum does not universally
+establish set semantics. Local cart tracking is updated from arguments even when
+an action observation reports a semantic refusal. full-cart array operations can
+be treated as replacement operations by the tracker even when a new tool means
+incremental changes. Actual cart confirmation therefore matters. cart_ids uses
+ID substring presence in serialized cart views, so a referenced or removed ID
+mentioned in a note can look held.
+
+line_faults checks missing and duplicate product lines, quantities, more-specific
+categories, sold-out lines and known prices. fit_faults checks coupling. unproven
+and bare-number hints ask for better evidence once. The checks intentionally
+stop holding after a few attempts or when time/steps become short. Budget faults
+are reported only up to ten times the budget, reflecting an assumed scale issue
+for larger discrepancies. These are heuristic advisories rather than universal
+terminal invariants.
+
+CHECK receives the raw request, current ledger, actual or planned cart, cart
+records and other candidates for objective tasks. For ordinary non-audited
+purchases, it first tries Haiku and escalates a rejection to Sonnet when available.
+Other cases can start with the judge-selected Sonnet/Haiku sequence. Most JSON
+stages accept the first parseable object rather than validating the full schema.
+
+The review cache key contains sorted IDs and a version. It excludes quantities,
+full listing evidence, observed prices and cart semantics. check_cart adds the
+key to checked before obtaining a verdict. A subsequent call for the same key
+returns an empty blocking message even when the stored verdict is false. An
+absent response also returns an empty blocking message, while a nonempty object
+without ok is stored as a positive verdict. These behaviors were reproduced
+offline and can admit an unchecked or previously rejected cart.
+
+GATE receives the original request, all due steps for a stage, ledger, cart,
+numbered done_log, recent notes, message/step allowance and tool schemas. It asks
+for proof lines or the next tool call. A missing proof may trigger one stronger
+model nudge. Order message proof must postdate the last cart change. Procedural
+calls can message the shopper or invoke another tool, using up to three gate
+rounds.
+
+The gate only checks entries returned by the model. It does not ensure every
+required step has a corresponding successful entry. With no call returned, it
+can cache the gate as satisfied even when a returned step is explicitly false.
+After failed inference or exhausted rounds it returns true. A gate question's
+follow-up can add product needs or a textual hold, but other change types are
+not parsed through a complete shared reducer. The prompt requires the shopper's
+reply to 'grant' order-related steps, conflating information delivery with consent.
+There are no choose-stage gate calls in normal execution. These facts fit the
+observed concentration of procedure failures, while withheld requests prevent
+attribution of all 23 to one specific line of code.
+
+16. Finishing, failure recovery and deliberate risk taking
+
+The ordinary checkout path can run a cheapest hunt, refresh offers/cart, handle
+stock loss, follow references, check compatibility and cart structure, read
+missing facts, issue evidence hints, compare cheaper records, review the cart,
+ask a late question, gate the order and finally send the purchase call alone.
+After a refusal, it interprets notes and offers replacement candidates. All
+automatic work consumes real environment steps even when no planner turn occurs.
+
+The decline path can trace unresolved references, search for fitting items,
+audit known records, open plausible rows, challenge an early decline, restore
+previously reviewed lines and complete a verified candidate cart. AUDIT and SWAP
+share the same general reading prompt. They choose among a bounded subset of
+seen records, so an absence in their context is not an exhaustive no-match proof.
+
+finish tries to fill missing items and orders a held cart when possible. It calls
+gate but discards the returned permission. It does not run the ordinary cart
+review. salvage is a separate automatic fallback, once per task. It keeps existing
+lines, scores candidates by simple evidence, compatibility and price, builds the
+best available set, then purchases. If over budget, it can replace items with the
+cheapest candidates without revalidating the whole set's requirements or coupling.
+It skips total-budget enforcement in each-item mode. Its gate result is also
+discarded. A final decline follows if these attempts cannot finish.
+
+These choices may recover points that a cautious controller would forfeit by
+stopping unfinished. Their value depends on the world and the correctness of
+available candidates. Treating every imperfect cart as inadmissible could reduce
+Miyagi's gains. Treating every fallback purchase as reliable would ignore the
+all-or-nothing task contract. A controlled update must measure both fallback
+rescues and fallback-induced wrong purchases.
+
+work catches crashes and resumes turns up to three times. answer_open_calls
+repairs unfinished tool-call records in the model context. The entry point also
+catches exceptions and attempts finish. The state changes made before a crash
+are not transactional, so a resumed helper can encounter partially updated cart,
+note or candidate state. Broad _soft decorators log errors and return defaults
+in selected helpers. They preserve progress but can turn an interrupted check
+into no warning, which changes the finish decision.
+
+17. Inference, latency and the $5 run cap
+
+The configured light, heavy and spare models are Haiku 5.5, Sonnet 5.5 and GPT-6
+Luna. All inference and environment traffic uses the supplied ProxyClient.
+There are 42 planner iterations initially and up to ten extra after a refused
+finish. ALL_CALLS is 60, but counts model-selection attempts rather than every
+physical request. A synthetic HTTP 429 sequence made four physical requests while
+the counter rose by one. Empty-light and reasoning-effort retries have additional
+counter rules. Thus 60 is not a strict physical-request upper bound.
+
+The controller accounts reported usage.cost only when a response has choices.
+Failed requests or omitted cost fields can be unaccounted. It reserves no charge
+before a call. A synthetic call at $0.077 followed by a $0.020 bill raised spend
+to $0.097 despite SPEND_HARD being $0.078.
+
+SPEND_SOFT = $0.055 mainly affects judge availability and some prompts.
+SPEND_HARD = $0.078 bounds the ordinary planner loop after spending occurs.
+HEAVY_ROOM = $0.020 permits a heavy judge when the nominal remaining room allows.
+The recovery planner can continue below SPEND_HARD + $0.010, or $0.088.
+Helper and finish calls are not all bounded by that same threshold.
+
+At 90 invocations, $0.078 allocations sum to $7.02 and $0.088 to $7.92. At 30
+qualifying invocations they sum to $2.34 and $2.64. These are nominal thresholds,
+not strict upper bounds because individual calls can overshoot. The observed
+race bills of $3.31-$3.56 are useful evidence of typical recorded runs, but the
+source does not guarantee the user's $5 total cap or $2 qualifying cap.
+
+Timing uses elapsed monotonic time. The nominal task budget is 300 seconds,
+model margin twenty, minimum useful call room six, wind-down at 200, last normal
+turn at 255 and some extra room for an empty cart. Model HTTP timeouts shrink
+to five-second buckets near the deadline. Delays are bounded by a nominal
+45-second retry-wait counter, with jitter. Successful brief parsing resets that
+counter, and transport time lies outside it. A late reply can also exceed the
+remaining per-stage interview time because its adapter ignores the requested
+timeout.
+
+Light tool-call reasoning becomes low effort after 90 seconds, on tasks allowing
+at least seventy steps, or after an empty light response. Unsupported effort
+parameters disable the feature. This targets reasoning that exhausts output
+tokens before returning actions. It is a practical latency improvement, but a
+quality/latency tradeoff that needs task-level measurement. Timing here is elapsed
+task execution, rather than time-of-day or validator identity routing.
+
+For our future implementation, an initial $0.050 per-invocation allowance would
+sum to $4.50 across ninety and $1.50 across thirty, leaving room under both caps.
+It needs admission based on current input/output rate envelopes, physical retry
+counting, conservative accounting when usage is absent, and a reserved finish
+allowance. The value of stronger calls should be measured by task outcomes.
+Those measures should be added in a separate evaluated step before altering the
+interviewer or search strategy, because a new spending policy can itself change
+which decisions receive a model call.
+
+18. Verified defects and interpretation limits
+
+offline_probe.py performs synthetic method-level checks with live transports
+replaced by deterministic stubs. It never starts a real shopping run. Its output
+is offline-probes.json. All fourteen targeted behaviors were reproduced.
+
+1. A repeated unchanged negative cart review returns no blocking message.
+2. A nonempty review object without ok is stored as positive.
+3. A missing review returns no blocking message and is cached as checked.
+4. Changing quantity leaves the review key unchanged.
+5. Conflicting duplicate attribute spellings are merged into a combined value.
+6. A short budget notice is not extracted.
+7. A note whose interpretation fails is already marked heard.
+8. An invalid item index is applied to the last real item.
+9. Missing gate proof can be treated as satisfied.
+10. Forced finish purchases after gate returns false.
+11. A queued basket action still runs after a budget change.
+12. Physical inference retries exceed the logical request counter.
+13. A model bill can exceed the nominal hard spend threshold.
+14. An unread answer retained by the asking engine does not update the main ledger.
+
+These probes establish actual control behavior under the stated synthetic inputs.
+They do not estimate how many historical failures each defect caused. The public
+transcripts establish outcomes and interaction patterns, while the unavailable
+race requests and internal model traces limit individual causal attribution.
+
+19. Concrete examples from the inspected public transcripts
+
+The qualifying run fails t-6fd2a792df with needs_not_found. Its third message
+elicits a single-pack preference, after two indifferent replies. The final order
+still fails discovery, so one successful answer does not establish complete
+preference coverage. Tasks t-3254025544 and t-108fbf1075 elicit packaging/pack
+preferences but fail request matching, showing that extraction, candidate matching
+and finishing remain separate sources of error. t-e622afe641 ends in a failed
+decline after three indifferent multi-property questions. t-fc0b16b797 purchases
+an incorrect glasses choice despite completing its three questions.
+
+In race task t-970f8ed149, the first product question receives a request for
+smaller words, the next product discloses a packaging preference, and the third
+question receives another expression of confusion. The agent buys at step 25
+and the verdict is process_requirement_missed. This establishes an unresolved
+conversation pattern before a procedural failure without exposing the hidden
+request's exact procedure.
+
+In t-a107a5eaed, one product discloses a requirement and two other product replies
+ask for repetition. The agent finishes an order at step 75 with a procedural
+failure. In t-3baa44b122 all three property-list answers request clarification,
+and the eventual purchase at step 82 is valid but suboptimal. Another task,
+t-3d4fb3dae8, also has three confused replies yet passes. Therefore confusion is
+a risk signal rather than a sufficient explanation for every failure.
+
+These examples are documented by episode IDs and complete public interactions
+in feedback-analysis.json and feedback/. They do not rely on private grader
+checks. They should be retained as regression evidence for conversation handling,
+without copying any task, product or vocabulary identifiers into an agent.
+
+20. Implications for the next Cairn-based framework
+
+Use the exact archived Miyagi source as a comparison baseline within the Cairn
+family. Preserve the capabilities that explain its broad coverage during initial
+experiments, especially schema adaptation, reference-page handling, value-driven
+searches, pagination, compatible-set selection and compact planner context.
+
+The first accuracy experiment should address interaction completion. Represent
+each explicit procedural duty and each consequential confused exchange with
+its source, item scope, required stage, completion evidence and remaining message
+cost. That representation must be used by both the interviewer and the terminal
+controller. A confused reply needs a short clarification targeted to the same
+subject when the budget permits. The scheduler must decide deliberately between
+clarifying, asking another product, and preserving a mandatory procedure message.
+The current unconditional preference for fresh products should not silently
+make that choice. A crowding response should promptly reduce question breadth.
+
+Treat this as a scoped experimental hypothesis. The observations justify testing
+it, but do not justify adding broad new clarification to every indifferent reply.
+An indifferent answer can be fully useful, and a required information delivery
+does not require customer assent. A generic invitation to ask differs from an
+explicit instruction to obtain approval. These distinctions belong in the
+interpretation and procedure contract before hard finish guards are tightened.
+
+A subsequent correctness experiment should repair review-state semantics.
+Preserve positive and negative outcomes separately, reject malformed reviews as
+inconclusive, include quantities/current requirements/relevant record revisions
+in the key, and permit bounded reconsideration with concrete new evidence. Keep
+one terminal precondition shared by normal checkout, completed-cart repair,
+salvage and forced finish. A failed procedure check should lead to repair while
+budget permits. Repeating the same check without new information should remain
+bounded. The prior ICDI development demonstrated the danger of introducing a
+blocking validator whose response protocol the model does not reliably satisfy.
+
+Further experiments can address conflicting evidence without unioning mutually
+exclusive values, short and unread change notices, scope validation, and invalid
+queued actions. These changes affect many downstream decisions and therefore
+require independent regression checks before combining them with new search.
+
+The seven best-option failures justify a later search-coverage experiment.
+Track which query and pages have actually been read, preserve all non-pagination
+filters in its identity, distinguish observed ordering from guaranteed ordering,
+and use whole compatible sets for total-price objectives. Measure step and time
+cost as well as newly solved optimal-choice tasks. Do not assume that more pages
+or more prompt text automatically improve the score.
+
+An evaluation sequence should keep exact source hashes and fixed selections,
+compare each patch with its immediate baseline, identify every changed passing
+case, and retain per-task questions, parsed updates, actual terminal actions,
+inference requests, costs and elapsed time. Synthetic probes verify mechanisms.
+Paid evaluation determines semantic accuracy. Independent hidden races determine
+generalization. Current public and local practice worlds are compiled separately,
+so scores from unrelated task rosters must not be treated as paired comparisons.
+
+21. Submission and integrity considerations
+
+The archived code has one synchronous agent_main and imports only json, random,
+re, time, typing, annotations and the supported ProxyClient. It is below 1 MB,
+parses as Python, uses dynamic tool schemas, and has no file I/O, direct network
+client, dynamic evaluation or external storage. Its random use is retry jitter.
+Its time use concerns elapsed execution, timeout handling and diagnostics.
+
+ORO permits building on publicly released agents and requires meaningfully
+different reachable logic for a derivative submission. Current public rules
+prohibit suite identifiers, embedded answers, fixed product/attribute/unit lookup
+tables, private grader logic and copying unpublished work. A champion's source
+is evidence of an accepted historical submission. It is not automatic approval
+of a future close copy under the current integrity check. In particular, the
+property-specific processor rule, normalization vocabulary and code patterns
+should be reviewed for general applicability before transfer. This report makes
+no finding that Miyagi violates ORO rules.
+
+The source archive has been preserved for research. Future modifications should
+retain a reproducible comparison and include only general, reachable changes
+supported by current rules. No registration, submission or new mining agent was
+created during this investigation.
+
+22. Evidence files and reproduction
+
+status.json                    Exact champion identity and release snapshot
+runs.json                      Six included public run summaries
+problems.json                  Qualifying goals and released episode metadata
+top-history.json               Public champion transition history
+source-comparison.json         AST comparison with archived Cairn v2
+cairn-to-miyagi.diff            Complete source diff
+guide/brief/check/etc .txt      Exact extracted prompt constants
+*-changes.diff                 Prompt differences
+prompt-and-call-inventory.json Prompt constants and 24 model-call expressions
+configuration.json             Controller constants and regex configuration
+function-index.txt/.json       All 303 definitions and dependencies
+feedback-plan.json             Selected 120 public episode identities
+feedback-progress.json         Complete/resumable retrieval checkpoint
+feedback-analysis.json         Results, message logs and disclosed confusion filter
+feedback/                      All 120 public episode-feedback responses
+offline_probe.py               Transport-isolated mechanism checks
+offline-probes.json            Fourteen reproduced behaviors
+
+Offline mechanism reproduction from the repository root
+python3 logs/research/miyagi-2026-11-17/offline_probe.py
+
+Primary public references
+https://api.oroagents.com/v1/public/agent-versions/06af7499-f202-7cf9-8000-3c856a5cf41f/status
+https://api.oroagents.com/v1/public/agent-versions/06af7499-f202-7cf9-8000-3c856a5cf41f/runs
+https://api.oroagents.com/v1/public/agent-versions/06af7499-f202-7cf9-8000-3c856a5cf41f/problems
+https://api.oroagents.com/v1/public/top/history
+https://oroagents.com/docs/miners/monitoring
+https://oroagents.com/docs/miners/scoring
+https://oroagents.com/docs/miners/code-requirements
+README.md and docs/miner-guide.md in the project explain the active contract.

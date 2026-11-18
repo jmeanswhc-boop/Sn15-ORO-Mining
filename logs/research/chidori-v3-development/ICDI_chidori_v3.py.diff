@@ -1,0 +1,461 @@
+--- ICDI_chidori_v2.py
++++ ICDI_chidori_v3.py
+@@ -1,4 +1,4 @@
+-# ICDI CHIDORI v2: self-contained pricing admission for the provided POST client.
++# ICDI CHIDORI v3: scoped budget-denial and recovery corrections.
+ import json
+ from decimal import Decimal, InvalidOperation, ROUND_CEILING
+ import random
+@@ -4810,10 +4810,21 @@
+         return [ln for ln in out if ln not in self.heard]
+ 
+     def read_note(self, lines):
+-        for ln in lines:
+-            self.heard.add(ln)
++        for line in lines:
++            if line not in self.heard and line not in self.pending_notices:
++                self.pending_notices.append(line)
++        lines = list(self.pending_notices)
++        if not lines:
++            return ""
++        key = (tuple(lines), self.version, self.step)
++        if self.notice_attempts.get(key, 0) >= 2:
++            return ""
++        self.notice_attempts[key] = self.notice_attempts.get(key, 0) + 1
+         p = NOTE_PROMPT + "\n\nITEMS AND REQUIREMENTS NOW:\n" + self.ledger() + "\n\nTHE NOTICE:\n" + "\n".join(lines)
+-        ans = self.json_ask(p, [LIGHT, SPARE], 2500) or {}
++        ans = self.json_ask(p, [LIGHT, SPARE], 2500)
++        if not self.valid_notice(ans):
++            self.trace.append({"kind": "notice_pending", "count": len(lines)})
++            return ""
+         gone = [str(g) for g in listify(ans.get("gone")) if isinstance(g, str) or (isinstance(g, int) and not isinstance(g, bool))]
+         known = [g for g in gone if g in self.rows]
+         for g in known:
+@@ -4824,7 +4835,9 @@
+         if self.note_sold and len(lines) == 1:
+             self.sold_lines.add(lines[0])
+         kind = ans.get("kind")
+-        if kind is not None and kind != "change":
++        if kind != "change":
++            self.heard.update(lines)
++            self.pending_notices = [line for line in self.pending_notices if line not in lines]
+             return ""
+         rec = []
+         b = self.budget_guard(ans.get("budget"))
+@@ -4869,6 +4882,8 @@
+         out = summ
+         if rec:
+             out += " (" + "; ".join(rec) + ")"
++        self.heard.update(lines)
++        self.pending_notices = [line for line in self.pending_notices if line not in lines]
+         return out.strip()
+ 
+     def live(self):
+@@ -6360,7 +6375,7 @@
+             msg = self.think(self.convo, [LIGHT, SPARE], DIRECTOR_CAP, self.offered())
+             if msg is None:
+                 self.misses += 1
+-                if self.no_credit or self.calls >= CALL_CAP:
++                if self.no_credit or self.calls >= CALL_CAP or self.request_denied:
+                     break
+                 if self.misses > 2:
+                     if self.clock() >= OUTAGE_CUTOFF:
+@@ -8663,9 +8678,14 @@
+         ids = list(planned) if planned else self.cart_ids()
+         key = "|".join(sorted(ids)) + "#" + str(self.version)
+         js = self.judges(limit)
+-        if key in self.checked or not js or not ids:
+-            return ""
+-        self.checked.add(key)
++        context = self.cart_review_context(ids, bool(planned))
++        if key in self.checked and self.review_contexts.get(key) == context:
++            return self.review_messages.get(key, "") if self.verdicts.get(key) is False else ""
++        if not js or not ids:
++            return ""
++        self.checked.discard(key)
++        if self.verdicts.get(key) is not False:
++            self.verdicts.pop(key, None)
+         parts = [CHECK_PROMPT, "REQUEST:\n" + self.request, "REQUIREMENTS NOW BINDING:\n" + self.ledger()]
+         if planned:
+             parts.append("CART (planned only: judge it as though these listings sat in the cart, each at its asked quantity): " +
+@@ -8695,15 +8715,22 @@
+         ans = None
+         if len(js) == 2 and not planned and not self.audited and not PICKS3.fullmatch(self.pick()) and not weak:
+             ans = self.json_ask(prompt, [LIGHT], 3000)
+-            if ans is not None:
+-                js = [HEAVY] if (ans.get("ok") is False and HEAVY in self.judges(limit)) else []
++            if isinstance(ans, dict) and isinstance(ans.get("ok"), bool):
++                js = [HEAVY] if (ans["ok"] is False and HEAVY in self.judges(limit)) else []
++            else:
++                ans = None
+         if js and not self.no_credit:
+             a2 = self.json_ask(prompt, js, 3000)
+-            if a2 is not None:
++            if isinstance(a2, dict) and isinstance(a2.get("ok"), bool):
+                 ans = a2
+         self.trace.append({"kind": "cart_check", "ids": ids, "ok": None if ans is None else ans.get("ok")})
+-        self.verdicts[key] = ans is not None and ans.get("ok") is not False
+-        if ans is None or ans.get("ok") is not False:
++        if not isinstance(ans, dict) or not isinstance(ans.get("ok"), bool):
++            return ""
++        self.checked.add(key)
++        self.review_contexts[key] = context
++        self.verdicts[key] = ans["ok"]
++        if ans["ok"]:
++            self.review_messages.pop(key, None)
+             return ""
+         self.leads = [x for x in self.leads if x not in ids]
+         probs = [str(p) for p in listify(ans.get("problems"))][:5]
+@@ -8714,6 +8741,7 @@
+         if better:
+             t += " Candidates that seem preferable: " + ", ".join(better) + "."
+         t += " Repair the cart, or else demonstrate that the reviewer erred by reading the records afresh, and then check out."
++        self.review_messages[key] = t
+         return t
+ 
+ 
+@@ -9913,9 +9941,11 @@
+                     continue
+                 if gt:
+                     tail.insert(0, "[Cairn] " + gt)
++            self.recovery_blocked = ""
+             res = self.env(tool, args)
+             if res is None:
+-                replies.append("[Cairn] The call broke down through a network or server problem; you may retry it.")
++                replies.append(HOLD_OPEN + " " + self.recovery_blocked + self.cart_footer() if self.recovery_blocked else
++                               "[Cairn] The call broke down through a network or server problem; you may retry it.")
+                 continue
+             obs = res.get("observation")
+             if tool == r.get("compare") and ct and isinstance(args.get(ct), list) and len(args[ct]) > 1:
+@@ -10047,6 +10077,9 @@
+     def finish(self, again=False):
+         if self.finished or self.store_broke or self.left() <= 0:
+             return ""
++        hold = self.terminal_recovery_hold(False)
++        if hold:
++            return hold
+         fresh = self.fresh()
+         holding = bool(self.cart_ids())
+         whole = True
+@@ -10088,6 +10121,9 @@
+                     self.reread()
+                     if self.finished or self.left() <= 0:
+                         return ""
++                hold = self.terminal_recovery_hold(True)
++                if hold:
++                    return hold
+                 go, text = self.gate("order")
+                 if not go:
+                     return text or "A required procedure remains unresolved."
+@@ -10107,6 +10143,9 @@
+         if ref:
+             da, f = shape_args(self.quiet_fill(dict(self.brief.get("refuse_args") or {})), self.schemas.get(ref) or {})
+             if not f:
++                hold = self.terminal_recovery_hold(False)
++                if hold:
++                    return hold
+                 go, text = self.gate("end")
+                 if not go:
+                     return text or "A required procedure remains unresolved."
+@@ -10144,24 +10183,112 @@
+         best = max(cands, key=lambda k: (len(set(figs[k])), len(figs[k]), -order.index(k)))
+         return best if len(set(figs[best])) >= 3 else None
+ 
+-# Monetary amounts are integral nanodollars; prices are read through the proxy.
+-# Monetary configuration uses the maximum published rate across context tiers.
+-# Refresh these settings against the provider catalog before a release.
++# Monetary amounts are integral nanodollars. Prices are reviewed financial settings.
++# Context-tier admission retains maximum published rates as its fallback.
++# Checked against provider metadata on 2026-11-12; refresh before release.
+ # They are estimates for admission, not certified maximum routed prices.
+-BUDGET_PRICE_CONFIG = {"data": [
+-    {"id": LIGHT, "context_length": 1000000,
+-     "top_provider": {"max_completion_tokens": 128000},
+-     "pricing": {"prompt": "0.0000005", "completion": "0.0000025",
+-                 "input_cache_read": "0.00000005", "input_cache_write": "0.000000625", "request": "0"}},
+-    {"id": HEAVY, "context_length": 1000000,
+-     "top_provider": {"max_completion_tokens": 128000},
+-     "pricing": {"prompt": "0.000002", "completion": "0.00001",
+-                 "input_cache_read": "0.0000001", "input_cache_write": "0.0000025", "request": "0"}},
+-    {"id": SPARE, "context_length": 1050000,
+-     "top_provider": {"max_completion_tokens": 128000},
+-     "pricing": {"prompt": "0.0000002", "completion": "0.00000075",
+-                 "input_cache_read": "0.00000002", "input_cache_write": "0.00000025", "request": "0"}},
+-]}
++BUDGET_PRICE_CONFIG = {
++    "data": [
++        {
++            "id": "anthropic/claude-haiku-5.5",
++            "context_length": 1000000,
++            "top_provider": {
++                "max_completion_tokens": 128000
++            },
++            "pricing": {
++                "prompt": "0.0000005",
++                "completion": "0.0000025",
++                "input_cache_read": "0.00000005",
++                "input_cache_write": "0.000000625",
++                "request": "0"
++            },
++            "context_tiers": [
++                {
++                    "min_prompt_tokens": 0,
++                    "pricing": {
++                        "prompt": "0.0000001",
++                        "completion": "0.0000005",
++                        "input_cache_read": "0.00000001",
++                        "input_cache_write": "0.000000125",
++                        "request": "0"
++                    }
++                },
++                {
++                    "min_prompt_tokens": 100000,
++                    "pricing": {
++                        "prompt": "0.0000005",
++                        "completion": "0.0000025",
++                        "input_cache_read": "0.00000005",
++                        "input_cache_write": "0.000000625",
++                        "request": "0"
++                    }
++                }
++            ]
++        },
++        {
++            "id": "anthropic/claude-sonnet-5.5",
++            "context_length": 1000000,
++            "top_provider": {
++                "max_completion_tokens": 128000
++            },
++            "pricing": {
++                "prompt": "0.000002",
++                "completion": "0.00001",
++                "input_cache_read": "0.0000001",
++                "input_cache_write": "0.0000025",
++                "request": "0"
++            },
++            "context_tiers": [
++                {
++                    "min_prompt_tokens": 0,
++                    "pricing": {
++                        "prompt": "0.000002",
++                        "completion": "0.00001",
++                        "input_cache_read": "0.0000001",
++                        "input_cache_write": "0.0000025",
++                        "request": "0"
++                    }
++                }
++            ]
++        },
++        {
++            "id": "openai/gpt-6-luna",
++            "context_length": 1050000,
++            "top_provider": {
++                "max_completion_tokens": 128000
++            },
++            "pricing": {
++                "prompt": "0.0000002",
++                "completion": "7.5E-7",
++                "input_cache_read": "0.00000002",
++                "input_cache_write": "0.00000025",
++                "request": "0"
++            },
++            "context_tiers": [
++                {
++                    "min_prompt_tokens": 0,
++                    "pricing": {
++                        "prompt": "0.0000001",
++                        "completion": "0.0000005",
++                        "input_cache_read": "0.00000001",
++                        "input_cache_write": "0.000000125",
++                        "request": "0"
++                    }
++                },
++                {
++                    "min_prompt_tokens": 272000,
++                    "pricing": {
++                        "prompt": "0.0000002",
++                        "completion": "0.00000075",
++                        "input_cache_read": "0.00000002",
++                        "input_cache_write": "0.00000025",
++                        "request": "0"
++                    }
++                }
++            ]
++        }
++    ]
++}
+ 
+ 
+ AGENT_USD_LIMIT = "0.035"
+@@ -10225,7 +10352,7 @@
+             completion = count_of(top.get("max_completion_tokens"))
+             if context is None or context <= 0:
+                 continue
+-            self.prices[row["id"]] = {
++            price = {
+                 "input": max(values["prompt"], values.get("input_cache_read", 0), values.get("input_cache_write", 0)),
+                 "plain_input": values["prompt"],
+                 "output": values["completion"] + values.get("internal_reasoning", 0),
+@@ -10233,6 +10360,39 @@
+                 "context": context,
+                 "completion": completion,
+             }
++            tiers = row.get("context_tiers")
++            if tiers is not None:
++                if not isinstance(tiers, list) or not tiers:
++                    continue
++                normalized = []
++                thresholds = set()
++                valid = True
++                for tier in tiers:
++                    threshold = tier.get("min_prompt_tokens") if isinstance(tier, dict) else None
++                    rates = tier.get("pricing") if isinstance(tier, dict) else None
++                    if (not isinstance(threshold, int) or isinstance(threshold, bool) or
++                            threshold < 0 or threshold >= context or threshold in thresholds or not isinstance(rates, dict)):
++                        valid = False
++                        break
++                    rates = {k: money_units(v) for k, v in rates.items()}
++                    if (rates.get("prompt") is None or rates.get("completion") is None or
++                            any(v is None or (k not in used and k not in unused_text and v > 0) for k, v in rates.items())):
++                        valid = False
++                        break
++                    tier_price = {"min_prompt_tokens": threshold,
++                                  "input": max(rates["prompt"], rates.get("input_cache_read", 0), rates.get("input_cache_write", 0)),
++                                  "plain_input": rates["prompt"],
++                                  "output": rates["completion"] + rates.get("internal_reasoning", 0),
++                                  "request": rates.get("request", 0)}
++                    if any(tier_price[k] > price[k] for k in ("input", "plain_input", "output", "request")):
++                        valid = False
++                        break
++                    thresholds.add(threshold)
++                    normalized.append(tier_price)
++                if not valid or 0 not in thresholds:
++                    continue
++                price["tiers"] = normalized
++            self.prices[row["id"]] = price
+ 
+     def quote(self, body, protected=0):
+         price = (self.prices or {}).get(body.get("model"))
+@@ -10252,6 +10412,11 @@
+                 return None, "unsupported_message"
+         # A conservative estimate, not a certified tokenizer or routed-price bound.
+         prompt = len(json.dumps(body, ensure_ascii=False).encode("utf-8")) + 512 + 64 * len(messages) + 128 * len(body.get("tools") or [])
++        if price.get("tiers"):
++            applicable = [tier for tier in price["tiers"] if tier["min_prompt_tokens"] <= prompt]
++            price = dict(price)
++            for field in ("input", "plain_input", "output", "request"):
++                price[field] = max(tier[field] for tier in applicable)
+         requested = count_of(body.get("max_tokens"))
+         if requested is None or requested <= 0 or prompt >= price["context"]:
+             return None, "context_or_output_limit"
+@@ -10303,7 +10468,13 @@
+         self.budget_mode = "work"
+         self.brief_read = False
+         self.last_budget_denial = ""
++        self.request_denied = False
+         self.budget_locally_stopped = False
++        self.pending_notices = []
++        self.notice_attempts = {}
++        self.review_contexts = {}
++        self.review_messages = {}
++        self.recovery_blocked = ""
+ 
+     def budget_post(self, body):
+         budget = self.inference_budget
+@@ -10354,6 +10525,7 @@
+         return result
+ 
+     def think(self, messages, models, cap, tools=None):
++        self.request_denied = False
+         if self.no_credit:
+             return None
+         denied = []
+@@ -10381,10 +10553,85 @@
+                 self.waited += wait
+                 tries += 1
+         if denied:
+-            self.no_credit = True
+-            self.budget_locally_stopped = True
+-            self.trace.append({"kind": "local_inference_stop", "reasons": denied})
++            self.request_denied = True
++            budget = self.inference_budget
++            self.no_credit = budget.breached or not budget.prices or budget.remaining() == 0
++            self.budget_locally_stopped = self.no_credit
++            self.trace.append({"kind": "request_budget_denied", "reasons": denied,
++                               "remaining_usd": budget.remaining() / 1000000000})
++            if self.no_credit:
++                self.trace.append({"kind": "local_inference_stop", "reasons": denied})
+         return None
++
++    def valid_notice(self, answer):
++        if not isinstance(answer, dict) or answer.get("kind") not in ("change", "error", "other"):
++            return False
++        if answer["kind"] != "change":
++            return True
++        if not isinstance(answer.get("summary"), str):
++            return False
++        if not all(isinstance(answer.get(k), bool) for k in ("sold_out", "price_moved")):
++            return False
++        if "budget" not in answer or (answer["budget"] is not None and (not is_num(answer["budget"]) or answer["budget"] <= 0)):
++            return False
++        gone = answer.get("gone")
++        if not isinstance(gone, list) or any(not isinstance(g, (str, int)) or isinstance(g, bool) for g in gone):
++            return False
++        for field in ("add", "drop"):
++            entries = answer.get(field)
++            if not isinstance(entries, list):
++                return False
++            for entry in entries:
++                if not isinstance(entry, dict) or not isinstance(entry.get("need"), str) or not entry["need"].strip():
++                    return False
++                target = entry.get("item")
++                number = count_of(target)
++                if number is None and isinstance(target, str):
++                    matches = [n for n, item in enumerate(self.items, 1) if words(item.name) == words(target)]
++                    number = matches[0] if len(matches) == 1 else None
++                if number is None or not 1 <= number <= len(self.items):
++                    return False
++                entry["item"] = number
++        return True
++
++    def cart_review_context(self, ids, planned=False):
++        quantities = [it.quantity for it in self.items] if planned else [self.held(i) for i in ids]
++        return dump([self.ledger(), quantities, [[i, self.rows.get(i), self.full.get(i), self.sold_out(i)] for i in ids]])
++
++    def terminal_recovery_hold(self, order):
++        if self.pending_notices:
++            text = self.read_note([])
++            if text:
++                return "A pending notice changes the task: " + text + ". Apply it before ending."
++            if self.pending_notices:
++                return "A public store notice remains uninterpreted. Resolve it before ending."
++        if not order:
++            return ""
++        ids = self.cart_ids()
++        lost = [i for i in ids if self.sold_out(i)]
++        if lost:
++            return "Replace the unavailable cart lines before ordering: " + ", ".join(lost) + "."
++        key = "|".join(sorted(ids)) + "#" + str(self.version)
++        if self.verdicts.get(key) is False:
++            previous = self.review_contexts.get(key)
++            if previous is not None and previous != self.cart_review_context(ids):
++                self.cart_check()
++            if self.verdicts.get(key) is False:
++                return self.review_messages.get(key) or "The current cart has a valid negative review. Repair it before ordering."
++        return ""
++
++    def env(self, tool, args):
++        self.recovery_blocked = ""
++        if self.finished or self.left() <= 0:
++            return None
++        order = self.is_order(tool, args)
++        if order or self.is_decline(tool, args):
++            text = self.terminal_recovery_hold(order)
++            if text:
++                self.recovery_blocked = text
++                self.trace.append({"kind": "recovery_hold", "detail": text})
++                return None
++        return super().env(tool, args)
+ 
+     def read_brief(self):
+         super().read_brief()

@@ -1,0 +1,159 @@
+ICDI_r1 — stage-level LLM, shopper-message and cost audit
+Reviewed 2026-11-16 (America/New_York). No agent changes or paid calls.
+
+Correction to the prior report
+------------------------------
+The earlier verification established total calls in four scripted flows and
+budget-admission behavior. It did not establish a complete stage-level call
+profile or an expected hidden-race bill. $4.50 is an allocation for 90
+invocations, not a measured or predicted cost. This audit supplies the missing
+stage breakdown. The companion JSON contains instrumented counts and individual
+reservations; all model replies are scripted, and their dummy charges must not
+be used as cost estimates.
+
+Counts before retries/fallbacks
+------------------------------
+Stage                             LLM decisions             Shopper messages
+Initial brief                     1 Haiku                   0
+Additional brief repair            conditional              0
+Shared buy/decline mode repair     0 or 1 Haiku              0
+Reference-description separation   0 or 1 Sonnet per item    0
+Tool-result shape learning         0 or 1 Haiku per tool     0
+Search/cart action planning        1 Haiku per planner turn  0 directly
+Question selection                 0 or 1 Sonnet per task    0
+Interview answer interpretation    1 Haiku per reply         1 per question
+Confusion repair                   +1 Haiku for new reply    +1 per retry
+New store-note interpretation      1 Haiku per note batch    0
+Requirement reducer / text parser  0                         0
+Cart review                        1 Sonnet per new state    0
+Same-state cached cart review      0                         0
+Required procedure                 up to 3 Haiku decisions   up to 3 per gate
+  plus reading its shopper replies +1 Haiku per reply        included above
+Reference-chain resolution         up to 4 Haiku decisions   0
+Sold-out replacement review        1 Sonnet when invoked     0
+Decline audit                      1–2 Sonnet decisions      0
+Recovery planning                  up to 6 additional turns  shares same allowance
+
+These are successful first-choice calls. A denied Sonnet request can fall back
+to Haiku without becoming a physical call. Malformed structured replies can cause
+a second-model attempt. Transient failures permit one retry per model, so a
+logical operation with two models can produce up to four physical attempts.
+The initial brief's explicit repair path can produce three model selections in
+all, up to six physical attempts, before other conditional setup operations.
+All of these consume the SAME global 60-physical-call ceiling and monetary budget.
+An additional recovery cycle does not reset either ceiling.
+
+Question selection happens on the first interview only. Later ambiguity-driven
+interviews use the outstanding questions instead of paying for another initial
+plan. An interview clarification retry is bounded per property per interview;
+it is not a separate message allowance. An unresolved explicit clarification can
+also be revisited, subject to its attempt counter and remaining messages.
+
+A simple approval usually uses three LLM calls: select approval action, interpret
+the reply, verify completion. That is one shopper message, not three. A procedure
+that is already proven for the same state uses its cache. State changes may make
+new proof necessary. A gate's three-round limit is per invocation, not a lifetime
+limit: it can be invoked again, still subject to global resources.
+
+The shopper-message limit M is extracted from the request. With an ask tool but
+no extracted limit, the code defaults to 3; this is an agent heuristic, not a
+universal ORO rule. Interview capacity initially equals M minus the reserved
+messages for pre-choice duties and the longer order/decline path. Every sent
+question, approval request and procedural explanation counts in msg_used. The
+world's own limits remain authoritative.
+
+For example M=3 with one required approval leaves at most two interview messages.
+If one is spent repairing confusion, only one distinct property might be covered.
+This tradeoff is real: repairing ambiguity can reduce preference discovery.
+A shopper message is an environment action. The agent's separate interpretation
+of the reply is the LLM call counted above.
+
+Instrumented offline counts (successful scripted responses)
+-----------------------------------------------------------
+Full ordinary flow:       6 LLM = brief 1 + planner 4 + cart review 1; messages 0.
+Full text-record flow:    6 LLM = same stages; messages 0.
+Full checkout-change:    12 LLM = brief 1 + planner 8 + reviews 2 + note 1; messages 0.
+Full approval flow:       9 LLM = brief 1 + planner 4 + review 1 + gate 2 + reply 1;
+                                messages 1.
+Interview-only, two questions: 3 LLM = question plan 1 + replies 2; messages 2.
+Interview-only, confusion repair: 4 LLM = question plan 1 + replies 3; messages 3.
+
+The last two are isolated interview flows, not complete tasks. None of these
+small fictional flows establishes a hidden-race average, tail cost, completion
+rate or wall-clock latency. In particular, the full-flow fixtures originally
+reported a dummy $0.00001 per model call. That is test plumbing, not provider
+billing. Summing per-request reservations in these fixtures is not an actual
+bill either: unused reservation is released after each reported charge.
+
+Rates and illustrative cost sensitivity
+---------------------------------------
+Current advertised standard prices per million input/output tokens:
+Haiku 5.5: $0.10 / $0.50
+Sonnet 5.5: $2.00 / $10.00
+GPT-6 Luna: $0.10 / $0.50
+Provider routes, caching and long prompts can differ. Cost analysis must count
+all billed output tokens, including reasoning, not merely visible reply text.
+
+At 5,000 uncached input tokens and 500 billed output tokens per call:
+Haiku/Luna = $0.00075; Sonnet = $0.015 (20 times as much).
+
+Hypothetical calls/task        Cost/task     Cost for 90
+10 light + 1 Sonnet            $0.02250       $2.0250
+15 light + 2 Sonnet            $0.04125       $3.7125
+20 light + 3 Sonnet            $0.06000       $5.4000
+
+These are arithmetic scenarios, NOT forecasts or measured costs. The last pattern
+cannot be sustained under the agent's configured allocation: it must downgrade,
+skip later calls or finish early. Likewise, 5,000 input tokens on each of a fully
+used 1,800-output question-plan call and 1,500-output cart-review call cost $0.053
+for those two Sonnet calls alone. Adding 15 light calls of the illustrative size
+would give $0.06425 per task / $5.7825 for 90, before any other overhead.
+
+Allocation in the actual source:
+ordinary work: $0.044/task; protected recovery: $0.006/task;
+combined: $0.050/task, $1.50 for 30 or $4.50 for 90 invocations.
+The residual $0.50 relative to the requested $5 run cap is a margin, not funds
+that individual tasks can borrow. There is no shared cross-task allocator.
+
+Admission reserves 1.25 * (prompt_bound * input_envelope + max_output *
+output_envelope). The prompt bound uses UTF-8 bytes plus framing overhead, not
+an actual model tokenizer. Usage cost replaces the reservation when returned;
+missing/uncertain billing retains it. The source stops further inference when
+reported cost or tokens exceed the envelope. This cannot retroactively prevent
+that unexpectedly high charge, nor can it guarantee the total under arbitrary
+provider price changes or extra invocations.
+
+A concrete conservative-admission effect in the interview fixture:
+The Sonnet question plan reserves $0.038754375 with its full 1,800-token output cap.
+Its minimum 1,024-token output allowance still requires approximately $0.028084.
+Before recovery, it therefore cannot be admitted once previous accounted spend
+exceeds roughly $0.015916 for that exact prompt. It falls back to Haiku even
+though around $0.028 remains in the ordinary budget. This is a reservation effect,
+not a measured provider charge, and can affect accuracy.
+
+Principal conclusions
+---------------------
+- The dominant cost risk is repeated Sonnet decisions, not the number of shopper
+  messages by itself. Interview selection, cart review, reference cleanup, stock
+  replacement and decline review can all ask for Sonnet.
+- Sequential clarification adds a reply-interpretation call versus batching in
+  some cases. It uses Haiku first; whether its accuracy gain justifies the added
+  latency has not been measured.
+- Strict state revisions prevent stale decisions but can cause repeated reviews
+  and procedure requests. The total call cap does not stop a stage consuming too
+  much of the useful budget; there are no fixed per-stage spending allocations.
+- The 60-call cap is a ceiling, not a target. Long contexts, output length,
+  uncertain billing, timeouts or the monetary limit can stop the agent much sooner.
+- The current version has not demonstrated that its budget is sufficient for
+  difficult hidden tasks. The next paid analysis needs per-stage prompt/output
+  tokens, cache usage, charges, denials/fallbacks, shopper-message allocation and
+  task outcomes, especially upper-tail cases. Avoid judging success by a low bill
+  when tasks stopped early.
+
+Agent source unchanged by this audit:
+24101d67e2943c9731c73e7aa272fee49dbf3cd674309b371a2077fdcda27a97
+
+Pricing references checked in this turn:
+https://openrouter.ai/anthropic/claude-haiku-5.5
+https://openrouter.ai/anthropic/claude-sonnet-5.5
+https://openrouter.ai/openai/gpt-6-luna

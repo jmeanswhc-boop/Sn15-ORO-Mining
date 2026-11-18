@@ -1,0 +1,156 @@
+test_structured_record_is_preserved (agents.tests.test_icdi_r1.ObservationRegressions) ... ok
+test_text_record_and_nested_attributes_reach_ledger (agents.tests.test_icdi_r1.ObservationRegressions) ... FAIL
+test_malformed_review_cannot_approve (agents.tests.test_icdi_r1.ReviewRegressions) ... FAIL
+test_missing_procedure_proof_is_not_permission (agents.tests.test_icdi_r1.ReviewRegressions) ... FAIL
+test_negative_review_remains_negative_on_repeat (agents.tests.test_icdi_r1.ReviewRegressions) ... FAIL
+test_budget_only_answer_invalidates_cached_decision (agents.tests.test_icdi_r1.StateRegressions) ... FAIL
+test_dropped_requirement_can_be_reinstated (agents.tests.test_icdi_r1.StateRegressions) ... FAIL
+test_independent_bounds_are_not_auto_replaced (agents.tests.test_icdi_r1.StateRegressions) ... ok
+test_invalid_item_cannot_mutate_another_item (agents.tests.test_icdi_r1.StateRegressions) ... FAIL
+test_no_change_is_idempotent_and_keeps_evidence (agents.tests.test_icdi_r1.StateRegressions) ... FAIL
+test_note_failure_is_not_acknowledged_as_processed (agents.tests.test_icdi_r1.StateRegressions) ... FAIL
+test_quantity_change_reaches_live_ledger (agents.tests.test_icdi_r1.StateRegressions) ... FAIL
+test_replacement_retires_only_named_old_requirement (agents.tests.test_icdi_r1.StateRegressions) ... FAIL
+test_same_ids_with_new_facts_invalidate_review (agents.tests.test_icdi_r1.StateRegressions) ... FAIL
+test_short_and_plain_notes_are_not_lost (agents.tests.test_icdi_r1.StateRegressions) ... FAIL
+
+======================================================================
+FAIL: test_text_record_and_nested_attributes_reach_ledger (agents.tests.test_icdi_r1.ObservationRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 128, in test_text_record_and_nested_attributes_reach_ledger
+    self.assertIn('sample-1', e.rows)
+AssertionError: 'sample-1' not found in {}
+
+======================================================================
+FAIL: test_malformed_review_cannot_approve (agents.tests.test_icdi_r1.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 159, in test_malformed_review_cannot_approve
+    self.assertTrue(e.check_cart())
+AssertionError: '' is not true
+
+======================================================================
+FAIL: test_missing_procedure_proof_is_not_permission (agents.tests.test_icdi_r1.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 146, in test_missing_procedure_proof_is_not_permission
+    self.assertFalse(e.gate('order')[0])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_negative_review_remains_negative_on_repeat (agents.tests.test_icdi_r1.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 153, in test_negative_review_remains_negative_on_repeat
+    self.assertTrue(e.check_cart())
+AssertionError: '' is not true
+
+======================================================================
+FAIL: test_budget_only_answer_invalidates_cached_decision (agents.tests.test_icdi_r1.StateRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 60, in test_budget_only_answer_invalidates_cached_decision
+    self.assertNotEqual(before, e.check_key(['sample-1']))
+AssertionError: 'sample-1#0' == 'sample-1#0'
+
+======================================================================
+FAIL: test_dropped_requirement_can_be_reinstated (agents.tests.test_icdi_r1.StateRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 78, in test_dropped_requirement_can_be_reinstated
+    self.assertEqual(e.needs_now(), [])
+AssertionError: Lists differ: [(1, 'finish: matte')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+(1, 'finish: matte')
+
+- [(1, 'finish: matte')]
++ []
+
+======================================================================
+FAIL: test_invalid_item_cannot_mutate_another_item (agents.tests.test_icdi_r1.StateRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 73, in test_invalid_item_cannot_mutate_another_item
+    self.assertEqual(e.items[1].told, [])
+AssertionError: Lists differ: ['finish: glossy'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'finish: glossy'
+
+- ['finish: glossy']
++ []
+
+======================================================================
+FAIL: test_no_change_is_idempotent_and_keeps_evidence (agents.tests.test_icdi_r1.StateRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 112, in test_no_change_is_idempotent_and_keeps_evidence
+    self.assertEqual(e.needs_now(), [(1, 'finish: matte')])
+AssertionError: Lists differ: [(1, 'finish: matte'), (1, 'finish: matte')] != [(1, 'finish: matte')]
+
+First list contains 1 additional elements.
+First extra element 1:
+(1, 'finish: matte')
+
+- [(1, 'finish: matte'), (1, 'finish: matte')]
++ [(1, 'finish: matte')]
+
+======================================================================
+FAIL: test_note_failure_is_not_acknowledged_as_processed (agents.tests.test_icdi_r1.StateRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 87, in test_note_failure_is_not_acknowledged_as_processed
+    self.assertNotIn(line, e.heard)
+AssertionError: 'Please use the revised total budget of thirty.' unexpectedly found in {'Please use the revised total budget of thirty.'}
+
+======================================================================
+FAIL: test_quantity_change_reaches_live_ledger (agents.tests.test_icdi_r1.StateRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 98, in test_quantity_change_reaches_live_ledger
+    self.assertEqual(e.items[0].qty, 2)
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_replacement_retires_only_named_old_requirement (agents.tests.test_icdi_r1.StateRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 67, in test_replacement_retires_only_named_old_requirement
+    self.assertEqual(e.needs_now(), [(1, 'handle finish: rough'), (1, 'finish: glossy')])
+AssertionError: Lists differ: [(1, 'finish: matte'), (1, 'handle finish: rough'), (1, 'finish: glossy')] != [(1, 'handle finish: rough'), (1, 'finish: glossy')]
+
+First differing element 0:
+(1, 'finish: matte')
+(1, 'handle finish: rough')
+
+First list contains 1 additional elements.
+First extra element 2:
+(1, 'finish: glossy')
+
+- [(1, 'finish: matte'), (1, 'handle finish: rough'), (1, 'finish: glossy')]
++ [(1, 'handle finish: rough'), (1, 'finish: glossy')]
+
+======================================================================
+FAIL: test_same_ids_with_new_facts_invalidate_review (agents.tests.test_icdi_r1.StateRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 105, in test_same_ids_with_new_facts_invalidate_review
+    self.assertNotEqual(e.check_key(['sample-1']), old)
+AssertionError: 'sample-1#0' == 'sample-1#0'
+
+======================================================================
+FAIL: test_short_and_plain_notes_are_not_lost (agents.tests.test_icdi_r1.StateRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 92, in test_short_and_plain_notes_are_not_lost
+    self.assertIn('Budget now 30.', e.loose_lines('Budget now 30.'))
+AssertionError: 'Budget now 30.' not found in []
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.839s
+
+FAILED (failures=13)

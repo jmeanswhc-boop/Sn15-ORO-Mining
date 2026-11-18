@@ -1,0 +1,42 @@
+
+Overview
+What miners do on the ORO subnet: submit agents, get evaluated, and earn emissions.
+What miners do
+
+Miners on the ORO subnet build shopping agents. These are Python programs that interpret shopper goals, choose from each world's tools, act inside generated shopping worlds, and adapt to the observations they receive.
+
+After submission, validators run your agent in an isolated Docker sandbox against the active ORO Bench EnvPack. Each task is a shopping request: the agent works in that task's world with the tools it supplies and places one order or declines, and the world's grader scores the result. Scores from multiple validators are aggregated to determine leaderboard eligibility.
+
+The top agent, determined by the highest Overall score, earns the bulk of emissions. A small protected share goes to the most recent race's survivors. There is no time-based decay of the top agent's emission share. New agents must beat a challenge margin above the current top score to claim the position, and that challenge margin decays over time.
+
+Read ORO Bench before implementing an agent. It explains the environment contract, how a task works, and how grading differs from the scorer used by ShoppingBench, its predecessor.
+
+Prerequisites
+
+Set up the following before writing or submitting an agent.
+
+ | Requirement | Details
+ | Bittensor CLI | Install with pip install bittensor-cli. Required for wallet creation and subnet registration.
+ | Bittensor hotkey | A registered hotkey on the ORO Bittensor subnet (netuid 15). Create one with btcli wallet new_coldkey and btcli wallet new_hotkey, then register with btcli subnet register --netuid 15. Registration requires TAO.
+ | Python 3.10+ | Required for local development and the ORO CLI.
+ | Docker | Installed and running. Used for local testing only. The test runner executes your agent in an isolated sandbox container.
+ | Inference provider account | LLM inference during evaluation is billed to your OpenRouter account. Connect it before submitting. See Inference Providers for the connection flow.
+ | ORO SDK | Install with pip install -U "oro-sdk[bittensor]". Provides the oro submit CLI and the Python API client.
+
+Verify your setup
+
+# Confirm Python version
+python3 --version
+
+# Confirm Docker is running
+docker info
+
+# Install the ORO SDK with Bittensor wallet support
+pip install -U "oro-sdk[bittensor]"
+
+# Confirm the CLI is available
+oro --help
+Quick Start
+Build, test, submit, and monitor an ORO Bench shopping agent.
+Dashboard & Wallet Setup
+Connect your Bittensor wallet to the ORO miner dashboard.

@@ -1,0 +1,714 @@
+{
+  "created_at": "2026-11-14T04:51:58.201274+00:00",
+  "source_sha256": "31b083e8ac95bc6863a4a01f9768a61879914fed4eb9116ea0f27b394d825a18",
+  "rates_usd_per_million": {
+    "haiku": {
+      "input": [
+        "0.10",
+        "0.11"
+      ],
+      "output": [
+        "0.50",
+        "0.55"
+      ]
+    },
+    "sonnet": {
+      "input": [
+        "2.00",
+        "2.20"
+      ],
+      "output": [
+        "10.00",
+        "11.00"
+      ]
+    },
+    "deepseek": {
+      "input": [
+        "0.2088",
+        "0.30"
+      ],
+      "output": [
+        "0.3096",
+        "0.96"
+      ]
+    }
+  },
+  "pricing_checked": "Public OpenRouter endpoint catalogs read through web this turn; matching November 13 archived rates.",
+  "pricing_sources": [
+    "https://openrouter.ai/api/v1/models/anthropic/claude-haiku-5.5/endpoints",
+    "https://openrouter.ai/api/v1/models/anthropic/claude-sonnet-5.5/endpoints",
+    "https://openrouter.ai/api/v1/models/deepseek/deepseek-v3.2/endpoints"
+  ],
+  "assumptions": {
+    "compact": {
+      "input_per_call": 1000,
+      "sonnet_output_per_call": 250,
+      "haiku_output_per_call": 100
+    },
+    "reference_assumptions": {
+      "input_per_call": 2000,
+      "sonnet_output_per_call": 400,
+      "haiku_output_per_call": 150
+    },
+    "larger": {
+      "input_per_call": 4000,
+      "sonnet_output_per_call": 800,
+      "haiku_output_per_call": 300
+    }
+  },
+  "limitations": [
+    "Scenario arithmetic, not measured provider tokens, a statistical forecast or confidence interval.",
+    "Thirty/ninety repetitions assume identical flow and token averages; actual task mixture is unknown.",
+    "No cache discount, backup, uncertain-charge, funding fee or infrastructure cost included.",
+    "Rates assume base context tiers and no SANDBOX_MODEL override.",
+    "Demand over the ORO cap describes attempted workload completion; the platform will block new calls before full completion."
+  ],
+  "scenarios": [
+    {
+      "name": "healthy",
+      "source": "prior controlled full flow",
+      "counts": {
+        "anthropic/claude-haiku-5.5": 12,
+        "anthropic/claude-sonnet-5.5": 5
+      },
+      "cost_sensitivity": {
+        "compact": {
+          "per_task_usd": [
+            "0.0243",
+            "0.02673"
+          ],
+          "thirty_tasks_usd": [
+            "0.7290",
+            "0.80190"
+          ],
+          "ninety_tasks_usd": [
+            "2.1870",
+            "2.40570"
+          ]
+        },
+        "reference_assumptions": {
+          "per_task_usd": [
+            "0.0433",
+            "0.04763"
+          ],
+          "thirty_tasks_usd": [
+            "1.2990",
+            "1.42890"
+          ],
+          "ninety_tasks_usd": [
+            "3.8970",
+            "4.28670"
+          ]
+        },
+        "larger": {
+          "per_task_usd": [
+            "0.0866",
+            "0.09526"
+          ],
+          "thirty_tasks_usd": [
+            "2.5980",
+            "2.85780"
+          ],
+          "ninety_tasks_usd": [
+            "7.7940",
+            "8.57340"
+          ]
+        }
+      }
+    },
+    {
+      "name": "read_procedure",
+      "source": "prior controlled full flow",
+      "counts": {
+        "anthropic/claude-haiku-5.5": 30,
+        "anthropic/claude-sonnet-5.5": 60
+      },
+      "cost_sensitivity": {
+        "compact": {
+          "per_task_usd": [
+            "0.2745",
+            "0.30195"
+          ],
+          "thirty_tasks_usd": [
+            "8.2350",
+            "9.05850"
+          ],
+          "ninety_tasks_usd": [
+            "24.7050",
+            "27.17550"
+          ]
+        },
+        "reference_assumptions": {
+          "per_task_usd": [
+            "0.48825",
+            "0.537075"
+          ],
+          "thirty_tasks_usd": [
+            "14.64750",
+            "16.112250"
+          ],
+          "ninety_tasks_usd": [
+            "43.94250",
+            "48.336750"
+          ]
+        },
+        "larger": {
+          "per_task_usd": [
+            "0.9765",
+            "1.07415"
+          ],
+          "thirty_tasks_usd": [
+            "29.2950",
+            "32.22450"
+          ],
+          "ninety_tasks_usd": [
+            "87.8850",
+            "96.67350"
+          ]
+        }
+      }
+    },
+    {
+      "name": "two_indifferent_replies",
+      "source": "new controlled full flow",
+      "counts": {
+        "anthropic/claude-sonnet-5.5": 7,
+        "anthropic/claude-haiku-5.5": 18
+      },
+      "cost_sensitivity": {
+        "compact": {
+          "per_task_usd": [
+            "0.0342",
+            "0.03762"
+          ],
+          "thirty_tasks_usd": [
+            "1.0260",
+            "1.12860"
+          ],
+          "ninety_tasks_usd": [
+            "3.0780",
+            "3.38580"
+          ]
+        },
+        "reference_assumptions": {
+          "per_task_usd": [
+            "0.06095",
+            "0.067045"
+          ],
+          "thirty_tasks_usd": [
+            "1.82850",
+            "2.011350"
+          ],
+          "ninety_tasks_usd": [
+            "5.48550",
+            "6.034050"
+          ]
+        },
+        "larger": {
+          "per_task_usd": [
+            "0.1219",
+            "0.13409"
+          ],
+          "thirty_tasks_usd": [
+            "3.6570",
+            "4.02270"
+          ],
+          "ninety_tasks_usd": [
+            "10.9710",
+            "12.06810"
+          ]
+        }
+      }
+    },
+    {
+      "name": "two_preference_replies",
+      "source": "new controlled full flow",
+      "counts": {
+        "anthropic/claude-sonnet-5.5": 9,
+        "anthropic/claude-haiku-5.5": 20
+      },
+      "cost_sensitivity": {
+        "compact": {
+          "per_task_usd": [
+            "0.0435",
+            "0.04785"
+          ],
+          "thirty_tasks_usd": [
+            "1.3050",
+            "1.43550"
+          ],
+          "ninety_tasks_usd": [
+            "3.9150",
+            "4.30650"
+          ]
+        },
+        "reference_assumptions": {
+          "per_task_usd": [
+            "0.0775",
+            "0.08525"
+          ],
+          "thirty_tasks_usd": [
+            "2.3250",
+            "2.55750"
+          ],
+          "ninety_tasks_usd": [
+            "6.9750",
+            "7.67250"
+          ]
+        },
+        "larger": {
+          "per_task_usd": [
+            "0.155",
+            "0.1705"
+          ],
+          "thirty_tasks_usd": [
+            "4.650",
+            "5.1150"
+          ],
+          "ninety_tasks_usd": [
+            "13.950",
+            "15.3450"
+          ]
+        }
+      }
+    }
+  ],
+  "new_offline_profiles": [
+    {
+      "scenario": "two_indifferent_replies",
+      "world_steps": 9,
+      "messages": 2,
+      "candidate_evaluations": 2,
+      "model_counts": {
+        "anthropic/claude-sonnet-5.5": 7,
+        "anthropic/claude-haiku-5.5": 18
+      },
+      "purpose_counts": {
+        "contract": 1,
+        "action search": 1,
+        "observation": 9,
+        "action open": 2,
+        "candidate evidence": 2,
+        "question discovery": 2,
+        "action question": 2,
+        "shopper revision": 2,
+        "action cart view": 2,
+        "action cart": 1,
+        "action checkout": 1
+      },
+      "calls": [
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "contract",
+          "max_output_tokens": 3300,
+          "prompt_characters_including_system": 2848,
+          "scripted_reply_characters": 493
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action search",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1608,
+          "scripted_reply_characters": 57
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1444,
+          "scripted_reply_characters": 247
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action open",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1547,
+          "scripted_reply_characters": 42
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1461,
+          "scripted_reply_characters": 83
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "candidate evidence",
+          "max_output_tokens": 1750,
+          "prompt_characters_including_system": 1410,
+          "scripted_reply_characters": 305
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "question discovery",
+          "max_output_tokens": 850,
+          "prompt_characters_including_system": 1222,
+          "scripted_reply_characters": 190
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action question",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1624,
+          "scripted_reply_characters": 76
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1419,
+          "scripted_reply_characters": 113
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "shopper revision",
+          "max_output_tokens": 900,
+          "prompt_characters_including_system": 839,
+          "scripted_reply_characters": 140
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action question",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1624,
+          "scripted_reply_characters": 75
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1417,
+          "scripted_reply_characters": 112
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "shopper revision",
+          "max_output_tokens": 900,
+          "prompt_characters_including_system": 837,
+          "scripted_reply_characters": 139
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action cart view",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1602,
+          "scripted_reply_characters": 36
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1342,
+          "scripted_reply_characters": 81
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "action cart",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1784,
+          "scripted_reply_characters": 59
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1361,
+          "scripted_reply_characters": 83
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action cart view",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1606,
+          "scripted_reply_characters": 36
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1376,
+          "scripted_reply_characters": 107
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action open",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1675,
+          "scripted_reply_characters": 43
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1401,
+          "scripted_reply_characters": 83
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "candidate evidence",
+          "max_output_tokens": 1750,
+          "prompt_characters_including_system": 1477,
+          "scripted_reply_characters": 313
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "question discovery",
+          "max_output_tokens": 850,
+          "prompt_characters_including_system": 1505,
+          "scripted_reply_characters": 190
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "action checkout",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1659,
+          "scripted_reply_characters": 33
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1343,
+          "scripted_reply_characters": 83
+        }
+      ],
+      "token_counts_measured": false,
+      "actual_billed_cost": null,
+      "note": "Scripted successful responses prove call counts for this flow only, not model accuracy or task-mix frequency."
+    },
+    {
+      "scenario": "two_preference_replies",
+      "world_steps": 9,
+      "messages": 2,
+      "candidate_evaluations": 4,
+      "model_counts": {
+        "anthropic/claude-sonnet-5.5": 9,
+        "anthropic/claude-haiku-5.5": 20
+      },
+      "purpose_counts": {
+        "contract": 1,
+        "action search": 1,
+        "observation": 9,
+        "action open": 2,
+        "candidate evidence": 4,
+        "question discovery": 4,
+        "action question": 2,
+        "shopper revision": 2,
+        "action cart view": 2,
+        "action cart": 1,
+        "action checkout": 1
+      },
+      "calls": [
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "contract",
+          "max_output_tokens": 3300,
+          "prompt_characters_including_system": 2848,
+          "scripted_reply_characters": 493
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action search",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1608,
+          "scripted_reply_characters": 57
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1444,
+          "scripted_reply_characters": 247
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action open",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1547,
+          "scripted_reply_characters": 42
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1461,
+          "scripted_reply_characters": 83
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "candidate evidence",
+          "max_output_tokens": 1750,
+          "prompt_characters_including_system": 1410,
+          "scripted_reply_characters": 305
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "question discovery",
+          "max_output_tokens": 850,
+          "prompt_characters_including_system": 1222,
+          "scripted_reply_characters": 190
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action question",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1624,
+          "scripted_reply_characters": 76
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1408,
+          "scripted_reply_characters": 102
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "shopper revision",
+          "max_output_tokens": 900,
+          "prompt_characters_including_system": 828,
+          "scripted_reply_characters": 183
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "candidate evidence",
+          "max_output_tokens": 1750,
+          "prompt_characters_including_system": 1424,
+          "scripted_reply_characters": 418
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "question discovery",
+          "max_output_tokens": 850,
+          "prompt_characters_including_system": 1443,
+          "scripted_reply_characters": 190
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action question",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1629,
+          "scripted_reply_characters": 75
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1421,
+          "scripted_reply_characters": 102
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "shopper revision",
+          "max_output_tokens": 900,
+          "prompt_characters_including_system": 827,
+          "scripted_reply_characters": 183
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "candidate evidence",
+          "max_output_tokens": 1750,
+          "prompt_characters_including_system": 1438,
+          "scripted_reply_characters": 531
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "question discovery",
+          "max_output_tokens": 850,
+          "prompt_characters_including_system": 1466,
+          "scripted_reply_characters": 190
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action cart view",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1613,
+          "scripted_reply_characters": 36
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1370,
+          "scripted_reply_characters": 81
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "action cart",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1806,
+          "scripted_reply_characters": 59
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1389,
+          "scripted_reply_characters": 83
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action cart view",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1638,
+          "scripted_reply_characters": 36
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1404,
+          "scripted_reply_characters": 107
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "action open",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1707,
+          "scripted_reply_characters": 43
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1429,
+          "scripted_reply_characters": 83
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "candidate evidence",
+          "max_output_tokens": 1750,
+          "prompt_characters_including_system": 1505,
+          "scripted_reply_characters": 555
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "question discovery",
+          "max_output_tokens": 850,
+          "prompt_characters_including_system": 1533,
+          "scripted_reply_characters": 190
+        },
+        {
+          "model": "anthropic/claude-sonnet-5.5",
+          "purpose": "action checkout",
+          "max_output_tokens": 1100,
+          "prompt_characters_including_system": 1691,
+          "scripted_reply_characters": 33
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "purpose": "observation",
+          "max_output_tokens": 1700,
+          "prompt_characters_including_system": 1371,
+          "scripted_reply_characters": 83
+        }
+      ],
+      "token_counts_measured": false,
+      "actual_billed_cost": null,
+      "note": "Scripted successful responses prove call counts for this flow only, not model accuracy or task-mix frequency."
+    }
+  ],
+  "paid_calls": 0,
+  "agent_modified": false
+}

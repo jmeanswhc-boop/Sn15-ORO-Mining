@@ -1,0 +1,58 @@
+FFFFFF
+======================================================================
+FAIL: test_credit_error_is_not_retried (agents.tests.test_icdi_r1.BudgetRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 269, in test_credit_error_is_not_retried
+    self.assertEqual(len(calls), 1)
+AssertionError: 4 != 1
+
+======================================================================
+FAIL: test_every_physical_attempt_counts_and_reserves_cost (agents.tests.test_icdi_r1.BudgetRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 276, in test_every_physical_attempt_counts_and_reserves_cost
+    self.assertEqual(e.calls, len(calls))
+AssertionError: 1 != 4
+
+======================================================================
+FAIL: test_expensive_review_falls_back_without_overspending (agents.tests.test_icdi_r1.BudgetRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 292, in test_expensive_review_falls_back_without_overspending
+    self.assertEqual(calls[0]['model'], ns['LIGHT'])
+AssertionError: 'anthropic/claude-sonnet-5.5' != 'anthropic/claude-haiku-5.5'
+- anthropic/claude-sonnet-5.5
+?                  ^^^^^^
++ anthropic/claude-haiku-5.5
+?                  ^^^^^
+
+
+======================================================================
+FAIL: test_reported_cost_above_quote_stops_further_calls (agents.tests.test_icdi_r1.BudgetRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 284, in test_reported_cost_above_quote_stops_further_calls
+    self.assertEqual(len(calls), 1)
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_reserve_is_available_only_during_recovery (agents.tests.test_icdi_r1.BudgetRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 298, in test_reserve_is_available_only_during_recovery
+    self.assertIsNone(e.call_model(ns['LIGHT'], [{'role': 'user', 'content': 'test'}], 1000, None)[0])
+AssertionError: {'content': 'ok'} is not None
+
+======================================================================
+FAIL: test_unknown_billing_stays_within_ninety_task_allocation (agents.tests.test_icdi_r1.BudgetRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 262, in test_unknown_billing_stays_within_ninety_task_allocation
+    self.assertGreater(e.cost, 0)
+AssertionError: 0.0 not greater than 0
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.351s
+
+FAILED (failures=6)

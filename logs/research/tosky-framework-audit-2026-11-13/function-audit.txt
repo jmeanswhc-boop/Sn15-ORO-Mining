@@ -1,0 +1,200 @@
+TOSKY FUNCTION-BY-FUNCTION AUDIT
+Source SHA-256: 31b083e8ac95bc6863a4a01f9768a61879914fed4eb9116ea0f27b394d825a18
+
+Imports, model constants and entrypoint: locally parsed; public allowlist checked separately.
+
+Slot
+Useful explicit requested-item state. Hard/soft constraints remain unsourced strings; there are no requirement IDs, withdrawal records, entity bindings or typed alternatives.
+
+Obligation
+Useful deadline/kind/evidence-step state. It lacks source grounding, requested counts, grouping, item identity, earliest-start conditions and a cart-dependence flag.
+
+Candidate
+Collects row, pages, price/stock, verdict and revisions. Evidence is reduced to quotation strings; per-field source/observation revisions and failed-interpretation diagnostics are not retained. measure_unit is written but never used in ranking.
+
+Scope
+Collects query-local IDs, count and continuation. It lacks the predicate/canonical coverage relationship to the requested item and a catalog revision that can expire a previous completeness result.
+
+compact — lines 31-36
+Compact serialization is useful, but truncating the serialized JSON can cut a value or structural boundary. Consumers subsequently validate against the untruncated object, so displayed evidence and citeable evidence can disagree. Cache keys using truncated serialization can also collide.
+
+object_from_text — lines 39-58
+Accepts ordinary or fenced JSON and some surrounding prose. It validates only that the outer result is a dictionary, not each producer contract. It cannot distinguish a cut reply from an ordinary format fault because infer discards finish_reason.
+
+number — lines 61-76
+Decimal avoids ordinary binary floating-point arithmetic. However numeric NaN/Infinity and negative monetary amounts are accepted; commas are always removed, so a comma decimal is misread. Downstream comparisons may raise or use the wrong scale.
+
+single_number_in — lines 79-87
+Provides a useful fallback for a single observed numeral. Its caller treats an unparseable field as permission to accept an arbitrary model amount. It also inherits comma ambiguity and cannot resolve a multi-number price by itself.
+
+path_value — lines 90-106
+Works for ordinary nested keys and nonnegative array indices. A dot is always a separator, so a literal dotted key cannot be addressed as a leaf. Citing its parent object is possible but weakens field binding and is clipping-limited. Use runtime evidence IDs or an array of exact path segments.
+
+exact_scalar — lines 109-116
+Useful for detecting an opaque scalar in nested arguments. Any scalar occurrence is weaker than identity-field binding; an ID embedded in a comment field is not necessarily the action target or the owner of the cited fact.
+
+record_for_id — lines 119-134
+Locates a record by any matching scalar rather than a validated identity field. It can return a wrapper or echoed metadata. An identified record must also be the exclusive entity allowed to supply its eligibility facts.
+
+stock_value — lines 137-148
+Handles booleans, numeric quantities and some availability phrases without a product table. The phrase not in stock is interpreted as available; serialized Boolean strings are not resolved here. Numeric finiteness is unchecked.
+
+valid_schema — lines 151-191
+Checks core types, required keys, enums, additional properties, array sizes and numeric bounds; it correctly excludes Boolean integer quantities. String length/pattern, const, combinators and references are unsupported. The supplied 80 tool schemas include 80 maxLength and 40 minLength occurrences.
+
+Tosky.__init__ — lines 250-306
+Separates requirements, obligations, candidates, scopes, cart state and several revisions. All state is per episode. There is no dollar allowance, uncertain-cost ledger, fatal-credit latch or elapsed-time deadline. The graph is represented primarily by mutable fields and free-text lists rather than dependency-bearing claims.
+
+Tosky.left — lines 308-309
+Correctly derives the remaining world-step count. It does not represent remaining inference money, wall time or the complete cost of satisfying pending dependencies.
+
+Tosky.role — lines 311-312
+Simple dynamic role lookup. Missing roles use an empty string; callers comparing an empty opening-tool name with an absent role can accidentally enter that role branch.
+
+Tosky.tool_specs — lines 314-318
+Keeps planning grounded in the world-supplied tool schemas. An empty names list selects all schemas, although plan_action guards its own empty input. Repeatedly transmitting schemas for already bound deterministic actions adds cost.
+
+Tosky.infer — lines 320-353
+Counts each wrapper-level physical attempt with ProxyClient max_retries=1 and has model fallback. It records reported cost but never admits or rejects requests by dollars, reserves no finalization budget, ignores 402 and finish_reason, and has no global deadline. A valid outer dictionary stops fallback even when its inner schema is unusable.
+
+Tosky.execute — lines 355-398
+Preserves the complete opaque binding, consecutive step numbers and identical replay of an uncertain action. It stops new world calls after finished and blocks an unreconciled action. There is no timed/backoff policy for 429, and valid transport receipts are not necessarily successful actions.
+
+Tosky.bootstrap — lines 400-479
+Builds a useful explicit contract and tool-role map. The returned structure lacks a full local schema check: a string hard field becomes characters, skipped items can leave noncontiguous indices, and duties have no source proof or explicit multiplicity. Malformed extraction falls back to a truncated request as one item, silently losing constraints.
+
+Tosky.fallback_roles — lines 481-504
+Generic tool-verb matching is a reasonable schema fallback and is separate from prohibited product vocabulary tables. Requiring a tool to be unused can miss legitimate multifunction tools. It cannot replace semantic schema binding for unfamiliar tool descriptions.
+
+Tosky.get_candidate — lines 506-510
+The item/opaque-ID pair keeps separate requested roles from sharing one mutable candidate object. Each object still mixes several observed pages and revisions; source-specific field ownership and validity are not first-class state.
+
+Tosky.scope_key — lines 512-516
+Correctly removes the learned pagination argument to unite pages of a query. JSON key order is not canonical and serialization is clipped at 3000 characters, so equivalent queries can split and sufficiently long queries can collide.
+
+Tosky.learn_shape — lines 518-542
+Reuses learned structural paths and validates some path existence and the pagination argument. Price, stock and ID keys are not validated against their claimed row fields. An invalid newly proposed shape can still be returned for immediate use. category_key is stored but does not enforce product type.
+
+Tosky.absorb — lines 544-579
+Centralizes observation interpretation and delegates state updates. It calls a model after every action, including terminal receipts. A pass statement under the finished check does not return. Missing role names can match the empty opening tool. Parsed error text is logged without consistently preventing downstream state commits.
+
+Tosky.absorb_search — lines 581-624
+Maintains query-local seen IDs, page count and stock/price observations. Updating a row does not invalidate candidate eligibility; missing new price fields retain old prices. Only 80 rows are ingested even when a null next token marks the scope complete. A completed filtered query does not prove complete relevant-catalog coverage.
+
+Tosky.absorb_detail — lines 626-638
+Maintains tool-specific pages and invalidates evaluation after a new page. On the first page it stores the whole observation as detail even when record_for_id has isolated one product. With multiple views, tool names and per-view timestamps are removed from the displayed values, allowing old evidence to acquire a new global detail_step.
+
+Tosky.absorb_cart — lines 640-660
+Requires an observed record and an integer quantity for each proposed line. It accepts a quantity if any numeric field equals it, including price, and does not verify that all observed lines were represented. It therefore cannot certify an exact cart from an incomplete model projection.
+
+Tosky.explicit_empty_cart — lines 662-666
+Recognizes some empty cart containers, but it scans any top-level list with a broad key fragment. An empty recommendations/products list can be confused with the cart, while nested or unfamiliar empty-cart containers can be missed.
+
+Tosky.absorb_reply — lines 668-703
+Keeps later shopper constraints in the pipeline and ties approvals to basket state. Any nonempty reply marks a question obligation answered, including confusion. Any nonapproval pending obligation can be completed by a message reply, including a read duty. The extracted free/refusal fields are not applied to their intended states.
+
+Tosky.absorb_changes — lines 705-735
+Can refresh market offers and revise the budget. Empty text bypasses source containment. Budget units and exact changed prices are not applied; market changes do not revise candidate-evaluation dependencies. Requirement changes are reparsed with a second model call and a weakly typed delta.
+
+Tosky.apply_contract_delta — lines 737-774
+Requires source support for additions and some budget changes. Drops are not source-checked, and additions run before drops: a same-property replacement erases the new need too. Quantity, objective, budget-unit, new-duty and indifference changes are not represented completely.
+
+Tosky.observation_error — lines 776-777
+Recognizes only a truthy top-level error key. accepted:false, success:false, applied:false and textual errors are not sufficient to stop success-dependent commits.
+
+Tosky.item_from_purpose — lines 779-782
+Extracts an item number from an internal purpose string. Procedures invoked without an item default to item one, so second-item page refreshes can fail to update their candidate. Structured item identity would avoid dependence on log wording.
+
+Tosky.contract_summary — lines 784-791
+Offers a compact current view of items, budget, objective and relations. It omits budget_scope and the obligation states, and raw truncation can hide requirements. A summary is not a source-complete immutable decision snapshot.
+
+Tosky.evaluate — lines 793-883
+Combines hard-requirement states with stock/price checks and rejects absent quotations. Product type is not a required result, exact free-text requirement copying is brittle, duplicate rows overwrite one another, and unknown/unavailable output is cached at the current revision. It cannot order evidence by per-view freshness and can accept arbitrary amounts from unparseable values.
+
+Tosky.evaluate.evidence_value — lines 814-818
+Checks that a quotation occurs at a path in the row/detail value. It does not bind a first-comparison path to the selected product, disambiguate literal dotted keys, enforce numeric field meaning or determine source freshness. Truncating the citeable value at 2000 characters adds a second representation boundary.
+
+Tosky.candidates_for — lines 885-893
+Filters by item/verdict and supplies a consistent starting order for simple cases. It sorts raw currency amounts and raw measurement values, so later pruning can use incomparable units before normalization.
+
+Tosky.compatible_units — lines 895-910
+The runtime conversion cache avoids a fixed conversion registry. Missing units default to factor one; punctuation stripping can equate distinct symbol-only currencies. Failed inference is cached as incompatibility. Numeric factors are not checked for finiteness.
+
+Tosky.basket_key — lines 912-922
+Tracks selected items, quantities, prices, request/market/cart revisions and observed cart lines. Including offer_step makes unchanged rereads revoke proofs; broad invalidation can create process loops. The 3000-character serialization limit can collapse distinct large baskets.
+
+Tosky.basket_total — lines 924-939
+Performs Decimal arithmetic and applies runtime money-unit factors. It always requires prices, even with no monetary budget. The each mode constrains quantity-times-price, so a separate per-unit ceiling is not representable. Invalid and unknown combinations both return None.
+
+Tosky.relation_ok — lines 941-959
+Checks model-returned quotations from opened pages and caches results. Quote count is not relation coverage: repeated proofs for one relation can omit another. Unknown/unavailable responses become False, and added reference pages are not cache dependencies.
+
+Tosky.choose_basket — lines 961-1008
+The bounded best-first combination search is useful for joint budget and relationship constraints. Its 600-node cutoff returns the same empty result as infeasibility. It forbids shared listing IDs across slots and never normalizes physical objective units. Each new relation combination can consume another model request.
+
+Tosky.choose_basket.rank — lines 976-986
+Ranks combinations by raw extreme metric and then normalized money, or by normalized money alone. The heap ordering is useful when each option dimension is monotone, but physical measure_unit is never used and objective aggregation across items is fixed rather than contract-typed.
+
+Tosky.challenges — lines 1010-1043
+Makes some unresolved state visible for prompts and diagnostics. It is not the dependency scheduler: missing reference acquisition and format-only repair are absent, the list is truncated, and the run loop does not dispatch actions from these challenge objects.
+
+Tosky.obligation_satisfied — lines 1045-1048
+Requires a positive recorded step and a matching basket for before-order duties. It does not verify the event type here, and all before-order duties are treated as cart-dependent, including one-time reads.
+
+Tosky.reserve — lines 1050-1059
+Attempts to save world steps for cart work, refreshes and procedures. With no desired basket it reserves only one step. Extra-line removals, multi-action duties, reference acquisition, format recovery and inference time/money are not fully included.
+
+Tosky.question_to_ask — lines 1061-1070
+Prioritizes mandatory questions and reserves approval messages. It hard-stops optional questions after two messages despite a larger budget, and does not reserve ordinary mandatory messages. Mutually exclusive ending branches are not modeled in the reservation.
+
+Tosky.discover_questions — lines 1072-1103
+Uses request context and actual listing differences without a product-property registry. The cache key includes detail_step, so unchanged refreshes can repeatedly invoke discovery. It can keep proposing questions after the two-optional-message rule prevents using them.
+
+Tosky.plan_action — lines 1105-1144
+Restricts the model to permitted tool names, validates arguments and checks target scalar occurrence. It permits two format attempts and has limited deterministic fallbacks. It still pays for planning known zero-argument actions and cannot bind the target to its actual identity argument field.
+
+Tosky.perform — lines 1146-1188
+Combines planning, dispatch, observation and optional process proof. A successful transport receipt is treated as progress regardless of actual effect. A message can satisfy a pending read through absorb_reply. Repeated-action suppression lacks dependency revisions, while allowed repeats can loop on unchanged evidence.
+
+Tosky.search_item — lines 1190-1203
+Uses a bounded number of alternate routes and avoids hardcoded taxonomies. It does not produce a proof that the broad relevant search space is covered, and the persistent action history can prevent a necessary same-query refresh after a material change.
+
+Tosky.next_page — lines 1205-1220
+Preserves the initial query and changes its learned page argument without another planner call. False-like cursor values are treated as exhausted; pagination correctness depends on the learned shape and stale scope flags.
+
+Tosky.open_candidate — lines 1222-1232
+Targets a selected listing and distinguishes detail from offer intent. It runs a model to build arguments even for known single-ID readers. Freshness is inferred from a later aggregate detail_step rather than source-specific current offer facts.
+
+Tosky.next_unverified — lines 1234-1245
+Can avoid obviously noncompetitive raw-price alternatives. It skips every candidate that already has detail, including current unknowns, so evidence/format problems and newly available references have no recovery action here.
+
+Tosky.unresolved_better — lines 1247-1265
+Identifies unread cheaper candidates and incomplete relevant scopes. It uses raw currency or physical amounts and is only an advisory run-loop condition; checkout_ready does not require it to be resolved.
+
+Tosky.expected_cart — lines 1267-1268
+Builds a simple desired quantity map. Repeated listing IDs overwrite rather than aggregate, consistent with the optimizer forbidding shared IDs but incomplete for legitimate multi-role purchases of the same SKU.
+
+Tosky.cart_ready — lines 1270-1275
+Requires equality with the recorded desired map and no dirty flag. The second return repeats the first condition. Its correctness is limited by the incomplete cart projection accepted upstream.
+
+Tosky.checkout_ready — lines 1277-1288
+Provides a real gate for a full basket, current eligibility, stock, an observed offer, budget and due obligations. It is stronger than an unguarded forced checkout. It does not enforce the optimality frontier or dependencies on changed/reference observations.
+
+Tosky.pending_process — lines 1290-1291
+Finds the next unsatisfied obligation at one of three stages. A stage acts as a dispatch phase even when the natural-language instruction only states a latest completion deadline, creating reference-before-order dependency cycles.
+
+Tosky.do_process — lines 1293-1309
+Separates message duties from generic nonterminal actions. Read duties can still choose message tools and be completed by a reply; arbitrary provided procedural tools that lack a mapped role are excluded. There is no item field, explicit count/group or performed-action type contract.
+
+Tosky.align_cart — lines 1311-1327
+Reads uncertain carts and verifies changes rather than assuming add means replace. It does not independently enforce before-selection duties. Repeated failed or misparsed receipts can cause unbounded same-cart cycles until another limit is hit.
+
+Tosky.terminal — lines 1329-1343
+Checks readiness before ordering and some duties before declining. It has no infeasibility evidence requirement for decline. Terminal action argument planning and post-terminal observation parsing can consume inference money after the substantive decision is known.
+
+Tosky.run — lines 1345-1495
+The explicit loop is auditable and has finite step/call/safety bounds. Its fixed order is not dependency-aware: only one pending candidate is evaluated, unknowns lack a repair route, before-order references wait for eligibility, failed before-selection duties can fall through to cart work, and best-effort decline conflates unresolved evidence with absence.
+
+agent_main — lines 1498-1507
+Provides the supported synchronous entrypoint and catches run exceptions without fabricating a grade. Construction occurs outside the try, so initialization errors escape. The exception path returns diagnostics without a separately budgeted recovery attempt.
+

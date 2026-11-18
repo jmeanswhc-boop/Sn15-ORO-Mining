@@ -1,0 +1,103 @@
+--- 02_interview.py
++++ 03a_properties.py
+@@ -136,12 +136,14 @@
+ HEAR = 'A shopping agent asked a shopper some questions. Read each answer and return ONE JSON object and nothing else:\n{"needs": [{"item": item number, "need": "property: constraint", "points": true when the value is to be read from another listing, else false}], "drop": [{"item": item number, "property": "a requirement the shopper now gives up"}], "free": [{"item": item number, "property": "..."}], "crowded": [numbers of the questions whose answer complains that the message asked about too many things or wants them asked one at a time; not answers that only say they did not follow it or want it in simpler words], "budget": new total limit as a number or null}\n- "needs": every firm preference an answer states, with the exact value or limit and its unit ("at least 30 cm", "oval", "not wicker"). Name the need by the property the answer itself names, which may differ from the one asked about; several answers about one property make one need. Copy the value word for word as the answer says it, keeping its nouns and units ("at least 3 shelves", not "at least 3"); the value is only what a listing could state, from the wanted value or its limit word to its end, without the framing the answer puts around it ("oval" for "matching oval", "settled, with oval" or "oval and nothing else", "at least 30 cm" for "equal to at least 30 cm").\n- An answer can give the value by pointing at another listing (a value like, unlike or near the one on some shop\'s product, that product picked out by a few of its properties): that is ONE need on the property the answer names, with "points": true. Its value is the answer\'s own words copied exactly, from the comparison words to the end of that description, including what it says about a listing that page may name; never shorten or reword it. The properties describing the other product are not needs of this item.\n- "free": the property of each question the shopper said they do not mind about.\n- Folksy or roundabout wording that names a value still states that value. Wording that refuses to bargain over a value (it will not be traded, given up or changed) states that value as wanted; write \"not X\" only when the answer rejects X itself. An answer that turns away anything WITHOUT a value, or anything that does not give a value, wants that value itself: write the value, never \"without\" or \"not\" in front of it.'
+ NOTE = 'While a shopping agent works, the store showed this note (it may come from the shopper or the store). Return ONE JSON object and nothing else:\n{"kind": "change" when the note changes the task (budget, requirements, a price, availability, a refusal of the order), "error" when it only reports that a call was malformed or not accepted, "other" for anything else, "budget": the new total limit as a number in the request\'s unit, or null, "add": [{"item": item number, "need": "property: constraint"}], "drop": [{"item": item number, "need": "the requirement no longer wanted, as the ledger words it; when the note gives up a property the ledger does not list, that property as the note names it"}], "gone": [listing ids said to be unavailable], "sold_out": true when it says a chosen listing is gone, sold out or no longer available (even without naming it), "price_moved": true when it says a price changed, "freed": [{"item": item number, "words": "the words of that item\'s name, as the ledger shows it, that state a value of the property this note drops (for example \"waterproof\" in \"waterproof jacket\" when water resistance is dropped); never the words naming the kind of product"}] or [] when no such words, "summary": "one short sentence"}\nA replaced requirement is a drop of the old one plus an add of the new one. Report every change in the note.'
+ CHECK = 'You are the last check before a shopping agent checks out. Decide from the records shown whether this cart is exactly right.\nReading rules: a base or boost clock or frequency (keys such as base clock, base frequency, boost clock) does not state a processor speed or clock speed requirement, and neither does a GHz figure in the title or description of a listing whose attributes give only such a base or boost value; a requirement is met when the listing\'s attribute for that property states the value (any key spelling, one element of a list is enough, case, singular/plural and plain synonyms count, a value containing the required value\'s words counts, such as "deep teal" for teal, units converted, limits include the edge, a range must lie wholly inside); an attribute whose key names the same property as the requirement decides, and if it says something else the listing fails, though a value under a key that adds the item\'s own name to the property (a bag\'s "bag shape") counts even when the bare key ("shape") says something else; a key for a different property, even a related one (a handle colour is not the body\'s colour), decides nothing; when the listing has no attribute for that property, the wanted value stated under another attribute or in the title or description counts (a number of another kind does not: a weight is not a capacity; nor does a bare figure whose text does not say what it measures); a requirement the category label itself states is met by that category; the category label must match the requested item as a whole; a rule of being unlike another listing\'s value counts as met unless the records show that same value. Each requested item must appear as a separate cart line at the requested quantity, nothing else may be in the cart, nothing shown out of stock, and the total of price times quantity over all lines must be within the budget. The newest record of a listing wins.\nWhen the pick rule is cheapest, most or least, also look at the other listings shown: if one of them clearly fits every requirement and beats the cart\'s choice on that rule, the cart is wrong.\nReturn ONE JSON object and nothing else: {"ok": true or false, "problems": ["short, concrete problem", ...], "better": [listing ids that should replace a cart line, best first]}. Use ok=false only for a problem the records clearly show or a requirement no record addresses.'
++CHECK += '\nFor a generic property, a key naming that same property and this listing category may be more specific than the generic key. A different component or predicate is not equivalent. If equally specific keys conflict, resolve from the raw evidence; do not treat a matching value alone as proof.'
+ READING = 'a base or boost clock or frequency (keys such as base clock, base frequency, boost clock) does not state a processor speed or clock speed requirement, and neither does a GHz figure in the title or description of a listing whose attributes give only such a base or boost value; the listing\'s attribute for a property decides when its key names that same property (any key spelling, one element of a list is enough, synonyms and unit conversions count, a value containing the required value\'s words counts, such as "deep teal" for teal, limits include the edge); a value under a key that adds the item\'s own name to the property (a bag\'s "bag shape") counts even when the bare key ("shape") says something else; a key for a different property, even a related one (a handle colour is not the body\'s colour), decides nothing; when no attribute names that property, the wanted value stated under another attribute or in the title or description counts (a bare figure that does not say what it measures counts for nothing); a requirement the category label itself states is met by that category; the category label must match the item; a rule of being unlike another listing\'s value counts as met unless the records show that same value; out-of-stock listings and listings that break the budget do not fit.'
+ AUDIT = 'A shopping agent wants to end without buying because it thinks nothing fits. Check the listing records shown against the requirements, with these reading rules: ' + READING + '\nRecords marked ROW were seen only as a search result row: their page (the attributes) has not been read, so they can be neither passed nor failed on a property the row does not show.\nReturn ONE JSON object and nothing else: {"fits": {"item number": [listing ids that appear to meet every requirement, cheapest first, at most 4]}, "open": [ids of ROW listings of a requested kind, inside the budget, whose page could show that they fit, most promising first, at most 6], "reason": "one sentence"}'
+ UNMIX = 'A shopper\'s request was read into firm requirements on a product. Some requirements take their value from another listing the request points at, and the words that pick out that other listing (its kind, its shop, the properties named after it with "with ...") are sometimes read by mistake as requirements on the product being bought. Using the request\'s wording, say which of the OTHER REQUIREMENTS below only describe that other listing. Return ONE JSON object and nothing else: {"describe_other": [those requirements copied exactly; empty when every one is a real requirement on the product]}'
+ TRAIL = 'A shopping agent is about to check out. Some requirements take their value from another listing instead of stating it, and a listing\'s page can send the reader on to a further listing for that property. The order counts only when the agent has opened in full every listing along each such chain. Follow each requirement\'s chain from the requirement\'s own description, link by link, through the pages\' own words, using the records below (OPENED: the agent has opened that page; ROW: its page not read, seen only as a search result row or by its attributes).\nReturn ONE JSON object and nothing else: {"chains": [{"need": the requirement copied exactly, "links": [{"id": the listing id when a record below is that link, else "", "about": how the requirement or the previous page describes that listing, "find": "for a link not found: search words (its shop and the values the description gives)"}], "done": true when the last link is an OPENED page that states the property\'s value itself (also when the requirement asks for a value other than or unlike that one: the page\'s value is what it is measured against), else false, "value": the property\'s value as stated on that last page; when the requirement asks for what goes with that value and the page names what its value pairs with, that other value; or ""}]}\nA record is a link only when it matches the whole description of that link: the shop or brand, the kind of product AND every property value the description gives (for example "a 10 pieces multipack" rules out the same shop\'s listing with 10 capsules and no multipack); when no record matches all of it, that link is not found yet, even if the same shop sells other listings of that kind. Give "find" for such a link: the shop\'s name and the description\'s values, as a few search words.\nList each chain\'s links in order and stop at the first link whose page is not OPENED or not found, since its words are still unknown.'
+ GATE = 'A shopping agent is about to STAGE. The shopper\'s request asks for the steps below along the way. Decide from the numbered RECORD of what the agent has done whether each step due before this STAGE is done for the cart as it is now. A step counts as done only when a RECORD line shows it being done and, for a step about the cart or the order, that line comes after the cart last changed and its reply grants it; questions on a product\'s properties do not do a step.\nWhen a step is still missing, give the one store call that does it next: a tool from TOOLS with its arguments. A message to the shopper goes through the messaging tool: one short sentence or question about that step alone, in plain words, naming no product properties or values the step does not need. Give no call when every due step is done or when the messages or steps left cannot do the missing one.\nReturn ONE JSON object and nothing else: {"steps": [{"step": the step, "done": true or false, "lines": [the RECORD line numbers that show it done]}], "call": {"tool": "...", "args": {...}} or null, "hold": what a reply asks to change before going on, or "", "needs": [{"item": item number, "need": "property: constraint"} for each firm requirement such a reply states]}'
+ SWAP = "A listing in a shopping agent's cart has just sold out. Find replacements for that cart line among the other listing records shown, with these reading rules: " + READING + '\nReturn ONE JSON object and nothing else: {"fits": [{"id": listing id, "price": its price as a number as the record shows it} for every listing that appears to meet every requirement of the sold-out line\'s item, at most 6], "reason": "one sentence"}'
++SWAP += '\nFor a generic property, a key naming that same property and this listing category may be more specific than the generic key. A different component or predicate is not equivalent. If equally specific keys conflict, resolve from the raw evidence; do not treat a matching value alone as proof.'
+ SHAPE = 'A store tool returned the result below. Name its parts by the exact keys the result and the tool\'s parameters use. Return ONE JSON object and nothing else: {"rows": the key of the list of listings, "count": the key holding how many listings matched in all (not how many are shown), or null, "next": the key holding the value that asks for the following page, or null, "next_arg": the tool parameter that takes that value, or null, "price": the key, inside a row, of the listing\'s price, or null, "stock": the key, inside a row, that says whether the listing can be bought now, or null}'
+ GUARD_KEYS = 3
+ GUARD_SHARE = 0.0
+@@ -5155,6 +5157,28 @@
+             return None
+         return (self.price_of(ident) or 0.0) <= float(figure.group().replace(',', '')) + 1e-09
+ 
++    def property_ranks(self, ident: str, prop: str) -> dict[str, int]:
++        # Resolve scope from this request and observed category, never from a product vocabulary.
++        def words(text: str) -> str:
++            return ' '.join(w for w in _words(text).split() if w not in ('of', 'the', 'a', 'an', 'for', 'and', 'or'))
++        number = self.item_of(ident)
++        item = self.items[number - 1] if 1 <= number <= len(self.items) else None
++        cat = self.category_key()
++        record = {**(self.rows.get(ident) or {}), **(self.full.get(ident) or {})}
++        context = str(record.get(cat) or '') if cat else ''
++        if not context and item:
++            context = item.shelf or item.name
++        scope = _spelled(words(context))
++        plain = words(prop)
++        wanted = _spelled(plain)
++        ranks = {}
++        for key, value in (_fact_block(self.full.get(ident) or {}) or {}).items():
++            if not str(value).strip():
++                continue
++            named = _spelled(words(key))
++            ranks[key] = 3 if wanted and wanted < named and named - wanted <= scope else _key_rank(plain, words(key))
++        return ranks
++
+     def shows_need(self, ident: str, need: str) -> str:
+         priced = self.price_cap(ident, need)  # (v900 g2)
+         if priced is not None:
+@@ -5170,10 +5194,12 @@
+         if not wanted:
+             return ''
+         block = _fact_block(record) or {}
+-        keys = [k for k in block if _names(_stem(prop), _stem(k))]
++        ranks = self.property_ranks(ident, prop)
++        top = max(ranks.values(), default=0)
++        keys = [k for k, rank in ranks.items() if top and rank == top]
+         if keys:
+             hit = [k for k in keys if wanted <= _roots(str(block[k]))]
+-            return f'{hit[0]}={str(block[hit[0]])[:60]}' if hit else ''
++            return f'{hit[0]}={str(block[hit[0]])[:60]}' if hit and self.key_verdict(ident, need)[0] is True else ''
+         texts = [str(v) for v in record.values() if isinstance(v, str)] + [str(v) for v in block.values()]
+         return f'"{value}" in its text' if any((wanted <= _roots(t) for t in texts)) else ''
+ 
+@@ -5184,7 +5210,7 @@
+             return (None, '')
+         side, limit, unit = (found.group(1), float(found.group(2)), found.group(3).rstrip('s'))
+         block = _fact_block(self.full.get(ident) or {}) or {}
+-        ranks = {k: _key_rank(prop, k) for k in block if str(block[k]).strip()}
++        ranks = self.property_ranks(ident, prop)
+         top = max(ranks.values(), default=0)
+         figures = [float(n) for k, r in ranks.items() if top and r == top for n, u in re.findall('(\\d+(?:\\.\\d+)?)\\s*([a-z"]+)?', str(block[k]).lower().replace(',', '')) if (u or '').rstrip('s') == unit]
+         if not figures:
+@@ -5218,7 +5244,7 @@
+             return self.bound_verdict(ident, prop, value)  # (v900 g4)
+         if re.search('\\d', value):  # (v900 g3) a figure is proven only when a key naming the property states it word for word
+             block = _fact_block(self.full.get(ident) or {}) or {}
+-            ranks = {k: _key_rank(prop, k) for k in block if str(block[k]).strip()}
++            ranks = self.property_ranks(ident, prop)
+             top = max(ranks.values(), default=0)
+             wants = [_figure_words(o) for o in re.split('\\s*(?:,|/|\\bor\\b)\\s*', value) if o.strip()]
+             stated = [_figure_words(str(block[k])) for k, r in ranks.items() if top and r == top]
+@@ -5232,11 +5258,13 @@
+         record = {**(self.rows.get(ident) or {}), **(self.full.get(ident) or {})}
+         block = _fact_block(self.full.get(ident) or {}) or {}
+         wanted = set().union(*wants)
+-        ranks = {k: _key_rank(prop, k) for k in block if str(block[k]).strip() and not wanted <= _value_words(_words(k))}  # (v900 g4) a key named after the value ("tlc technology: yes") is a flag
++        ranks = {k: rank for k, rank in self.property_ranks(ident, prop).items() if not wanted <= _value_words(_words(k))}  # (v900 g4) a key named after the value ("tlc technology: yes") is a flag
+         top = max(ranks.values(), default=0)
+         named = [(k, str(block[k])) for k, r in ranks.items() if top and r == top]
+         if named:
+             hit = next(((k, v) for k, v in named if any((_states(w, _value_words(v)) for w in wants))), None)
++            if top == 3 and hit and any(not any(_states(w, _value_words(v)) for w in wants) for _, v in named):
++                return (None, 'conflicting item-scoped keys: ' + '; '.join(f'{k}={v[:60]}' for k, v in named))
+             if negated:
+                 return (False, f'its key {hit[0]} says {hit[1][:60]!r}') if hit else (True, '')
+             if hit:
+@@ -5358,7 +5386,7 @@
+         if not figures or re.search('\\b(?:' + BOUND + ')\\b', value.lower()) or re.search('\\bor\\b|,|/', value):
+             return False
+         block = _fact_block(self.full.get(ident) or {}) or {}
+-        ranks = {k: _key_rank(prop.strip(), k) for k in block if str(block[k]).strip()}
++        ranks = self.property_ranks(ident, prop.strip())
+         top = max(ranks.values(), default=0)
+         stated = [set(re.findall('\\d+(?:\\.\\d+)?', str(block[k]))) for k, r in ranks.items() if top and r == top]
+         return bool(stated) and all((s and not figures <= s for s in stated))

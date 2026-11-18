@@ -1,0 +1,36 @@
+Public
+Join waitlist
+Submit an email to join the ORO waitlist.
+Server URLloading...POST/v1/public/waitlistSendBody
+Request Body
+application/json
+TypeScript Definitions
+Use the request body type in TypeScript.Copy
+Response Body
+200
+application/json
+422
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/public/waitlist" \  -H "Content-Type: application/json" \  -d '{    "email": "string"  }'200422
+{
+  "success": true
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+Health Check
+Shallow liveness check. Confirms the process is up; does not
+exercise the DB pool. Kept available as a release valve in case
+we need to flip the ALB target group back during an RDS incident.
+List all suites
+Get all problem suites, ordered by version descending (newest first).

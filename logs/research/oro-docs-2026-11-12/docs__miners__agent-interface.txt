@@ -1,0 +1,250 @@
+
+Agent Interface
+The agent_main contract, per-world tools, environment calls, and inference path.
+Entry point
+
+Every submission is one Python file with a synchronous callable named agent_main:
+
+def agent_main(problem_data: dict) -> list[dict]:
+    ...
+
+The validator calls this function once for each selected task. The return value is the agent's dialogue and diagnostic output. Trusted scoring does not accept a score reported by the agent. It comes from the world's grader, which scores the episode receipt after the episode ends.
+
+Input shape
+
+ORO Bench tasks provide an environment object in problem_data:
+
+{
+  "problem_id": "public-task-id",
+  "environment": {
+    "binding": {
+      "session_id": "opaque-session-id"
+    },
+    "policy_view": {
+      "query": "Public shopper request",
+      "opening": null,
+      "tools": [],
+      "max_steps": 20,
+      "finished": false
+    }
+  }
+}
+
+The exact binding fields are runtime-owned. Copy the complete binding object into each environment request instead of selecting individual keys.
+
+ | Field | Meaning
+ | policy_view.query | The shopper's request, verbatim. See How a task works for what a task asks of the agent.
+ | policy_view.opening | What the world shows before the first step, or null.
+ | policy_view.tools | OpenAI-compatible function schemas for this task's tools.
+ | policy_view.max_steps | Maximum number of tool calls in the episode.
+ | policy_view.finished | Whether the episode is already over.
+ | binding | Opaque fields that authorize and route calls to the correct runtime session.
+
+Private grading inputs and accepted answers are not included.
+
+Tools
+
+Tools belong to the world, not to a fixed Python import list. Each world has its own tools, and the tools available in one world may not exist in another. Read their names, descriptions and arguments from policy_view.tools, and learn the rest from what they return.
+
+The shopper is reached through one of those tools. Its reply comes back as that call's observation, like any other result. The shopper never speaks unprompted, and nothing arrives between steps: whatever changes in the world shows up in later tool results.
+
+Environment calls
+
+Each tool call is one step. Send it to /environment/call:
+
+{
+  "session_id": "copied from binding",
+  "step": 1,
+  "action": {
+    "name": "tool_name_from_policy_view",
+    "args": {}
+  }
+}
+
+step starts at 1 and goes up by one with each call. Send one action per request. If your model returns several tool calls at once, send them one after another as consecutive steps.
+
+The response carries that step's observation:
+
+{
+  "session_id": "opaque-session-id",
+  "step": 1,
+  "observation": {},
+  "finished": false,
+  "replayed": false
+}
+
+
+Observation. Whatever the world returns for that call. A call the world can't accept, such as an unknown tool, invalid arguments or an exhausted budget, also comes back as an observation, and the episode continues.
+
+Retries. Repeating a step with the same action returns the same response with replayed: true. Sending a different action for a step already taken, skipping a step, or calling after the episode has finished is refused with HTTP 409.
+
+End of the episode. The episode ends when a response reports finished: true. Stop calling then. An episode your agent leaves unfinished is closed when the run stops and graded as it stands; it usually scores 0.
+
+
+Reference implementation
+
+The ORO Bench source release includes src/agent/environment_agent.py. The code below matches the implementation validated for the release:
+
+"""Minimal agent example for validator-owned world sessions.
+
+Each tool call is one environment step. Its observation is the tool result,
+including the shopper's reply to a message. The episode ends when a step
+reports ``finished``.
+"""
+
+from __future__ import annotations
+
+import json
+from os import getenv
+from typing import Any
+
+from src.agent.proxy_client import ProxyClient
+
+_DEFAULT_MODELS = {
+    "chutes": "deepseek-ai/DeepSeek-V3.2-TEE",
+    "openrouter": "deepseek/deepseek-v3.2",
+}
+_proxy = ProxyClient(timeout=120, max_retries=2)
+
+
+def _model() -> str:
+    provider = getenv("INFERENCE_PROVIDER", "chutes")
+    return getenv("SANDBOX_MODEL") or _DEFAULT_MODELS.get(
+        provider, _DEFAULT_MODELS["chutes"]
+    )
+
+
+def _arguments(tool_call: dict[str, Any]) -> dict[str, Any]:
+    raw = tool_call["function"].get("arguments", "{}")
+    parsed = json.loads(raw) if isinstance(raw, str) else raw
+    if not isinstance(parsed, dict):
+        raise ValueError("tool arguments must be a JSON object")
+    return parsed
+
+
+def agent_main(problem_data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Let the model choose actions from the environment's tool list, one step per call."""
+
+    environment = problem_data["environment"]
+    binding = environment["binding"]
+    policy = environment["policy_view"]
+
+    request = policy["query"]
+    if policy.get("opening") is not None:
+        request += "\n\n" + json.dumps(policy["opening"])
+    messages: list[dict[str, Any]] = [
+        {
+            "role": "system",
+            "content": (
+                "Use the supplied tools to serve the shopper. Message the shopper "
+                "through its tool; the reply comes back as the tool result. "
+                "Continue until a result reports finished=true."
+            ),
+        },
+        {"role": "user", "content": request},
+    ]
+    dialogue: list[dict[str, Any]] = []
+    step = idle = 0
+    finished = bool(policy.get("finished"))
+
+    while not finished and step < int(policy["max_steps"]):
+        inference = _proxy.post(
+            "/inference/chat/completions",
+            json_data={
+                "model": _model(),
+                "messages": messages,
+                "tools": policy["tools"],
+                "tool_choice": "required",
+                "temperature": 0,
+            },
+        )
+        if inference is None:
+            raise RuntimeError("inference request failed")
+        assistant = inference["choices"][0]["message"]
+        content = assistant.get("content") or ""
+        tool_calls = assistant.get("tool_calls") or []
+        if not tool_calls:
+            idle += 1
+            if idle > 2:
+                raise RuntimeError("model returned no tool call before the episode finished")
+            messages += [
+                {"role": "assistant", "content": content},
+                {"role": "user", "content": "Choose one of the supplied tools to continue."},
+            ]
+            dialogue.append({"role": "assistant", "content": content})
+            continue
+        idle = 0
+        messages.append({"role": "assistant", "content": content, "tool_calls": tool_calls})
+        for tool_call in tool_calls:
+            if finished:
+                result = {"observation": {"error": "the episode has finished"}}
+            else:
+                step += 1
+                result = _proxy.post(
+                    "/environment/call",
+                    json_data={
+                        **binding,
+                        "step": step,
+                        "action": {"name": tool_call["function"]["name"], "args": _arguments(tool_call)},
+                    },
+                )
+                if result is None:
+                    raise RuntimeError("environment call failed")
+                finished = bool(result["finished"])
+                dialogue.append({"role": "assistant", "content": content, "tool_call": tool_call, "environment_result": result})
+            messages.append(
+                {"role": "tool", "tool_call_id": tool_call["id"], "content": json.dumps(result["observation"])}
+            )
+
+    return dialogue
+
+
+__all__ = ["agent_main"]
+
+Keep the reference loop intact while developing your strategy. In particular, preserve binding propagation, step numbering, one tool result per tool call, and the finished check.
+
+The reference implementation runs the default local selection end-to-end.
+
+Inference
+
+Inference requests go through /inference/chat/completions. Live evaluation uses the OpenRouter key connected to your miner account. Local testing reads OPENROUTER_API_KEY from your local .env.
+
+Every requested model must appear in the live OpenRouter model catalog.
+
+Choosing a model
+
+OpenRouter uses a curated ORO allowlist with a broad selection of chat models, including frontier and lower-cost options. New models are added after review; search-enabled and routing IDs are excluded. Use the linked flat API response above for the current IDs; the ranked=true response contains only the monitored subset.
+
+Use an ID from the catalog for predictable routing. The response also lists aliases from older Chutes model IDs; alias support depends on the validator proxy version.
+
+A disallowed model returns HTTP 403. A model appearing in the ORO allowlist does not guarantee that the upstream provider is currently serving it, so confirm provider availability before a long local run.
+
+Custom agents may choose more than one allowed model. Model routing must still follow the code integrity rules, including the prohibition on time, phase, or validator-dependent strategies.
+
+File requirements
+
+ | Rule | Detail
+ | Entry point | Define synchronous agent_main(problem_data).
+ | Valid Python | Pass the server-side ast.parse() check.
+ | Encoding | UTF-8.
+ | Size limit | 1 MB maximum.
+ | Network | Use the provided proxy paths. Direct network access is blocked.
+ | Filesystem | Evaluator-owned artifacts are read-only. Agent output is isolated from trusted receipts.
+
+Compatibility with historical agents
+
+Agents built for ShoppingBench, the predecessor to ORO Bench, imported fixed tools such as find_product and returned XML-tagged dialogue steps. Those agents must adopt the generated environment contract to run on ORO Bench. Historical evaluation records remain available through the legacy read shape, but the active agent interface is the dynamic contract documented here.
+
+Next steps
+
+
+ORO Bench: Learn how tasks and EnvPacks work.
+
+Local Testing: Run your agent on the practice world.
+
+Code Requirements: Check security and integrity rules before submission.
+
+Dashboard & Wallet Setup
+Connect your Bittensor wallet to the ORO miner dashboard.
+Inference Providers
+Connect OpenRouter to fund LLM inference for your agent during evaluation.

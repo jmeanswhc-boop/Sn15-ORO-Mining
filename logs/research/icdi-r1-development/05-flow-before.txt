@@ -1,0 +1,53 @@
+test_approval_is_observed_before_checkout (agents.tests.test_icdi_r1.EndToEndContracts) ... ERROR
+test_checkout_change_replaces_old_requirement_and_product (agents.tests.test_icdi_r1.EndToEndContracts) ... ok
+test_every_physical_attempt_counts_and_reserves_cost (agents.tests.test_icdi_r1.EndToEndContracts) ... ERROR
+test_expensive_review_falls_back_without_overspending (agents.tests.test_icdi_r1.EndToEndContracts) ... ERROR
+test_reported_cost_above_quote_stops_further_calls (agents.tests.test_icdi_r1.EndToEndContracts) ... ERROR
+test_reserve_is_available_only_during_recovery (agents.tests.test_icdi_r1.EndToEndContracts) ... ERROR
+test_text_record_world_completes (agents.tests.test_icdi_r1.EndToEndContracts) ... ok
+test_unchanged_structured_world_completes (agents.tests.test_icdi_r1.EndToEndContracts) ... ok
+
+======================================================================
+ERROR: test_approval_is_observed_before_checkout (agents.tests.test_icdi_r1.EndToEndContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 531, in test_approval_is_observed_before_checkout
+    self.assertTrue(e.no_credit)
+NameError: name 'e' is not defined
+
+======================================================================
+ERROR: test_every_physical_attempt_counts_and_reserves_cost (agents.tests.test_icdi_r1.EndToEndContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 535, in test_every_physical_attempt_counts_and_reserves_cost
+    calls = self.transport(ns, (None, {'status': 500}))
+AttributeError: 'EndToEndContracts' object has no attribute 'transport'
+
+======================================================================
+ERROR: test_expensive_review_falls_back_without_overspending (agents.tests.test_icdi_r1.EndToEndContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 550, in test_expensive_review_falls_back_without_overspending
+    calls = self.transport(ns, ({'choices': [{'message': {'content': 'ok'}}], 'usage': {'cost': 0.0001}}, None))
+AttributeError: 'EndToEndContracts' object has no attribute 'transport'
+
+======================================================================
+ERROR: test_reported_cost_above_quote_stops_further_calls (agents.tests.test_icdi_r1.EndToEndContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 542, in test_reported_cost_above_quote_stops_further_calls
+    calls = self.transport(ns, ({'choices': [{'message': {'content': 'ok'}}], 'usage': {'cost': 0.06}}, None))
+AttributeError: 'EndToEndContracts' object has no attribute 'transport'
+
+======================================================================
+ERROR: test_reserve_is_available_only_during_recovery (agents.tests.test_icdi_r1.EndToEndContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 558, in test_reserve_is_available_only_during_recovery
+    calls = self.transport(ns, ({'choices': [{'message': {'content': 'ok'}}], 'usage': {'cost': 0.0001}}, None))
+AttributeError: 'EndToEndContracts' object has no attribute 'transport'
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.447s
+
+FAILED (errors=5)

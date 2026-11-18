@@ -1,0 +1,378 @@
+Tosky_v4: a controlled improvement strategy built on PIRATE
+Prepared 2026-11-14. This is an implementation and evaluation plan, not a claim
+that a new agent has already improved. Original agent sources are unchanged.
+No new model inference, paid verification, or submission was performed.
+
+DECISION
+
+Use the second approach, selectively: retain PIRATE's working controller and
+transfer individual mechanisms only when evidence identifies a missing ability.
+Do not merge Tosky_v3's controller stack or another agent's whole architecture.
+The unit of transfer is a reachable behavior with a stated trigger, a failure it
+addresses, and a measurable effect. Neither champion status nor an attractive
+function name supplies that evidence.
+
+"Powerful" means a higher probability of a fully correct order OR a fully
+correct decline, across different tasks and changes within an episode, with
+enough resources to finish the entire run. It does not mean more model calls,
+more compulsory checks, a longer source file, or higher accuracy on a selected
+subset. Budget compliance is a feasibility constraint, not the score objective.
+
+An engineering ambition for material superiority is at least ten percentage
+points of paired accuracy improvement, not a prediction: roughly three extra
+successes per 30 tasks or nine per 90. The submission decision must also account
+for uncertainty, preserved successes, actual cost, and time. ORO's title uses
+three-race difficulty-adjusted Overall and a challenge margin; a fixed raw-score
+target cannot guarantee the title against future competitors or task draws.
+
+1. WHAT THE EVIDENCE ACTUALLY SUPPORTS
+
+PIRATE's two released races contain 360 scored executions of 180 task/world
+pairs, each evaluated twice. Outcomes: 110 passes, 112 procedure failures,
+111 request failures, 27 non-optimal choices, zero unfinished episodes. These
+categories describe one failure per episode; they are not an exhaustive root
+cause inventory or 223 automatically recoverable successes.
+
+Four full 90-task bills were $4.120608085, $4.298073725, $4.035243455,
+and $4.127490265. Existing costs are under $5 but leave limited room for new
+inference. Public episode feedback contains neither the model request trace nor
+per-task inference costs. Consequently, it cannot show which successful tasks
+would be cut off by a new per-task limit.
+
+Six isolated offline probes from the foundation study demonstrate defects in
+actual PIRATE methods, with synthetic dependencies and no agent-module import:
+  - direct_order and finish can buy after gate('order') returns False.
+  - gate can report permission after its model response is unavailable.
+  - Persistent HTTP 402 causes four physical requests and 34 nominal seconds of
+    retry waits before no_credit is set; the logical counter increases once.
+  - A successful response lacking usage.cost contributes zero recorded cost.
+  - scaled_same accepts '1000 mAh' and '10 V' as equivalent by comparing stripped
+    digits across different units. This affects a reference-mismatch shortcut.
+These are demonstrated code hazards. Public race traces do not establish how
+many of the 112 procedure failures or 111 request failures each hazard caused.
+
+The supplied Tosky_v3 validations identify the same source hash and practice
+pack: 19/20 at $0.423716310 and 23/30 at $0.643581875, with no failed inference
+requests or missing cost reports. The 20 shared tasks have 16 repeated passes,
+three pass-to-fail changes, and one fail-to-pass change. They are repeated
+executions, not 50 independent tasks. Practice results are not hidden-race scores.
+
+A new raw-log recount found ZERO review_boundary, review_boundary_packet, or
+review_boundary_response events in all 50 executions. The newly added typed
+review correction therefore has no observed execution in these runs. It must
+not receive credit for the scores. The older review_dispute did execute once.
+Budget denials occurred in 8/20 and 14/30 episodes; compact repair executed in
+3/20 and 2/30. Those mechanisms were exercised, but their net accuracy benefit
+still has not been isolated by ablation.
+
+Other public agents supply more focused evidence:
+
+Agent           Whole qualifier     Six difficult tasks   Recorded race mean
+PRIMO           59/60 executions    12/12 executions       race 3: 34.44%
+Four Leaf       58/60               12/12                  race 8: 6.67%
+Hunter          57/60               10/12                  different race/world
+Nagini          57/60               10/12                  different race/world
+KING            57/60                9/12                  different race/world
+Abacus r12      56/60               10/12                  different race/world
+PIRATE          50/60                3/12                  races 22/23 above
+
+Two executions per qualifying task are present. Qualifying rows use the same
+public world and contract. Historical race rows use different worlds and are
+not head-to-head rankings. Four Leaf's excellent qualifier and poor race are
+especially strong reasons to borrow a tested behavior, not adopt its framework.
+
+Concrete observations from saved question/answer traces:
+  - On the dining-set task, PIRATE included table base in long multi-property
+    questions but never elicited the preference. Four Leaf asked directly about
+    the observed table-base field and elicited trestle. PRIMO's short two-field
+    question also elicited it. Both donor executions passed; both PIRATE runs
+    failed. This supports an interview experiment, not a proven causal effect
+    of question length alone: question order, wording, models and prior state
+    also differed.
+  - On the sugar-free cola task, donor questions about pack size elicited a reply
+    explicitly naming pack type. The response's named property must govern the
+    stored requirement; forcing it into the asked field loses the information.
+    The analogous keys are not universally interchangeable.
+  - Both donors solved the lens task by declining; PIRATE ordered and failed.
+    A policy that merely orders more often cannot reproduce these successes.
+
+The earlier Tosky_v2 incident is a negative control for our own design process:
+0/10, despite 322 successful model requests. Forty-two parsed proofs were
+rejected before semantic matching, mainly by universal completeness and schema
+requirements. A large offline test count did not prove the live path useful.
+We must not repeat that global proof barrier under a new name.
+
+2. THE CORE TO PRESERVE, AND THE CENTRAL TESTABLE HYPOTHESIS
+
+PIRATE already has the useful core of an agent: observe the public environment,
+interpret the request, acquire missing information, choose and repair a cart,
+then act. Dynamic tool binding, per-item requirements, reference relationships,
+search expansion, and cheap planning already interact successfully on many
+tasks. Keep those paths unless an experiment demonstrates a reason to change.
+
+The central hypothesis is that its largest recoverable losses arise at the
+handoffs between current evidence, current obligations, and the next action.
+Several components can individually sound reasonable while acting on different
+versions of the task. A correct new preference may never reach matching; an
+unnamed stockout may not invalidate the attempted product; a review may object
+without giving a usable repair; a fallback may purchase despite that objection.
+
+This is a hypothesis with several concrete supporting counterexamples, not a
+claim that all task failures share one proven root cause. Search coverage,
+model interpretation, and undiscovered preferences can remain independent
+causes. Fixing checkout cannot invent information never acquired.
+
+Use a small, consistent decision contract over PIRATE's EXISTING state:
+  (a) Which item/relationship and requirement is relevant?
+  (b) Which observed fact or shopper message supports the conclusion?
+  (c) Has a relevant dependency changed since that conclusion?
+  (d) What specific action can resolve the remaining uncertainty?
+  (e) Are the inference, message and environment-step resources available?
+
+Do not introduce a parallel master ledger, a universal catalogue-completeness
+certificate, or a second planner. Facts remain in PIRATE's current items,
+requirements, rows, references, cart and action history. Small dependency stamps
+and explicit outcomes make their existing consumers agree.
+
+An unknown answer is neither an approval nor an automatic rejection. A hold
+must identify an actionable deficiency. Re-reading unrelated records must not
+reset the allowance for the same unresolved issue. Conversely, replacing one
+item must not erase unrelated requirements or unnecessarily repeat a whole
+interview. Obligations tied to a particular cart must be renewed when that cart
+changes; obligations already fulfilled independently of it remain fulfilled.
+
+3. WHAT TO TRANSFER AND WHAT TO LEAVE OUT
+
+PIRATE: preserve model roles, broad planner prompts, dynamic tool binding and
+working search/repair behavior initially. Repair their boundary contracts.
+
+Tosky_v3: adapt per-physical-request admission, settlement, conservative missing
+cost handling, immediate 402 stop, and compact repair principles. Recalibrate
+estimates and protected resources; do not copy the fixed $0.035 episode budget
+or $0.010 reservation mechanically. Its local monitor deadlock demonstrates
+that reserving money does not itself guarantee useful completion.
+
+Tosky_v3 typed review: defer transfer until a reachable, genuinely disputed
+review case demonstrates benefit. It is not a proven advantage missing from
+PIRATE. If later needed, send only the disputed requirement, relevant evidence,
+and alternatives, with a bounded response. Never require every candidate to
+possess a global certificate or treat a valid JSON response as semantic proof.
+
+PRIMO/Four Leaf: test short, dynamically selected questions and explicit
+response-property binding. Inspect observed coverage and value variation within
+the relevant item pool; use no fixed product/property priorities. Preserve
+message capacity for required procedures. Do not copy their property-merging
+heuristics based merely on overlapping values, their benchmark-tuned weights,
+or their whole model configurations. A shared value is not a shared property.
+
+Earlier champions: retain the demonstrated development discipline: changes
+scoped to the relevant objective, relationships with explicit item ownership,
+unused reservations released when unnecessary, and actual call-path checks.
+The previous study's unreachable helpers and shadowed methods are warnings:
+source similarity and added code alone cannot explain a score improvement.
+
+4. ORDERED IMPLEMENTATION AND EXPERIMENTS
+
+No phase is promoted merely because its unit tests pass. Each phase gets a
+separate diff, activation evidence, negative controls and a rollback point.
+Independent changes are also compared against the unchanged baseline, so a
+benefit is not mistakenly attributed to a prior intervention. Only successful
+changes enter the integrated candidate.
+
+P0. Freeze the baseline and build the evidence harness.
+  Inputs: exact PIRATE/v3 hashes, all six hard qualifiers plus all other known
+  qualifying successes, both local v3 runs, released matched-race outcomes.
+  Keep passing multi-item, reference, negation, alternatives, optimum and correct
+  decline cases in the regression set. Do not select only the six hard tasks.
+  Map every terminal route and actual helper dispatch. Replay stored observations
+  only up to the point where a changed action diverges; never invent a new world
+  reply or score from the old trace. Public PIRATE transcripts lack internal
+  model calls, so they cannot support a faithful full-agent replay.
+  Exit: reproducible original counterexamples, traceable inputs, runnable
+  offline fixtures. New paid baselines remain subject to later authorization.
+
+P1. Budget accounting first, separate from accuracy-policy changes.
+  Locations: think/call_model, judges and the existing completion reservation.
+  Charge the allowance before EACH physical transmission, including retries and
+  model fallbacks. Reconcile reported usage; keep the reservation if the charge
+  is unknown. Count physical attempts, stop immediately on 402, and permit only
+  bounded retries for genuinely transient errors. Do not change ordinary model
+  choices or prompt content when a request fits.
+  Test success, malformed replies, missing costs, timeouts, 429/5xx, 402,
+  oversized prompts, cache charges and output truncation separately.
+  Exit: accounting invariants hold; admitted ordinary requests keep their
+  existing path; unknown billing never becomes free credit; no bypassing caller.
+
+P2. Procedure agreement with bounded repair.
+  Locations: read_request, gate, gate_due, tail, direct_order, complete_cart,
+  run_calls, finish, and the lowest terminal dispatch in act.
+  Separate a stated duty from a limit or background remark. Represent the duty's
+  action, timing and observed completion evidence; informing a shopper is not
+  the same as receiving permission from them. Do not demand permission unless
+  the request does. Every terminal route must honor the same result.
+  A terminal dispatch check validates a current permission/result, not a new
+  recursive model gate. Nonterminal repair actions remain possible. Missing
+  review output is UNKNOWN and cannot manufacture permission. With no applicable
+  outstanding duty, direct observed completion can avoid a redundant model call.
+  A hold identifies the duty and next feasible action. Repeat unchanged holds
+  at most once for clarification; a genuine relevant event may justify replanning.
+  Reserve the actual remaining messages/steps before exploratory questions.
+  Exit: both bypass probes fixed; ordinary no-duty checkout unaffected; inform
+  and approval cases both correct; missing-output and exhausted-message cases
+  terminate the internal repair loop without fabricating compliance or a
+  supposedly correct decline. No new repeated-gate stall in the fixed fixtures.
+
+P3. Bind changes to their affected decisions.
+  Locations: take_note, take_heard, note_cart, check_key, sold_out, price_swap,
+  cheap_swap, reference checks and terminal dispatch.
+  Associate an unnamed checkout stockout with the attempted cart. A single
+  affected line can be invalidated directly. If several lines are ambiguous,
+  mark the affected scope unresolved and inspect it; do not declare every
+  product unavailable. Price, quantity, scope or requirement changes invalidate
+  only dependent reviews and objective comparisons. Preserve minimum-price or
+  other objective during replacement, rather than taking the first available
+  replacement. Budget replacement work before the last step.
+  Exit: no re-order of a known unavailable item; correct invalidation after a
+  replacement; unrelated item facts retained; dropped/added requirements handled
+  in sequence; replayed duplicate notices do not cause repeated work. Include
+  both genuine stockout and innocuous-note negative controls.
+
+P4. Property and reference semantics, as a separate change.
+  Locations: scaled_same, link_mismatch, key_verdict, bound_verdict and the
+  shared evidence path consumed by matching and review.
+  Remove the stripped-digit equivalence shortcut. Same numbers in different
+  units or properties are not proof. Use supplied schema/observations and
+  attributable interpretation; without evidence of equivalence return UNKNOWN,
+  not a fabricated match or mismatch. Preserve item ownership, negation, numeric
+  direction and OR alternatives. A more specific field wins only when it
+  actually names the requested property, not simply because its key is longer.
+  Exit: the unit counterexample is rejected as unproven; valid same-property
+  comparisons remain usable; ambiguity is not silently converted into refusal;
+  search and review agree on the same supplied evidence. No fixed unit table.
+
+P5. Preference discovery, measured independently.
+  Locations: interview, ask_next, settle and take_heard.
+  Select unresolved properties from observed, relevant candidate records and
+  supplied schemas. Prefer one clear property per question; any short bundle
+  must name a specific public-input reason, not a fixed task-category rule.
+  Bind an answer to the property it explicitly names, even if different from
+  the question. Indifference to a broad question does not resolve every field.
+  Avoid repeated low-value questions, preserve procedural messages, and reuse
+  existing planning calls rather than adding a compulsory question-judging model.
+  Exit: question generation is reachable, respects the message budget and uses
+  no memorized fields/answers; recorded donor behaviors can be represented;
+  answer parsing preserves their named property; real accuracy benefit is
+  established only by subsequent controlled evaluation, not scripted replies.
+
+P6. Conditional disputed-review repair and integration.
+  Add a compact disagreement path only if P2-P5 leave measured failures that it
+  can address. Otherwise omit it. A negative review must point to a requirement
+  and evidence; repair or adjudicate that issue without redoing the whole task.
+  Cap repeated adjudication by the same dependency state, not total read count.
+  Combine only the individually validated changes, then repeat full regression
+  and budget checks to detect interactions. Submission originality must come
+  from the resulting reachable functionality, not unused additions.
+
+5. BUDGET FEASIBILITY WITHOUT STRANGLING THE SOLVER
+
+A $5/90 cap corresponds to $0.05556 per task on average. A proposed common
+episode envelope of $0.050 gives $4.50 for 90 invocations and $1.50 for 30,
+leaving nominal margins under both requested run caps. This is a design starting
+point, NOT a certified bill bound or a measured non-regressing setting. PIRATE's
+$0.055/$0.078 thresholds are advisory and permit spending after a threshold;
+lowering those constants alone does not implement admission control.
+
+The envelope must include reasoning, review, retry and recovery calls. Protect
+the quoted cost of outstanding work inside it, and release that protection
+when the obligation is completed or absent. Do not add the protected amount
+on top of the envelope. First eliminate duplicate checks, failed 402 retries,
+irrelevant context and unchanged repair cycles; then reassess whether further
+restriction is needed. Freeze model choices while testing these mechanisms.
+
+Cost estimates require refreshed provider pricing, cache/tier/reasoning charges
+and bounded outputs. The existing v3 byte-count estimate is conservative but
+not a certified tokenizer/routed-price maximum; its false denials must be
+measured. Unknown prices cannot be assigned zero. If actual usage breaches the
+reservation, stop admitting further expensive work and record the breach.
+The platform's scoped key remains the authoritative run-level spending stop.
+Do not replace it, raise its limit or use another key.
+
+The arithmetic assumes 90 billable task invocations. Infrastructure retries or
+other unexpected billable work can consume additional credit; a local episode
+counter cannot promise full completion under arbitrary external failures.
+Use no files/global cross-episode memory to share credit and no qualifier/race
+environment switch. Unspent credit in a different task is not available to an
+episode unless the public runtime explicitly exposes that capability.
+
+Before setting final numbers, obtain authorized request-level PIRATE/candidate
+profiles: actual and reserved cost by purpose, physical attempts, missing cost,
+maximum prompt size, denials while money remains, and completion cost after
+the last new requirement. Public totals alone cannot establish this profile.
+
+6. VALIDATION, STOP RULES AND REGULATORY CHECKS
+
+Offline validation establishes mechanics, not hidden accuracy:
+  - Original six counterexamples and the real v3 stockout/procedure deadlocks.
+  - Unaffected passing states for every modified function and terminal route.
+  - Public-schema-preserving tool/ID renaming and candidate-order variation.
+  - Duplicate notices, conflicting scope, message exhaustion, transient errors,
+    missing costs and last-step boundaries.
+  - Activation traces proving each proposed mechanism actually executes.
+  - Read-only AST/security/reachability audit; original hashes remain unchanged.
+
+All current public examples have already informed development. They cannot
+honestly be called a fresh holdout. Synthetic transformations test invariants,
+not the private grader. Do not reconstruct hidden tasks or a grader from released
+feedback. Only subsequent unseen worlds provide evidence of generalization.
+
+When paid testing is later authorized, compare frozen PIRATE and one candidate
+under the same available pack, model/provider configuration and selection seed.
+Use the whole available task set, then repeat only when uncertainty or a change
+justifies it. Report paired gains AND losses, correct declines, unfinished
+episodes, procedure failures, actual bill, physical calls, task p95 and run
+wall time. Separate repeated executions of the same task from independent worlds;
+use task/world-clustered intervals or paired resampling, not a binomial interval
+that counts every repeat as new evidence. A 90-invocation budget stress test
+using repeated public cases is not a hidden-race accuracy test.
+
+Promotion requires the target mechanism to execute, the original defect to be
+removed, no unexplained regression in protected cases, and the integrated run
+to remain within both caps. As an initial runtime guardrail, investigate any
+>10% mean or p95 increase under comparable conditions; do not accept extra cost
+or latency without a measured accuracy gain. A single improved partial run is
+not sufficient evidence for submission. If a new loss appears, isolate or
+revert that change before adding another mechanism.
+
+Current ORO rules allow meaningful improvements to released source but reject
+cosmetic forks and unreachable padding. Use one strategy from public episode
+inputs; no phase/validator/clock routing, embedded task/product answers, fixed
+attribute or unit registries, copied grader logic, forbidden file writes, or
+direct network access. Retain the synchronous entry point, opaque bindings and
+sequential idempotent environment calls. Local AST checks are preparatory;
+they do not certify acceptance by the platform's private checks.
+
+Official sources checked on 2026-11-14:
+https://oroagents.com/docs/miners/code-requirements
+https://oroagents.com/docs/miners/agent-interface
+https://oroagents.com/docs/miners/scoring
+
+7. REPRODUCIBILITY AND LIMITS OF THIS DELIVERABLE
+
+strategy-evidence.json contains recalculated donor totals, 18 selected released
+episode traces, local activation counts, PIRATE failure totals and code anchors.
+input-hashes.json records 60 evidence inputs. Run collect_evidence.py to
+regenerate the evidence without network access, paid inference or agent imports.
+The foundation study supplies 46 runs / 4,020 outcomes and its isolated probes;
+the earlier champion-method study supplies the broader adaptation comparisons.
+No claim is made that every archived source was re-read line by line this turn.
+
+PIRATE source SHA-256:
+ea169847a7c61efc9957d1190e8751e134b6c7bbfb30089284facb979cc22e27
+Tosky_v3 source SHA-256:
+3b8b73ca3a2675b60fbbac5e86145af3fd3ece52ad69b69557305475b3dc5b50
+
+The strongest supported development decision is a preserved PIRATE core with
+measured improvements at its action/evidence boundaries and a separate
+information-discovery experiment. It is not yet evidence that Tosky_v4 will
+win. That distinction prevents another speculative update from being mistaken
+for a verified improvement.

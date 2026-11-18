@@ -1,0 +1,131 @@
+test_a_later_firm_requirement_retires_an_old_flexible_preference (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_a_new_firm_answer_still_becomes_a_requirement (test_tosky_l17.IndifferenceContracts) ... ok
+test_a_product_wide_answer_about_another_product_does_not_close_the_asked_one (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_an_explicit_order_wide_answer_closes_all_optional_questions (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_broad_scope_without_source_support_is_limited_to_the_question (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_budget_change_in_an_indifferent_reply_reaches_the_active_ledger (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_confusion_does_not_mark_a_topic_as_indifferent (test_tosky_l17.IndifferenceContracts) ... ok
+test_conversation_stops_when_topics_are_settled_before_the_message_limit (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_explicit_product_wide_indifference_stops_optional_questions (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_generic_indifference_settles_the_current_question_without_property_words (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_mixed_firm_answer_and_indifference_keep_the_firm_value (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_named_indifference_does_not_close_the_other_topics (test_tosky_l17.IndifferenceContracts) ... ok
+test_no_preference_cannot_remove_an_existing_firm_requirement (test_tosky_l17.IndifferenceContracts) ... ok
+test_no_preference_is_remembered_when_the_interviewer_is_rebuilt (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_punctuation_alias_is_not_asked_again_but_a_different_part_is (test_tosky_l17.IndifferenceContracts) ... FAIL
+test_sending_a_question_does_not_mark_confusion_as_an_answer (test_tosky_l17.IndifferenceContracts) ... FAIL
+
+======================================================================
+FAIL: test_a_later_firm_requirement_retires_an_old_flexible_preference (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 626, in test_a_later_firm_requirement_retires_an_old_flexible_preference
+    self.assertEqual(e.items[0].free, [])
+AssertionError: Lists differ: ['finish'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'finish'
+
+- ['finish']
++ []
+
+======================================================================
+FAIL: test_a_product_wide_answer_about_another_product_does_not_close_the_asked_one (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 569, in test_a_product_wide_answer_about_another_product_does_not_close_the_asked_one
+    self.assertEqual(second.open_props(), [])
+AssertionError: Lists differ: ['finish', 'texture'] != []
+
+First list contains 2 additional elements.
+First extra element 0:
+'finish'
+
+- ['finish', 'texture']
++ []
+
+======================================================================
+FAIL: test_an_explicit_order_wide_answer_closes_all_optional_questions (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 581, in test_an_explicit_order_wide_answer_closes_all_optional_questions
+    self.assertIsNone(engine.next_message())
+AssertionError: {'kind': 'list', 'parts': [(<offline_tosky.AskItem object at 0x77f74d534460>, ['finish'])]} is not None
+
+======================================================================
+FAIL: test_broad_scope_without_source_support_is_limited_to_the_question (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 502, in test_broad_scope_without_source_support_is_limited_to_the_question
+    self.assertNotIn("finish", it.open_props())
+AssertionError: 'finish' unexpectedly found in ['finish', 'texture']
+
+======================================================================
+FAIL: test_budget_change_in_an_indifferent_reply_reaches_the_active_ledger (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 545, in test_budget_change_in_an_indifferent_reply_reaches_the_active_ledger
+    self.assertEqual(e.budget, 30)
+AssertionError: 100 != 30
+
+======================================================================
+FAIL: test_conversation_stops_when_topics_are_settled_before_the_message_limit (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 616, in test_conversation_stops_when_topics_are_settled_before_the_message_limit
+    self.assertEqual(len(calls), 2)
+AssertionError: 3 != 2
+
+======================================================================
+FAIL: test_explicit_product_wide_indifference_stops_optional_questions (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 494, in test_explicit_product_wide_indifference_stops_optional_questions
+    self.assertIsNone(engine.next_message())
+AssertionError: {'kind': 'again', 'parts': [(<offline_tosky.AskItem object at 0x77f74d487ac0>, ['texture', 'body color', 'handle color', 'shape', 'packing', 'surface', 'size', 'length'])]} is not None
+
+======================================================================
+FAIL: test_generic_indifference_settles_the_current_question_without_property_words (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 475, in test_generic_indifference_settles_the_current_question_without_property_words
+    self.assertFalse(original & set(following["parts"][0][1]))
+AssertionError: {'texture', 'size', 'handle color', 'surface', 'body color', 'packing', 'shape'} is not false
+
+======================================================================
+FAIL: test_mixed_firm_answer_and_indifference_keep_the_firm_value (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 592, in test_mixed_firm_answer_and_indifference_keep_the_firm_value
+    self.assertIn("texture", e.items[0].free)
+AssertionError: 'texture' not found in []
+
+======================================================================
+FAIL: test_no_preference_is_remembered_when_the_interviewer_is_rebuilt (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 535, in test_no_preference_is_remembered_when_the_interviewer_is_rebuilt
+    self.assertNotIn("finish", rebuilt.items[0].open_props())
+AssertionError: 'finish' unexpectedly found in ['finish', 'texture']
+
+======================================================================
+FAIL: test_punctuation_alias_is_not_asked_again_but_a_different_part_is (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 509, in test_punctuation_alias_is_not_asked_again_but_a_different_part_is
+    self.assertNotIn("body_color", it.open_props())
+AssertionError: 'body_color' unexpectedly found in ['body.color', 'body_color', 'handle color']
+
+======================================================================
+FAIL: test_sending_a_question_does_not_mark_confusion_as_an_answer (test_tosky_l17.IndifferenceContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 600, in test_sending_a_question_does_not_mark_confusion_as_an_answer
+    self.assertIn("finish", it.open_props())
+AssertionError: 'finish' not found in []
+
+----------------------------------------------------------------------
+Ran 16 tests in 2.568s
+
+FAILED (failures=12)

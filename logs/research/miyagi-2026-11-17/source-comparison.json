@@ -1,0 +1,2861 @@
+{
+  "miyagi": {
+    "sha256": "69cbf616848f99b0d6dda0e57c44af39b7f4a11e7a347a825cd5b4da69a59b70",
+    "lines": 5954,
+    "functions": 290,
+    "imports": [
+      "from __future__ import annotations",
+      "import json",
+      "import random",
+      "import re",
+      "import time",
+      "from typing import Any",
+      "from src.agent.proxy_client import ProxyClient"
+    ]
+  },
+  "cairn": {
+    "sha256": "2344dcf9218708f75d4ff0dac8f37ea30c3d191a3df71daf1174c08b215ba500",
+    "lines": 5181,
+    "functions": 243
+  },
+  "identical": [
+    "Cairn.absorb",
+    "Cairn.act",
+    "Cairn.adopt_labels",
+    "Cairn.ask_json",
+    "Cairn.audit",
+    "Cairn.audit_call",
+    "Cairn.audit_fits",
+    "Cairn.buyable",
+    "Cairn.can_refuse",
+    "Cairn.cap_ignored",
+    "Cairn.cart_ids",
+    "Cairn.cart_mark",
+    "Cairn.cart_sets",
+    "Cairn.cart_text",
+    "Cairn.category_key",
+    "Cairn.cheaper_rows",
+    "Cairn.cheapest_here",
+    "Cairn.check_cart",
+    "Cairn.check_key",
+    "Cairn.clock",
+    "Cairn.compare_bare",
+    "Cairn.compare_facts",
+    "Cairn.compare_target",
+    "Cairn.complete_cart",
+    "Cairn.count_fixes",
+    "Cairn.described",
+    "Cairn.evidence",
+    "Cairn.facts_tool",
+    "Cairn.fill_facts",
+    "Cairn.find_link",
+    "Cairn.find_sold",
+    "Cairn.fit_faults",
+    "Cairn.fit_index",
+    "Cairn.fit_set",
+    "Cairn.fuller_label",
+    "Cairn.gate",
+    "Cairn.gate_due",
+    "Cairn.held_units",
+    "Cairn.ident",
+    "Cairn.is_buy",
+    "Cairn.is_refuse",
+    "Cairn.item_groups",
+    "Cairn.item_ids",
+    "Cairn.join_opens",
+    "Cairn.judges",
+    "Cairn.labels",
+    "Cairn.learn_rows",
+    "Cairn.left",
+    "Cairn.line_faults",
+    "Cairn.link_faults",
+    "Cairn.list_below",
+    "Cairn.loose_lines",
+    "Cairn.message_args",
+    "Cairn.model_room",
+    "Cairn.msgs_free",
+    "Cairn.needs_now",
+    "Cairn.note_cart",
+    "Cairn.note_view",
+    "Cairn.observe",
+    "Cairn.offer_tool",
+    "Cairn.open_rows",
+    "Cairn.others",
+    "Cairn.owner_of",
+    "Cairn.owns",
+    "Cairn.page_tools",
+    "Cairn.paging",
+    "Cairn.price_of",
+    "Cairn.price_sorted",
+    "Cairn.quiet",
+    "Cairn.read_shape",
+    "Cairn.ready_to_ask",
+    "Cairn.record_of",
+    "Cairn.records_in",
+    "Cairn.records_of_item",
+    "Cairn.replacements",
+    "Cairn.reread_offers",
+    "Cairn.resolve_ids",
+    "Cairn.rows_of_item",
+    "Cairn.run",
+    "Cairn.search_template",
+    "Cairn.send",
+    "Cairn.shared_shelf",
+    "Cairn.shop_rows",
+    "Cairn.show",
+    "Cairn.shown_already",
+    "Cairn.single_target",
+    "Cairn.sold_out",
+    "Cairn.spoken",
+    "Cairn.swap_hint",
+    "Cairn.tail",
+    "Cairn.take_heard",
+    "Cairn.take_note",
+    "Cairn.trim",
+    "Cairn.unmix",
+    "Cairn.value_search",
+    "Cairn.widen",
+    "Cairn.wider_hold",
+    "Cairn.work",
+    "Item",
+    "Item.__init__",
+    "_Stamped.__init__",
+    "_Stamped.append",
+    "_clip",
+    "_codes",
+    "_count",
+    "_dump",
+    "_fact_block",
+    "_fit_marks",
+    "_fits_kind",
+    "_holds_id",
+    "_id_like",
+    "_in_rows",
+    "_items",
+    "_json_obj",
+    "_kinds",
+    "_learn_id",
+    "_names",
+    "_roots",
+    "_shape",
+    "_snake",
+    "_stem",
+    "_words",
+    "agent_main"
+  ],
+  "changed": [
+    "Cairn",
+    "Cairn.__init__",
+    "Cairn.answer_open_calls",
+    "Cairn.below_cart",
+    "Cairn.call_mark",
+    "Cairn.call_model",
+    "Cairn.cap_keys",
+    "Cairn.cap_modes",
+    "Cairn.cap_template",
+    "Cairn.cart_calls",
+    "Cairn.cheapest_sets",
+    "Cairn.compare_room",
+    "Cairn.early_trail",
+    "Cairn.fill_short_cart",
+    "Cairn.finish",
+    "Cairn.first_look",
+    "Cairn.first_moves",
+    "Cairn.fit_plan",
+    "Cairn.fix_counts",
+    "Cairn.home_label",
+    "Cairn.hunt_cheaper",
+    "Cairn.hunt_fits",
+    "Cairn.hunt_item",
+    "Cairn.hunt_words",
+    "Cairn.interview",
+    "Cairn.last_page_first",
+    "Cairn.late_question",
+    "Cairn.ledger",
+    "Cairn.link_holds",
+    "Cairn.link_system",
+    "Cairn.lists_things",
+    "Cairn.missing_items",
+    "Cairn.more_pages",
+    "Cairn.more_rows_for_keys",
+    "Cairn.named_label",
+    "Cairn.names_code",
+    "Cairn.not_maker_keys",
+    "Cairn.note_facts",
+    "Cairn.note_read",
+    "Cairn.offered",
+    "Cairn.opened_shop",
+    "Cairn.page_read",
+    "Cairn.page_text",
+    "Cairn.part_shelves",
+    "Cairn.query_is_new",
+    "Cairn.read_request",
+    "Cairn.refuse_trail",
+    "Cairn.row_ids",
+    "Cairn.run_calls",
+    "Cairn.rushed",
+    "Cairn.series_for",
+    "Cairn.shorter_search",
+    "Cairn.show_links",
+    "Cairn.states_needs",
+    "Cairn.status",
+    "Cairn.think",
+    "Cairn.title_key",
+    "Cairn.trail",
+    "Cairn.turns",
+    "Cairn.unread_pages",
+    "Cairn.unspelled",
+    "Cairn.value_template",
+    "Cairn.value_words",
+    "Cairn.whole_removal",
+    "Cairn.widen_singly",
+    "_Stamped",
+    "_attr_block",
+    "_block_text",
+    "_block_value",
+    "_code_hit",
+    "_column_rows",
+    "_failed",
+    "_filler",
+    "_flat_block",
+    "_fold_twins",
+    "_glued",
+    "_id_texts",
+    "_join_twins",
+    "_keyed_rows",
+    "_llm_within",
+    "_pair",
+    "_pairs_block",
+    "_plain",
+    "_record_text",
+    "_records_text",
+    "_restore",
+    "_restore_field",
+    "_says",
+    "_series_marks",
+    "_soft",
+    "_spelled",
+    "_split_fields",
+    "_strings",
+    "_table_text",
+    "_text_words",
+    "_value_tokens"
+  ],
+  "added": [
+    "AskItem",
+    "AskItem.__init__",
+    "AskItem.open_props",
+    "AskItem.share",
+    "AskItem.stated_keys",
+    "BodyAsk",
+    "BodyAsk.__init__",
+    "BodyAsk.ask",
+    "BodyAsk.brief",
+    "BodyAsk.converse",
+    "BodyAsk.free",
+    "BodyAsk.hear",
+    "BodyAsk.llm",
+    "BodyAsk.scout",
+    "BodyAsk.send_one",
+    "BodyAsk.steps_left",
+    "BodyAsk.wording",
+    "Cairn.anchor_view",
+    "Cairn.bare_faults",
+    "Cairn.bare_hint",
+    "Cairn.cheaper_fit_hint",
+    "Cairn.credit",
+    "Cairn.credit_hits",
+    "Cairn.fits_with",
+    "Cairn.floor_values",
+    "Cairn.hit_tokens",
+    "Cairn.listing_of",
+    "Cairn.offset_key",
+    "Cairn.override_hint",
+    "Cairn.overrides",
+    "Cairn.pair_fits",
+    "Cairn.proven",
+    "Cairn.proven_sets",
+    "Cairn.query_mark",
+    "Cairn.quote_refs",
+    "Cairn.read_first_hint",
+    "Cairn.request_counts",
+    "Cairn.salvage",
+    "Cairn.short_items",
+    "Cairn.shows_need",
+    "Cairn.twin_musts",
+    "Cairn.unproven",
+    "Cairn.unproven_hint",
+    "Cairn.unread_hits",
+    "Cairn.value_forms",
+    "Cairn.valued",
+    "Cairn.wants_effort",
+    "SendoAsk",
+    "SendoAsk.__init__",
+    "SendoAsk._join",
+    "SendoAsk.again_list",
+    "SendoAsk.elapsed",
+    "SendoAsk.free",
+    "SendoAsk.hear",
+    "SendoAsk.merge_twins",
+    "SendoAsk.next_message",
+    "SendoAsk.rank",
+    "SendoAsk.think",
+    "SendoAsk.wording",
+    "_same_prop",
+    "_sd_cat_fit",
+    "_sd_clip",
+    "_sd_distinct",
+    "_sd_facts",
+    "_sd_json_all",
+    "_sd_json_in",
+    "_sd_key",
+    "_sd_stem",
+    "_sd_stems",
+    "_sd_words",
+    "_value_forms"
+  ],
+  "removed": [
+    "Cairn.answered_label",
+    "Cairn.ask_group",
+    "Cairn.ask_next",
+    "Cairn.ask_text",
+    "Cairn.finish_ask",
+    "Cairn.fit_ask",
+    "Cairn.groups_for",
+    "Cairn.hear",
+    "Cairn.item_said",
+    "Cairn.key_table",
+    "Cairn.lane_keys",
+    "Cairn.list_cap",
+    "Cairn.list_now",
+    "Cairn.look_alikes",
+    "Cairn.name_parts",
+    "Cairn.next_ask",
+    "Cairn.not_stated",
+    "Cairn.plan_lanes",
+    "Cairn.question",
+    "Cairn.quiet_reply",
+    "Cairn.samples",
+    "Cairn.settle",
+    "Cairn.told_about",
+    "Cairn.twins"
+  ],
+  "assignments": [
+    {
+      "name": "LIGHT",
+      "line": 8,
+      "changed": false,
+      "chars": 26
+    },
+    {
+      "name": "HEAVY",
+      "line": 9,
+      "changed": false,
+      "chars": 27
+    },
+    {
+      "name": "SPARE",
+      "line": 10,
+      "changed": false,
+      "chars": 17
+    },
+    {
+      "name": "LOOP_CALLS",
+      "line": 11,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "ALL_CALLS",
+      "line": 12,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "SPEND_SOFT",
+      "line": 13,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "SPEND_HARD",
+      "line": 14,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HEAVY_ROOM",
+      "line": 15,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "WAITS",
+      "line": 16,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "WAIT_TOTAL",
+      "line": 17,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "BRIEF_BY",
+      "line": 18,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "BRIEF_GAP",
+      "line": 19,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "OUTAGE_BY",
+      "line": 20,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "SHOW_CHARS",
+      "line": 21,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "PAGE_CHARS",
+      "line": 22,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "HUNT_STEPS",
+      "line": 23,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "ENV_GAP",
+      "line": 24,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "OPEN_GAP",
+      "line": 25,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "CHEAPER_SHOWN",
+      "line": 26,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "OVERRIDE_MARK",
+      "line": 27,
+      "changed": true,
+      "chars": 182
+    },
+    {
+      "name": "OVERRIDE_FOR",
+      "line": 28,
+      "changed": true,
+      "chars": 167
+    },
+    {
+      "name": "OVERRIDE_TAKE",
+      "line": 29,
+      "changed": true,
+      "chars": 64
+    },
+    {
+      "name": "OVERRIDE_TAKEN",
+      "line": 30,
+      "changed": true,
+      "chars": 178
+    },
+    {
+      "name": "CHEAP_HOLDS",
+      "line": 31,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "CHEAP_LIMIT",
+      "line": 32,
+      "changed": true,
+      "chars": 155
+    },
+    {
+      "name": "OPEN_LATER",
+      "line": 33,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "PAGE_ATTR_CHARS",
+      "line": 34,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "PAGE_REST_CHARS",
+      "line": 35,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "NO_NAME",
+      "line": 36,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "ASK_TURNS",
+      "line": 37,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "MESSAGE_FIELD",
+      "line": 38,
+      "changed": false,
+      "chars": 75
+    },
+    {
+      "name": "NOT_MESSAGE",
+      "line": 39,
+      "changed": false,
+      "chars": 54
+    },
+    {
+      "name": "TRAIL_ROOM",
+      "line": 40,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "FIT_PAGES",
+      "line": 41,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "CRASH_TURNS",
+      "line": 42,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "OPEN_MIN_STEPS",
+      "line": 43,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "OPEN_ITEMS",
+      "line": 44,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "OPEN_SHARE",
+      "line": 45,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "OPEN_EACH",
+      "line": 46,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "OPEN_NOT",
+      "line": 47,
+      "changed": false,
+      "chars": 119
+    },
+    {
+      "name": "SHORT_KEEP",
+      "line": 48,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "SET_SHOWN",
+      "line": 49,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "STOCK_OUT",
+      "line": 50,
+      "changed": false,
+      "chars": 91
+    },
+    {
+      "name": "HUNT_WHOLE",
+      "line": 51,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_GRACE",
+      "line": 52,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_VALUE_CHARS",
+      "line": 53,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_ROUNDS",
+      "line": 54,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_KEEP",
+      "line": 55,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_IDLE",
+      "line": 56,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_PAGE_NEW",
+      "line": 57,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_FIT_WORDS",
+      "line": 58,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_FIT_OPENS",
+      "line": 59,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_COMMON",
+      "line": 60,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_BY",
+      "line": 61,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "TITLE_CHARS",
+      "line": 62,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "TEXT_CHARS",
+      "line": 63,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "OBS_LIMIT",
+      "line": 64,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HISTORY_LIMIT",
+      "line": 65,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "GATE_ROUNDS",
+      "line": 66,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "AUTO_PAGES",
+      "line": 67,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "SHORT_PAGES",
+      "line": 68,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "CHEAPER_OPENS",
+      "line": 69,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "LEDGER_EVERY",
+      "line": 70,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "TASK_SECONDS",
+      "line": 71,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "TIME_MARGIN",
+      "line": 72,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "CALL_FLOOR",
+      "line": 73,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "ASK_BY",
+      "line": 74,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "QUESTION_BY",
+      "line": 75,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "WIND_DOWN",
+      "line": 76,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "LAST_TURN",
+      "line": 77,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "EMPTY_ROOM",
+      "line": 78,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "LATE_BY",
+      "line": 79,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "LATE_STEPS",
+      "line": 80,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "CAP_ARG",
+      "line": 81,
+      "changed": false,
+      "chars": 54
+    },
+    {
+      "name": "CAP_NOT",
+      "line": 82,
+      "changed": false,
+      "chars": 40
+    },
+    {
+      "name": "CAP_PRICED",
+      "line": 83,
+      "changed": false,
+      "chars": 36
+    },
+    {
+      "name": "CAP_LOW",
+      "line": 84,
+      "changed": false,
+      "chars": 70
+    },
+    {
+      "name": "EARLY_TRAILS",
+      "line": 85,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "CAP_CHANCE",
+      "line": 86,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "WALK_ROOM",
+      "line": 87,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "WALK_CALLS",
+      "line": 88,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "SHELF_ARG",
+      "line": 89,
+      "changed": false,
+      "chars": 83
+    },
+    {
+      "name": "LIST_MODE",
+      "line": 90,
+      "changed": false,
+      "chars": 48
+    },
+    {
+      "name": "AMOUNT",
+      "line": 91,
+      "changed": false,
+      "chars": 25
+    },
+    {
+      "name": "FLOOR",
+      "line": 92,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "EFFORT_CLOCK",
+      "line": 93,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "EFFORT_LONG",
+      "line": 94,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "QUERY_WORDS",
+      "line": 95,
+      "changed": false,
+      "chars": 89
+    },
+    {
+      "name": "_llm",
+      "line": 96,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "_env",
+      "line": 98,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "GUIDE",
+      "line": 99,
+      "changed": true,
+      "chars": 9442
+    },
+    {
+      "name": "BRIEF",
+      "line": 100,
+      "changed": true,
+      "chars": 6735
+    },
+    {
+      "name": "NOTE",
+      "line": 101,
+      "changed": false,
+      "chars": 928
+    },
+    {
+      "name": "CHECK",
+      "line": 102,
+      "changed": true,
+      "chars": 2735
+    },
+    {
+      "name": "READING",
+      "line": 103,
+      "changed": true,
+      "chars": 1651
+    },
+    {
+      "name": "AUDIT",
+      "line": 104,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "UNMIX",
+      "line": 105,
+      "changed": false,
+      "chars": 595
+    },
+    {
+      "name": "TRAIL",
+      "line": 106,
+      "changed": true,
+      "chars": 2250
+    },
+    {
+      "name": "GATE",
+      "line": 107,
+      "changed": false,
+      "chars": 1240
+    },
+    {
+      "name": "SWAP",
+      "line": 108,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "SHAPE",
+      "line": 109,
+      "changed": false,
+      "chars": 585
+    },
+    {
+      "name": "WIDEN_EACH",
+      "line": 110,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "FIT_CODE",
+      "line": 111,
+      "changed": false,
+      "chars": 51
+    },
+    {
+      "name": "PART_CODE",
+      "line": 112,
+      "changed": false,
+      "chars": 26
+    },
+    {
+      "name": "VALUE_ROOM",
+      "line": 113,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "VALUE_KEEP",
+      "line": 114,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "HUNT_FORMS",
+      "line": 115,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "GLUE_MAX",
+      "line": 116,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "LINK_SEARCHES",
+      "line": 117,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "LINK_ROWS",
+      "line": 118,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "LINK_FAMILIES",
+      "line": 119,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "PAIR_MARKS",
+      "line": 157,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "FIELD_MARKS",
+      "line": 158,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "FIELD_NAME",
+      "line": 159,
+      "changed": false,
+      "chars": 34
+    },
+    {
+      "name": "LIST_BULLET",
+      "line": 160,
+      "changed": false,
+      "chars": 29
+    },
+    {
+      "name": "RECORD_FIELDS",
+      "line": 161,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "NOTE_FIELDS",
+      "line": 162,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "FIELD_SHARE",
+      "line": 163,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "PAIR_SHARE",
+      "line": 164,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "BLOCK_NAME",
+      "line": 165,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "BLOCK_VALUE",
+      "line": 166,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "TAG_TEXT",
+      "line": 167,
+      "changed": false,
+      "chars": null
+    },
+    {
+      "name": "PAIR_KEY",
+      "line": 168,
+      "changed": false,
+      "chars": 45
+    },
+    {
+      "name": "ID_FIELD",
+      "line": 169,
+      "changed": false,
+      "chars": 204
+    },
+    {
+      "name": "FAIL_KEY",
+      "line": 170,
+      "changed": false,
+      "chars": 61
+    },
+    {
+      "name": "SD_LIST_LEN",
+      "line": 806,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "SD_KEY_CAP",
+      "line": 808,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "SD_RARE_SHARE",
+      "line": 809,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "SD_RARE_SEEN",
+      "line": 810,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "SD_TIME_RANK",
+      "line": 811,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "SD_TIME_ASK",
+      "line": 812,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "SD_TIME_HEAR",
+      "line": 813,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "SD_NOT_PROPS",
+      "line": 814,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "SD_NOT_PROP_WORDS",
+      "line": 815,
+      "changed": true,
+      "chars": null
+    },
+    {
+      "name": "__all__",
+      "line": 5954,
+      "changed": false,
+      "chars": null
+    }
+  ],
+  "coverage": [
+    {
+      "name": "_codes",
+      "start": 121,
+      "end": 123,
+      "lines": 3
+    },
+    {
+      "name": "_code_hit",
+      "start": 125,
+      "end": 130,
+      "lines": 6
+    },
+    {
+      "name": "_fit_marks",
+      "start": 132,
+      "end": 150,
+      "lines": 19
+    },
+    {
+      "name": "_series_marks",
+      "start": 152,
+      "end": 156,
+      "lines": 5
+    },
+    {
+      "name": "_failed",
+      "start": 172,
+      "end": 178,
+      "lines": 7
+    },
+    {
+      "name": "_plain",
+      "start": 180,
+      "end": 191,
+      "lines": 12
+    },
+    {
+      "name": "_block_value",
+      "start": 193,
+      "end": 195,
+      "lines": 3
+    },
+    {
+      "name": "_pair",
+      "start": 197,
+      "end": 204,
+      "lines": 8
+    },
+    {
+      "name": "_split_fields",
+      "start": 206,
+      "end": 232,
+      "lines": 27
+    },
+    {
+      "name": "_attr_block",
+      "start": 234,
+      "end": 269,
+      "lines": 36
+    },
+    {
+      "name": "_record_text",
+      "start": 271,
+      "end": 295,
+      "lines": 25
+    },
+    {
+      "name": "_table_text",
+      "start": 297,
+      "end": 309,
+      "lines": 13
+    },
+    {
+      "name": "_records_text",
+      "start": 311,
+      "end": 338,
+      "lines": 28
+    },
+    {
+      "name": "_block_text",
+      "start": 340,
+      "end": 346,
+      "lines": 7
+    },
+    {
+      "name": "_pairs_block",
+      "start": 348,
+      "end": 378,
+      "lines": 31
+    },
+    {
+      "name": "_column_rows",
+      "start": 380,
+      "end": 389,
+      "lines": 10
+    },
+    {
+      "name": "_id_texts",
+      "start": 391,
+      "end": 394,
+      "lines": 4
+    },
+    {
+      "name": "_keyed_rows",
+      "start": 396,
+      "end": 402,
+      "lines": 7
+    },
+    {
+      "name": "_holds_id",
+      "start": 404,
+      "end": 405,
+      "lines": 2
+    },
+    {
+      "name": "_flat_block",
+      "start": 407,
+      "end": 416,
+      "lines": 10
+    },
+    {
+      "name": "_restore_field",
+      "start": 418,
+      "end": 422,
+      "lines": 5
+    },
+    {
+      "name": "_restore",
+      "start": 424,
+      "end": 449,
+      "lines": 26
+    },
+    {
+      "name": "_join_twins",
+      "start": 453,
+      "end": 465,
+      "lines": 13
+    },
+    {
+      "name": "_glued",
+      "start": 467,
+      "end": 468,
+      "lines": 2
+    },
+    {
+      "name": "_text_words",
+      "start": 470,
+      "end": 472,
+      "lines": 3
+    },
+    {
+      "name": "_value_tokens",
+      "start": 474,
+      "end": 476,
+      "lines": 3
+    },
+    {
+      "name": "_value_forms",
+      "start": 478,
+      "end": 487,
+      "lines": 10
+    },
+    {
+      "name": "_fold_twins",
+      "start": 489,
+      "end": 510,
+      "lines": 22
+    },
+    {
+      "name": "_dump",
+      "start": 512,
+      "end": 516,
+      "lines": 5
+    },
+    {
+      "name": "_clip",
+      "start": 518,
+      "end": 527,
+      "lines": 10
+    },
+    {
+      "name": "_json_obj",
+      "start": 529,
+      "end": 548,
+      "lines": 20
+    },
+    {
+      "name": "_words",
+      "start": 550,
+      "end": 552,
+      "lines": 3
+    },
+    {
+      "name": "_snake",
+      "start": 554,
+      "end": 555,
+      "lines": 2
+    },
+    {
+      "name": "_stem",
+      "start": 557,
+      "end": 558,
+      "lines": 2
+    },
+    {
+      "name": "_roots",
+      "start": 560,
+      "end": 566,
+      "lines": 7
+    },
+    {
+      "name": "_spelled",
+      "start": 568,
+      "end": 569,
+      "lines": 2
+    },
+    {
+      "name": "_names",
+      "start": 571,
+      "end": 574,
+      "lines": 4
+    },
+    {
+      "name": "_same_prop",
+      "start": 576,
+      "end": 578,
+      "lines": 3
+    },
+    {
+      "name": "_kinds",
+      "start": 580,
+      "end": 584,
+      "lines": 5
+    },
+    {
+      "name": "_fits_kind",
+      "start": 586,
+      "end": 601,
+      "lines": 16
+    },
+    {
+      "name": "_shape",
+      "start": 603,
+      "end": 662,
+      "lines": 60
+    },
+    {
+      "name": "_items",
+      "start": 664,
+      "end": 669,
+      "lines": 6
+    },
+    {
+      "name": "_count",
+      "start": 671,
+      "end": 680,
+      "lines": 10
+    },
+    {
+      "name": "_id_like",
+      "start": 682,
+      "end": 685,
+      "lines": 4
+    },
+    {
+      "name": "_learn_id",
+      "start": 687,
+      "end": 700,
+      "lines": 14
+    },
+    {
+      "name": "_in_rows",
+      "start": 702,
+      "end": 709,
+      "lines": 8
+    },
+    {
+      "name": "_llm_within",
+      "start": 711,
+      "end": 717,
+      "lines": 7
+    },
+    {
+      "name": "_fact_block",
+      "start": 719,
+      "end": 728,
+      "lines": 10
+    },
+    {
+      "name": "_soft",
+      "start": 730,
+      "end": 741,
+      "lines": 12
+    },
+    {
+      "name": "_Stamped.__init__",
+      "start": 745,
+      "end": 747,
+      "lines": 3
+    },
+    {
+      "name": "_Stamped.append",
+      "start": 749,
+      "end": 751,
+      "lines": 3
+    },
+    {
+      "name": "_filler",
+      "start": 753,
+      "end": 764,
+      "lines": 12
+    },
+    {
+      "name": "_strings",
+      "start": 766,
+      "end": 771,
+      "lines": 6
+    },
+    {
+      "name": "_says",
+      "start": 773,
+      "end": 778,
+      "lines": 6
+    },
+    {
+      "name": "Item.__init__",
+      "start": 782,
+      "end": 789,
+      "lines": 8
+    },
+    {
+      "name": "_sd_key",
+      "start": 818,
+      "end": 826,
+      "lines": 9
+    },
+    {
+      "name": "_sd_clip",
+      "start": 829,
+      "end": 831,
+      "lines": 3
+    },
+    {
+      "name": "_sd_json_all",
+      "start": 834,
+      "end": 872,
+      "lines": 39
+    },
+    {
+      "name": "_sd_json_in",
+      "start": 875,
+      "end": 886,
+      "lines": 12
+    },
+    {
+      "name": "_sd_facts",
+      "start": 889,
+      "end": 921,
+      "lines": 33
+    },
+    {
+      "name": "_sd_words",
+      "start": 924,
+      "end": 925,
+      "lines": 2
+    },
+    {
+      "name": "_sd_stem",
+      "start": 928,
+      "end": 932,
+      "lines": 5
+    },
+    {
+      "name": "_sd_stems",
+      "start": 935,
+      "end": 936,
+      "lines": 2
+    },
+    {
+      "name": "_sd_cat_fit",
+      "start": 939,
+      "end": 946,
+      "lines": 8
+    },
+    {
+      "name": "_sd_distinct",
+      "start": 949,
+      "end": 959,
+      "lines": 11
+    },
+    {
+      "name": "AskItem.__init__",
+      "start": 963,
+      "end": 987,
+      "lines": 25
+    },
+    {
+      "name": "AskItem.share",
+      "start": 989,
+      "end": 990,
+      "lines": 2
+    },
+    {
+      "name": "AskItem.stated_keys",
+      "start": 992,
+      "end": 993,
+      "lines": 2
+    },
+    {
+      "name": "AskItem.open_props",
+      "start": 995,
+      "end": 996,
+      "lines": 2
+    },
+    {
+      "name": "SendoAsk.__init__",
+      "start": 1000,
+      "end": 1013,
+      "lines": 14
+    },
+    {
+      "name": "SendoAsk.elapsed",
+      "start": 1017,
+      "end": 1018,
+      "lines": 2
+    },
+    {
+      "name": "SendoAsk.think",
+      "start": 1020,
+      "end": 1037,
+      "lines": 18
+    },
+    {
+      "name": "SendoAsk.merge_twins",
+      "start": 1052,
+      "end": 1064,
+      "lines": 13
+    },
+    {
+      "name": "SendoAsk.rank",
+      "start": 1090,
+      "end": 1138,
+      "lines": 49
+    },
+    {
+      "name": "SendoAsk.free",
+      "start": 1142,
+      "end": 1143,
+      "lines": 2
+    },
+    {
+      "name": "SendoAsk.next_message",
+      "start": 1145,
+      "end": 1161,
+      "lines": 17
+    },
+    {
+      "name": "SendoAsk.again_list",
+      "start": 1163,
+      "end": 1177,
+      "lines": 15
+    },
+    {
+      "name": "SendoAsk._join",
+      "start": 1180,
+      "end": 1184,
+      "lines": 5
+    },
+    {
+      "name": "SendoAsk.wording",
+      "start": 1186,
+      "end": 1196,
+      "lines": 11
+    },
+    {
+      "name": "SendoAsk.hear",
+      "start": 1219,
+      "end": 1301,
+      "lines": 83
+    },
+    {
+      "name": "BodyAsk.__init__",
+      "start": 1312,
+      "end": 1321,
+      "lines": 10
+    },
+    {
+      "name": "BodyAsk.llm",
+      "start": 1325,
+      "end": 1328,
+      "lines": 4
+    },
+    {
+      "name": "BodyAsk.steps_left",
+      "start": 1330,
+      "end": 1331,
+      "lines": 2
+    },
+    {
+      "name": "BodyAsk.ask",
+      "start": 1333,
+      "end": 1338,
+      "lines": 6
+    },
+    {
+      "name": "BodyAsk.free",
+      "start": 1340,
+      "end": 1341,
+      "lines": 2
+    },
+    {
+      "name": "BodyAsk.brief",
+      "start": 1345,
+      "end": 1357,
+      "lines": 13
+    },
+    {
+      "name": "BodyAsk.scout",
+      "start": 1359,
+      "end": 1377,
+      "lines": 19
+    },
+    {
+      "name": "BodyAsk.wording",
+      "start": 1379,
+      "end": 1381,
+      "lines": 3
+    },
+    {
+      "name": "BodyAsk.hear",
+      "start": 1383,
+      "end": 1393,
+      "lines": 11
+    },
+    {
+      "name": "BodyAsk.send_one",
+      "start": 1395,
+      "end": 1416,
+      "lines": 22
+    },
+    {
+      "name": "BodyAsk.converse",
+      "start": 1418,
+      "end": 1431,
+      "lines": 14
+    },
+    {
+      "name": "Cairn.__init__",
+      "start": 1436,
+      "end": 1596,
+      "lines": 161
+    },
+    {
+      "name": "Cairn.left",
+      "start": 1598,
+      "end": 1599,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.clock",
+      "start": 1601,
+      "end": 1602,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.model_room",
+      "start": 1604,
+      "end": 1605,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.rushed",
+      "start": 1607,
+      "end": 1609,
+      "lines": 3
+    },
+    {
+      "name": "Cairn.msgs_free",
+      "start": 1611,
+      "end": 1612,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.cart_mark",
+      "start": 1614,
+      "end": 1615,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.row_ids",
+      "start": 1617,
+      "end": 1635,
+      "lines": 19
+    },
+    {
+      "name": "Cairn.page_tools",
+      "start": 1637,
+      "end": 1639,
+      "lines": 3
+    },
+    {
+      "name": "Cairn.facts_tool",
+      "start": 1641,
+      "end": 1646,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.compare_facts",
+      "start": 1648,
+      "end": 1649,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.compare_bare",
+      "start": 1651,
+      "end": 1653,
+      "lines": 3
+    },
+    {
+      "name": "Cairn.gate_due",
+      "start": 1655,
+      "end": 1656,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.tail",
+      "start": 1658,
+      "end": 1660,
+      "lines": 3
+    },
+    {
+      "name": "Cairn.judges",
+      "start": 1662,
+      "end": 1665,
+      "lines": 4
+    },
+    {
+      "name": "Cairn.think",
+      "start": 1667,
+      "end": 1704,
+      "lines": 38
+    },
+    {
+      "name": "Cairn.wants_effort",
+      "start": 1706,
+      "end": 1711,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.call_model",
+      "start": 1713,
+      "end": 1745,
+      "lines": 33
+    },
+    {
+      "name": "Cairn.ask_json",
+      "start": 1747,
+      "end": 1755,
+      "lines": 9
+    },
+    {
+      "name": "Cairn.act",
+      "start": 1757,
+      "end": 1812,
+      "lines": 56
+    },
+    {
+      "name": "Cairn.unspelled",
+      "start": 1814,
+      "end": 1835,
+      "lines": 22
+    },
+    {
+      "name": "Cairn.read_request",
+      "start": 1837,
+      "end": 1930,
+      "lines": 94
+    },
+    {
+      "name": "Cairn.twin_musts",
+      "start": 1933,
+      "end": 1950,
+      "lines": 18
+    },
+    {
+      "name": "Cairn.shared_shelf",
+      "start": 1953,
+      "end": 1956,
+      "lines": 4
+    },
+    {
+      "name": "Cairn.request_counts",
+      "start": 1958,
+      "end": 1978,
+      "lines": 21
+    },
+    {
+      "name": "Cairn.quote_refs",
+      "start": 1980,
+      "end": 2001,
+      "lines": 22
+    },
+    {
+      "name": "Cairn.unmix",
+      "start": 2003,
+      "end": 2018,
+      "lines": 16
+    },
+    {
+      "name": "Cairn.described",
+      "start": 2020,
+      "end": 2041,
+      "lines": 22
+    },
+    {
+      "name": "Cairn.ledger",
+      "start": 2043,
+      "end": 2085,
+      "lines": 43
+    },
+    {
+      "name": "Cairn.status",
+      "start": 2087,
+      "end": 2129,
+      "lines": 43
+    },
+    {
+      "name": "Cairn.unproven",
+      "start": 2131,
+      "end": 2155,
+      "lines": 25
+    },
+    {
+      "name": "Cairn.unproven_hint",
+      "start": 2157,
+      "end": 2171,
+      "lines": 15
+    },
+    {
+      "name": "Cairn.bare_faults",
+      "start": 2173,
+      "end": 2196,
+      "lines": 24
+    },
+    {
+      "name": "Cairn.bare_hint",
+      "start": 2198,
+      "end": 2210,
+      "lines": 13
+    },
+    {
+      "name": "Cairn.short_items",
+      "start": 2212,
+      "end": 2217,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.read_first_hint",
+      "start": 2219,
+      "end": 2251,
+      "lines": 33
+    },
+    {
+      "name": "Cairn.hit_tokens",
+      "start": 2254,
+      "end": 2256,
+      "lines": 3
+    },
+    {
+      "name": "Cairn.credit_hits",
+      "start": 2258,
+      "end": 2276,
+      "lines": 19
+    },
+    {
+      "name": "Cairn.credit",
+      "start": 2278,
+      "end": 2294,
+      "lines": 17
+    },
+    {
+      "name": "Cairn.unread_hits",
+      "start": 2296,
+      "end": 2314,
+      "lines": 19
+    },
+    {
+      "name": "Cairn.ident",
+      "start": 2316,
+      "end": 2327,
+      "lines": 12
+    },
+    {
+      "name": "Cairn.learn_rows",
+      "start": 2329,
+      "end": 2339,
+      "lines": 11
+    },
+    {
+      "name": "Cairn.absorb",
+      "start": 2341,
+      "end": 2369,
+      "lines": 29
+    },
+    {
+      "name": "Cairn.labels",
+      "start": 2371,
+      "end": 2385,
+      "lines": 15
+    },
+    {
+      "name": "Cairn.category_key",
+      "start": 2387,
+      "end": 2406,
+      "lines": 20
+    },
+    {
+      "name": "Cairn.item_groups",
+      "start": 2411,
+      "end": 2420,
+      "lines": 10
+    },
+    {
+      "name": "Cairn.single_target",
+      "start": 2422,
+      "end": 2429,
+      "lines": 8
+    },
+    {
+      "name": "Cairn.price_of",
+      "start": 2431,
+      "end": 2438,
+      "lines": 8
+    },
+    {
+      "name": "Cairn.buyable",
+      "start": 2440,
+      "end": 2446,
+      "lines": 7
+    },
+    {
+      "name": "Cairn.records_in",
+      "start": 2448,
+      "end": 2463,
+      "lines": 16
+    },
+    {
+      "name": "Cairn.note_view",
+      "start": 2465,
+      "end": 2470,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.shown_already",
+      "start": 2472,
+      "end": 2475,
+      "lines": 4
+    },
+    {
+      "name": "Cairn.read_shape",
+      "start": 2477,
+      "end": 2504,
+      "lines": 28
+    },
+    {
+      "name": "Cairn.paging",
+      "start": 2506,
+      "end": 2515,
+      "lines": 10
+    },
+    {
+      "name": "Cairn.price_sorted",
+      "start": 2517,
+      "end": 2519,
+      "lines": 3
+    },
+    {
+      "name": "Cairn.valued",
+      "start": 2521,
+      "end": 2529,
+      "lines": 9
+    },
+    {
+      "name": "Cairn.more_pages",
+      "start": 2531,
+      "end": 2580,
+      "lines": 50
+    },
+    {
+      "name": "Cairn.cap_ignored",
+      "start": 2582,
+      "end": 2600,
+      "lines": 19
+    },
+    {
+      "name": "Cairn.cheapest_here",
+      "start": 2602,
+      "end": 2609,
+      "lines": 8
+    },
+    {
+      "name": "Cairn.wider_hold",
+      "start": 2611,
+      "end": 2616,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.note_facts",
+      "start": 2618,
+      "end": 2624,
+      "lines": 7
+    },
+    {
+      "name": "Cairn.lists_things",
+      "start": 2626,
+      "end": 2628,
+      "lines": 3
+    },
+    {
+      "name": "Cairn.fill_facts",
+      "start": 2630,
+      "end": 2688,
+      "lines": 59
+    },
+    {
+      "name": "Cairn.show_links",
+      "start": 2690,
+      "end": 2713,
+      "lines": 24
+    },
+    {
+      "name": "Cairn.cap_template",
+      "start": 2715,
+      "end": 2745,
+      "lines": 31
+    },
+    {
+      "name": "Cairn.cap_keys",
+      "start": 2747,
+      "end": 2756,
+      "lines": 10
+    },
+    {
+      "name": "Cairn.cap_modes",
+      "start": 2758,
+      "end": 2784,
+      "lines": 27
+    },
+    {
+      "name": "Cairn.list_below",
+      "start": 2786,
+      "end": 2829,
+      "lines": 44
+    },
+    {
+      "name": "Cairn.cheaper_rows",
+      "start": 2831,
+      "end": 2853,
+      "lines": 23
+    },
+    {
+      "name": "Cairn.below_cart",
+      "start": 2856,
+      "end": 2868,
+      "lines": 13
+    },
+    {
+      "name": "Cairn.title_key",
+      "start": 2870,
+      "end": 2884,
+      "lines": 15
+    },
+    {
+      "name": "Cairn.hunt_words",
+      "start": 2886,
+      "end": 2909,
+      "lines": 24
+    },
+    {
+      "name": "Cairn.rows_of_item",
+      "start": 2911,
+      "end": 2914,
+      "lines": 4
+    },
+    {
+      "name": "Cairn.hunt_cheaper",
+      "start": 2917,
+      "end": 2944,
+      "lines": 28
+    },
+    {
+      "name": "Cairn.hunt_item",
+      "start": 2946,
+      "end": 3035,
+      "lines": 90
+    },
+    {
+      "name": "Cairn.hunt_fits",
+      "start": 3038,
+      "end": 3093,
+      "lines": 56
+    },
+    {
+      "name": "Cairn.unread_pages",
+      "start": 3095,
+      "end": 3130,
+      "lines": 36
+    },
+    {
+      "name": "Cairn.call_mark",
+      "start": 3132,
+      "end": 3141,
+      "lines": 10
+    },
+    {
+      "name": "Cairn.note_read",
+      "start": 3143,
+      "end": 3163,
+      "lines": 21
+    },
+    {
+      "name": "Cairn.query_is_new",
+      "start": 3165,
+      "end": 3170,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.last_page_first",
+      "start": 3173,
+      "end": 3206,
+      "lines": 34
+    },
+    {
+      "name": "Cairn.names_code",
+      "start": 3209,
+      "end": 3217,
+      "lines": 9
+    },
+    {
+      "name": "Cairn.offset_key",
+      "start": 3219,
+      "end": 3224,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.query_mark",
+      "start": 3226,
+      "end": 3227,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.first_look",
+      "start": 3229,
+      "end": 3241,
+      "lines": 13
+    },
+    {
+      "name": "Cairn.shorter_search",
+      "start": 3244,
+      "end": 3276,
+      "lines": 33
+    },
+    {
+      "name": "Cairn.first_moves",
+      "start": 3279,
+      "end": 3325,
+      "lines": 47
+    },
+    {
+      "name": "Cairn.page_text",
+      "start": 3327,
+      "end": 3330,
+      "lines": 4
+    },
+    {
+      "name": "Cairn.more_rows_for_keys",
+      "start": 3332,
+      "end": 3345,
+      "lines": 14
+    },
+    {
+      "name": "Cairn.observe",
+      "start": 3347,
+      "end": 3355,
+      "lines": 9
+    },
+    {
+      "name": "Cairn.widen",
+      "start": 3357,
+      "end": 3404,
+      "lines": 48
+    },
+    {
+      "name": "Cairn.widen_singly",
+      "start": 3406,
+      "end": 3427,
+      "lines": 22
+    },
+    {
+      "name": "Cairn.ready_to_ask",
+      "start": 3429,
+      "end": 3439,
+      "lines": 11
+    },
+    {
+      "name": "Cairn.message_args",
+      "start": 3441,
+      "end": 3469,
+      "lines": 29
+    },
+    {
+      "name": "Cairn.interview",
+      "start": 3471,
+      "end": 3500,
+      "lines": 30
+    },
+    {
+      "name": "Cairn.late_question",
+      "start": 3502,
+      "end": 3542,
+      "lines": 41
+    },
+    {
+      "name": "Cairn.search_template",
+      "start": 3545,
+      "end": 3571,
+      "lines": 27
+    },
+    {
+      "name": "Cairn.value_words",
+      "start": 3573,
+      "end": 3588,
+      "lines": 16
+    },
+    {
+      "name": "Cairn.value_forms",
+      "start": 3590,
+      "end": 3596,
+      "lines": 7
+    },
+    {
+      "name": "Cairn.floor_values",
+      "start": 3598,
+      "end": 3599,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.value_template",
+      "start": 3601,
+      "end": 3634,
+      "lines": 34
+    },
+    {
+      "name": "Cairn.value_search",
+      "start": 3636,
+      "end": 3688,
+      "lines": 53
+    },
+    {
+      "name": "Cairn.home_label",
+      "start": 3690,
+      "end": 3706,
+      "lines": 17
+    },
+    {
+      "name": "Cairn.adopt_labels",
+      "start": 3722,
+      "end": 3732,
+      "lines": 11
+    },
+    {
+      "name": "Cairn.owner_of",
+      "start": 3734,
+      "end": 3756,
+      "lines": 23
+    },
+    {
+      "name": "Cairn.owns",
+      "start": 3758,
+      "end": 3759,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.records_of_item",
+      "start": 3761,
+      "end": 3764,
+      "lines": 4
+    },
+    {
+      "name": "Cairn.send",
+      "start": 3771,
+      "end": 3792,
+      "lines": 22
+    },
+    {
+      "name": "Cairn.take_heard",
+      "start": 3794,
+      "end": 3818,
+      "lines": 25
+    },
+    {
+      "name": "Cairn.gate",
+      "start": 3822,
+      "end": 3885,
+      "lines": 64
+    },
+    {
+      "name": "Cairn.spoken",
+      "start": 3887,
+      "end": 3904,
+      "lines": 18
+    },
+    {
+      "name": "Cairn.loose_lines",
+      "start": 3906,
+      "end": 3918,
+      "lines": 13
+    },
+    {
+      "name": "Cairn.take_note",
+      "start": 3920,
+      "end": 3970,
+      "lines": 51
+    },
+    {
+      "name": "Cairn.needs_now",
+      "start": 3972,
+      "end": 3978,
+      "lines": 7
+    },
+    {
+      "name": "Cairn.evidence",
+      "start": 3980,
+      "end": 4015,
+      "lines": 36
+    },
+    {
+      "name": "Cairn.cart_text",
+      "start": 4017,
+      "end": 4020,
+      "lines": 4
+    },
+    {
+      "name": "Cairn.held_units",
+      "start": 4022,
+      "end": 4035,
+      "lines": 14
+    },
+    {
+      "name": "Cairn.cart_ids",
+      "start": 4037,
+      "end": 4041,
+      "lines": 5
+    },
+    {
+      "name": "Cairn.record_of",
+      "start": 4043,
+      "end": 4045,
+      "lines": 3
+    },
+    {
+      "name": "Cairn.others",
+      "start": 4047,
+      "end": 4059,
+      "lines": 13
+    },
+    {
+      "name": "Cairn.fit_index",
+      "start": 4061,
+      "end": 4075,
+      "lines": 15
+    },
+    {
+      "name": "Cairn.fit_set",
+      "start": 4077,
+      "end": 4082,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.item_ids",
+      "start": 4084,
+      "end": 4087,
+      "lines": 4
+    },
+    {
+      "name": "Cairn.link_system",
+      "start": 4089,
+      "end": 4099,
+      "lines": 11
+    },
+    {
+      "name": "Cairn.link_holds",
+      "start": 4101,
+      "end": 4104,
+      "lines": 4
+    },
+    {
+      "name": "Cairn.link_faults",
+      "start": 4106,
+      "end": 4120,
+      "lines": 15
+    },
+    {
+      "name": "Cairn.series_for",
+      "start": 4122,
+      "end": 4139,
+      "lines": 18
+    },
+    {
+      "name": "Cairn.fit_faults",
+      "start": 4141,
+      "end": 4166,
+      "lines": 26
+    },
+    {
+      "name": "Cairn.fit_plan",
+      "start": 4168,
+      "end": 4202,
+      "lines": 35
+    },
+    {
+      "name": "Cairn.proven",
+      "start": 4204,
+      "end": 4218,
+      "lines": 15
+    },
+    {
+      "name": "Cairn.fits_with",
+      "start": 4220,
+      "end": 4227,
+      "lines": 8
+    },
+    {
+      "name": "Cairn.proven_sets",
+      "start": 4230,
+      "end": 4250,
+      "lines": 21
+    },
+    {
+      "name": "Cairn.cheapest_sets",
+      "start": 4253,
+      "end": 4277,
+      "lines": 25
+    },
+    {
+      "name": "Cairn.missing_items",
+      "start": 4279,
+      "end": 4286,
+      "lines": 8
+    },
+    {
+      "name": "Cairn.states_needs",
+      "start": 4288,
+      "end": 4300,
+      "lines": 13
+    },
+    {
+      "name": "Cairn.fill_short_cart",
+      "start": 4302,
+      "end": 4325,
+      "lines": 24
+    },
+    {
+      "name": "Cairn.part_shelves",
+      "start": 4327,
+      "end": 4344,
+      "lines": 18
+    },
+    {
+      "name": "Cairn.fuller_label",
+      "start": 4346,
+      "end": 4351,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.named_label",
+      "start": 4353,
+      "end": 4360,
+      "lines": 8
+    },
+    {
+      "name": "Cairn.line_faults",
+      "start": 4362,
+      "end": 4403,
+      "lines": 42
+    },
+    {
+      "name": "Cairn.count_fixes",
+      "start": 4405,
+      "end": 4416,
+      "lines": 12
+    },
+    {
+      "name": "Cairn.fix_counts",
+      "start": 4418,
+      "end": 4455,
+      "lines": 38
+    },
+    {
+      "name": "Cairn.check_key",
+      "start": 4457,
+      "end": 4458,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.check_cart",
+      "start": 4460,
+      "end": 4494,
+      "lines": 35
+    },
+    {
+      "name": "Cairn.refuse_trail",
+      "start": 4496,
+      "end": 4502,
+      "lines": 7
+    },
+    {
+      "name": "Cairn.early_trail",
+      "start": 4504,
+      "end": 4515,
+      "lines": 12
+    },
+    {
+      "name": "Cairn.listing_of",
+      "start": 4517,
+      "end": 4526,
+      "lines": 10
+    },
+    {
+      "name": "Cairn.page_read",
+      "start": 4528,
+      "end": 4530,
+      "lines": 3
+    },
+    {
+      "name": "Cairn.trail",
+      "start": 4532,
+      "end": 4610,
+      "lines": 79
+    },
+    {
+      "name": "Cairn.not_maker_keys",
+      "start": 4612,
+      "end": 4613,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.shop_rows",
+      "start": 4615,
+      "end": 4624,
+      "lines": 10
+    },
+    {
+      "name": "Cairn.opened_shop",
+      "start": 4626,
+      "end": 4635,
+      "lines": 10
+    },
+    {
+      "name": "Cairn.find_link",
+      "start": 4637,
+      "end": 4680,
+      "lines": 44
+    },
+    {
+      "name": "Cairn.anchor_view",
+      "start": 4682,
+      "end": 4704,
+      "lines": 23
+    },
+    {
+      "name": "Cairn.offer_tool",
+      "start": 4706,
+      "end": 4707,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.reread_offers",
+      "start": 4709,
+      "end": 4738,
+      "lines": 30
+    },
+    {
+      "name": "Cairn.sold_out",
+      "start": 4740,
+      "end": 4741,
+      "lines": 2
+    },
+    {
+      "name": "Cairn.overrides",
+      "start": 4743,
+      "end": 4770,
+      "lines": 28
+    },
+    {
+      "name": "Cairn.override_hint",
+      "start": 4772,
+      "end": 4791,
+      "lines": 20
+    },
+    {
+      "name": "Cairn.shows_need",
+      "start": 4793,
+      "end": 4810,
+      "lines": 18
+    },
+    {
+      "name": "Cairn.cheaper_fit_hint",
+      "start": 4812,
+      "end": 4857,
+      "lines": 46
+    },
+    {
+      "name": "Cairn.swap_hint",
+      "start": 4859,
+      "end": 4875,
+      "lines": 17
+    },
+    {
+      "name": "Cairn.find_sold",
+      "start": 4877,
+      "end": 4884,
+      "lines": 8
+    },
+    {
+      "name": "Cairn.replacements",
+      "start": 4886,
+      "end": 4910,
+      "lines": 25
+    },
+    {
+      "name": "Cairn.audit",
+      "start": 4912,
+      "end": 4927,
+      "lines": 16
+    },
+    {
+      "name": "Cairn.audit_call",
+      "start": 4929,
+      "end": 4947,
+      "lines": 19
+    },
+    {
+      "name": "Cairn.audit_fits",
+      "start": 4949,
+      "end": 4954,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.open_rows",
+      "start": 4956,
+      "end": 4980,
+      "lines": 25
+    },
+    {
+      "name": "Cairn.cart_calls",
+      "start": 4982,
+      "end": 5019,
+      "lines": 38
+    },
+    {
+      "name": "Cairn.complete_cart",
+      "start": 5021,
+      "end": 5094,
+      "lines": 74
+    },
+    {
+      "name": "Cairn.pair_fits",
+      "start": 5096,
+      "end": 5108,
+      "lines": 13
+    },
+    {
+      "name": "Cairn.salvage",
+      "start": 5110,
+      "end": 5197,
+      "lines": 88
+    },
+    {
+      "name": "Cairn.is_buy",
+      "start": 5199,
+      "end": 5203,
+      "lines": 5
+    },
+    {
+      "name": "Cairn.is_refuse",
+      "start": 5205,
+      "end": 5209,
+      "lines": 5
+    },
+    {
+      "name": "Cairn.offered",
+      "start": 5211,
+      "end": 5228,
+      "lines": 18
+    },
+    {
+      "name": "Cairn.quiet",
+      "start": 5230,
+      "end": 5244,
+      "lines": 15
+    },
+    {
+      "name": "Cairn.resolve_ids",
+      "start": 5246,
+      "end": 5275,
+      "lines": 30
+    },
+    {
+      "name": "Cairn.cart_sets",
+      "start": 5277,
+      "end": 5281,
+      "lines": 5
+    },
+    {
+      "name": "Cairn.whole_removal",
+      "start": 5283,
+      "end": 5288,
+      "lines": 6
+    },
+    {
+      "name": "Cairn.note_cart",
+      "start": 5290,
+      "end": 5333,
+      "lines": 44
+    },
+    {
+      "name": "Cairn.show",
+      "start": 5335,
+      "end": 5339,
+      "lines": 5
+    },
+    {
+      "name": "Cairn.compare_target",
+      "start": 5341,
+      "end": 5347,
+      "lines": 7
+    },
+    {
+      "name": "Cairn.compare_room",
+      "start": 5349,
+      "end": 5359,
+      "lines": 11
+    },
+    {
+      "name": "Cairn.join_opens",
+      "start": 5361,
+      "end": 5388,
+      "lines": 28
+    },
+    {
+      "name": "Cairn.run_calls",
+      "start": 5390,
+      "end": 5745,
+      "lines": 356
+    },
+    {
+      "name": "Cairn.can_refuse",
+      "start": 5747,
+      "end": 5753,
+      "lines": 7
+    },
+    {
+      "name": "Cairn.finish",
+      "start": 5755,
+      "end": 5809,
+      "lines": 55
+    },
+    {
+      "name": "Cairn.trim",
+      "start": 5811,
+      "end": 5821,
+      "lines": 11
+    },
+    {
+      "name": "Cairn.run",
+      "start": 5823,
+      "end": 5851,
+      "lines": 29
+    },
+    {
+      "name": "Cairn.work",
+      "start": 5853,
+      "end": 5860,
+      "lines": 8
+    },
+    {
+      "name": "Cairn.answer_open_calls",
+      "start": 5862,
+      "end": 5870,
+      "lines": 9
+    },
+    {
+      "name": "Cairn.turns",
+      "start": 5872,
+      "end": 5937,
+      "lines": 66
+    },
+    {
+      "name": "agent_main",
+      "start": 5939,
+      "end": 5953,
+      "lines": 15
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+F.FF.
+======================================================================
+FAIL: test_current_relaxation_changes_eligibility_without_stale_cache (agents.tests.test_tosky_v5.RecoveryCandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v5.py", line 250, in test_current_relaxation_changes_eligibility_without_stale_cache
+    self.assertEqual(self.e.replacements(['lost'])[0], 'best')
+AssertionError: 'later-39' != 'best'
+- later-39
++ best
+
+
+======================================================================
+FAIL: test_known_alternative_category_is_kept_but_unrelated_kind_is_not (agents.tests.test_tosky_v5.RecoveryCandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v5.py", line 256, in test_known_alternative_category_is_kept_but_unrelated_kind_is_not
+    self.assertEqual(self.e.replacements(['lost'])[0], 'best')
+AssertionError: 'later-39' != 'best'
+- later-39
++ best
+
+
+======================================================================
+FAIL: test_old_best_opened_candidate_is_present_and_remains_first (agents.tests.test_tosky_v5.RecoveryCandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v5.py", line 235, in test_old_best_opened_candidate_is_present_and_remains_first
+    self.assertIn('"best"', self.prompts[0])
+AssertionError: '"best"' not found in 'A listing in a shopping agent\'s cart has just sold out. Find replacements for that cart line among the other listing records shown, with these reading rules: a base or boost clock or frequency (keys such as base clock, base frequency, boost clock) does not state a processor speed or clock speed requirement, and neither does a GHz figure in the title or description of a listing whose attributes give only such a base or boost value; the listing\'s attribute for a property decides when its key names that same property (any key spelling, one element of a list is enough, synonyms and unit conversions count, a value containing the required value\'s words counts, such as "deep teal" for teal, limits include the edge); a value under a key that adds the item\'s own name to the property (a bag\'s "bag shape") counts even when the bare key ("shape") says something else; a key for a different property, even a related one (a handle colour is not the body\'s colour), decides nothing; when no attribute names that property, the wanted value stated under another attribute or in the title or description counts (a bare figure that does not say what it measures counts for nothing); a requirement the category label itself states is met by that category; the category label must match the item; a rule of being unlike another listing\'s value counts as met unless the records show that same value; out-of-stock listings and listings that break the budget do not fit.\nReturn ONE JSON object and nothing else: {"fits": [{"id": listing id, "price": its price as a number as the record shows it} for every listing that appears to meet every requirement of the sold-out line\'s item, at most 6], "reason": "one sentence"}\nFor a generic property, a key naming that same property and this listing category may be more specific than the generic key. A different component or predicate is not equivalent. If equally specific keys conflict, resolve from the raw evidence; do not treat a matching value alone as proof.\n\nREQUEST:\nChoose a suitable item.\n\nREQUIREMENTS IN FORCE:\n- item: widget, quantity 1; requirements: finish: matte\n- pick: the cheapest listing that fits (lowest price)\n- in stock only\n\nSOLD-OUT CART LINE:\nlost: {"id":"lost","category":"Widgets","cost":1,"available":true,"attributes":{"finish":"matte","count":"one"}}\n\nCART NOW:\nlines by Cairn\'s record of the cart calls (listing: units): {}\n\nOTHER LISTING RECORDS SEEN (newest first):\n{"id":"later-39","category":"Widgets","cost":49,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-38","category":"Widgets","cost":48,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-37","category":"Widgets","cost":47,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-36","category":"Widgets","cost":46,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-35","category":"Widgets","cost":45,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-34","category":"Widgets","cost":44,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-33","category":"Widgets","cost":43,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-32","category":"Widgets","cost":42,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-31","category":"Widgets","cost":41,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-30","category":"Widgets","cost":40,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-29","category":"Widgets","cost":39,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-28","category":"Widgets","cost":38,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-27","category":"Widgets","cost":37,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-26","category":"Widgets","cost":36,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-25","category":"Widgets","cost":35,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-24","category":"Widgets","cost":34,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-23","category":"Widgets","cost":33,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-22","category":"Widgets","cost":32,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-21","category":"Widgets","cost":31,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-20","category":"Widgets","cost":30,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-19","category":"Widgets","cost":29,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-18","category":"Widgets","cost":28,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-17","category":"Widgets","cost":27,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-16","category":"Widgets","cost":26,"available":true,"attributes":{"finish":"matte","count":"one"}}\n{"id":"later-15","category":"Widgets","cost":25,"available":true,"attributes":{"finish":"matte","count":"one"}}'
+
+----------------------------------------------------------------------
+Ran 5 tests in 1.249s
+
+FAILED (failures=3)

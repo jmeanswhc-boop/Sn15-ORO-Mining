@@ -1,0 +1,338 @@
+Analysis of unchanged agents/TOSKY.py: architecture, inference budget and resources
+Reviewed on 2026-11-13. Source SHA-256:
+31b083e8ac95bc6863a4a01f9768a61879914fed4eb9116ea0f27b394d825a18
+
+Scope and evidence
+
+This concerns the 82,547-byte, 1,510-line TOSKY.py framework, not the earlier
+Tosky_v2, Tosky_v3 or ICDI_chidori agents. No agent changes, submissions or paid
+inference were made. The new inspector invokes real controller methods against
+scripted interpreter/world replies. It also intercepts the supplied client's
+HTTP and file-open operations. Synthetic flows characterize behavior and request
+counts, not a public-qualifier score, actual provider bill or production latency.
+
+Fresh primary references:
+https://oroagents.com/docs/miners/agent-interface
+https://oroagents.com/docs/miners/code-requirements
+https://oroagents.com/docs/miners/inference-providers
+https://oroagents.com/docs/miners/scoring
+https://api.oroagents.com/v1/public/inference/models?provider=openrouter
+https://openrouter.ai/api/v1/models/anthropic/claude-haiku-5.5/endpoints
+https://openrouter.ai/api/v1/models/anthropic/claude-sonnet-5.5/endpoints
+https://openrouter.ai/api/v1/models/deepseek/deepseek-v3.2/endpoints
+
+The model allowlist was successfully refreshed at 14:26:04 UTC. All three coded
+defaults were allowed. Public endpoint-pricing records were fetched at about
+16:06:49-51 UTC. These are time-stamped catalog observations, not frozen tariffs.
+
+1. Execution architecture
+
+The framework combines language-model interpretation with a Python controller.
+It is synchronous, uses a single main controller and sends one world action per
+environment step. It does not instantiate collaborating language-model agents,
+run parallel candidate workers, or train a model. Four dataclasses represent
+shopping entities; the Tosky class contains policy, state and orchestration.
+
+Entry and setup, lines 250 and 1498:
+- agent_main creates a new Tosky(problem_data), then calls run and returns its
+  dialogue/diagnostics. The constructor is outside the entrypoint's exception
+  handler, so malformed initialization can still escape that handler.
+- Input consists of the opaque environment binding and public policy_view:
+  query, opening, dynamic tool schemas, max_steps and finished.
+- The complete binding is copied into each environment request.
+- Shopping state is allocated anew for every task. Two module-global objects
+  are supplied ProxyClient transports, not shared shopping-answer memories.
+
+Contract interpretation, bootstrap, lines 400-479:
+- One deep-model request with a 3,300-token output allowance extracts requested
+  items, quantities, hard/soft constraints, shopping budget, objective, message
+  limit, procedure obligations, questions and semantic tool roles.
+- Tool roles are derived from supplied schemas/descriptions with a generic
+  fallback classifier. The agent does not import fixed world shopping tools.
+- An opening observation, if present, goes through observation interpretation.
+
+Per-task memory:
+- Slot (195): item role, quantity, hard constraints and soft preferences.
+- Candidate (215): listing identity, row/detail/pages, price, stock, verdict,
+  evidence, revision/offer/detail metadata and measured objective value.
+- Scope (237): search arguments, seen identifiers, page count, continuation and
+  completion status for one search scope.
+- Obligation (204): procedure description, timing, kind, evidence and basket key.
+- Tosky additionally holds pending questions, asked properties, world history,
+  cart contents, desired basket, reference observations and request/market/cart
+  revision counters. Runtime maps memoize tool shapes, monetary conversion
+  factors, cross-item checks and attempted actions.
+
+Observation processing, absorb, lines 544-790:
+- Every received observation is sent to the interpreter with a 1,700-token
+  output allowance. Shopper-message observations use Sonnet; others use Haiku.
+- The interpreter reports search shape, exact cart lines, changes, shopper reply,
+  approval and errors. Python then dispatches to search/detail/cart/reply/change
+  handlers, retains observed data and updates revisions.
+- Shopper replies trigger an additional fast revision interpretation. Some
+  requirement changes trigger another fast interpretation.
+- The finished-observation branch contains pass rather than return: a terminal
+  receipt can still cause a paid interpretation even though another world
+  action is prohibited. This is avoidable post-finish work, not an extra order.
+
+Evidence and optimization, lines 793-1048:
+- evaluate requests a 1,750-token deep assessment for each candidate that needs
+  evaluation at the current request revision. It checks submitted evidence paths
+  and quotations against observed records, and extracts price, stock and measure.
+- compatible_units can use another deep call (400 output tokens) and caches the
+  returned factor per task. This is not a fixed conversion registry.
+- relation_ok can use another deep call (850 output tokens) to check requirements
+  across a proposed multi-item basket and caches that result.
+- choose_basket uses a heap search capped at 600 combinations, together with
+  budget and relation checks. It is a bounded optimizer, not exhaustive proof of
+  the best basket over every possible world listing.
+- challenges exposes outstanding issues to prompts. It does not execute a
+  dependency graph or ensure that a missing reference is acquired before the
+  eligibility decision that requires that reference.
+
+World-action transaction, lines 1105-1189:
+  plan_action -> local schema/target validation -> execute -> absorb -> optional
+  process-proof interpretation -> return to the controller.
+- The planner selects exactly one schema-defined tool with JSON arguments.
+  It may try twice to repair invalid proposals. Schema validation is partial:
+  it checks types, required keys, enums, some item/numeric bounds and extra keys,
+  but does not implement all JSON Schema constraints such as string lengths.
+- execute sends /environment/call with the full binding, next step and one action.
+  On an uncertain transport result it retries the identical step/payload up to
+  three times. Unreconciled state blocks further world actions.
+- Received observations and action receipts are added to trace/events. The agent
+  does not report its own trusted score; the world/harness grades the episode.
+- A non-message procedure can add a 450-token deep proof request. The result is
+  tied to an evidence step and sometimes a basket signature.
+
+Controller, run, lines 1345-1495:
+- First handles repeated planning failure and attempts a legitimate finish.
+- Evaluates pending candidates and reads offers if needed.
+- Discovers questions; handles before-selection duties and optional questions.
+- Chooses a proposed basket; explores potential better listings/pages/scopes.
+- Refreshes stale offers, reconciles the cart, satisfies before-order duties and
+  attempts checkout when local gates pass.
+- With no basket, searches/opens/paginates; late in the episode it attempts a
+  permitted order or a decline after applicable before-decline obligations.
+- Stops at finished, blocked, world-step or controller safety limits. It is a
+  hand-written priority loop; the docstring's decision-graph terminology should
+  not be read as an implemented dependency scheduler.
+
+2. Inference policy and monetary exposure
+
+Every semantic task passes through infer at lines 320-353. Its request contains
+only model, messages, temperature=0 and max_tokens. There are no provider-native
+tools, browsing plugins, bash tools, embeddings, media or persistent sessions.
+
+Defaults:
+- Haiku: anthropic/claude-haiku-5.5 for ordinary actions, most observations,
+  question discovery, shopper-revision parsing and market notes.
+- Sonnet: anthropic/claude-sonnet-5.5 for contract interpretation, candidate
+  evidence, monetary units, cross-item fit, sensitive actions and process proof.
+- Backup: deepseek/deepseek-v3.2 after a failed or unusable selected-model result.
+- SANDBOX_MODEL overrides both normal and deep selections. Therefore changing
+  that supported configuration changes both the cost mix and interpretation
+  quality; the new ID must itself be allowed. The backup remains DeepSeek.
+
+All ten inference sites and their per-request output allowances:
+contract                    Sonnet        3300
+observation                 Haiku/Sonnet  1700  (Sonnet for a shopper message)
+shopper revision            Haiku          900
+market note                 Haiku          700
+candidate evidence          Sonnet        1750
+money units                 Sonnet         400
+cross-item fit              Sonnet         850
+question discovery          Haiku          850
+action                      Haiku/Sonnet  1100
+process proof               Sonnet         450
+For action, Sonnet is selected for cart, checkout, decline, approval and
+procedure; other intents use Haiku. Any site can fall back to DeepSeek.
+
+Catalog USD per million tokens, input / output:
+Haiku base tier             0.10-0.11     / 0.50-0.55
+Haiku 100k prompt tier      0.50-0.55     / 2.50-2.75
+Sonnet                      2.00-2.20     / 10.00-11.00
+DeepSeek                    0.2088-0.30   / 0.3096-0.96
+
+The Haiku override begins at the catalog's min_prompt_tokens=100000 threshold;
+it applies to an individual prompt, not accumulated tokens over an episode.
+Endpoint routing, caching, pricing changes and billing adjustments can change
+actual cost. The code requests no explicit prompt-cache policy. Do not assume
+guaranteed cache savings or apply a published discount twice to effective prices.
+At these base tiers Sonnet costs about twenty times as much per token as Haiku.
+For tokens actually billed, the basic calculation is the sum of input_tokens *
+input_rate plus output_tokens * output_rate for every attempt, with any billing
+adjustments reconciled afterwards. A max_tokens allowance is not output actually
+generated. The successful controlled profile assigns about 91% of its full-cap,
+output-only cost to five Sonnet calls, despite Haiku handling twelve calls.
+
+There are three unrelated budgets in this code/review:
+- self.budget is the shopper's purchase budget in the world's monetary unit.
+- reserve() reserves remaining world actions for finishing, not inference USD.
+- The provider's scoped run cap is the actual external inference limit: current
+  ORO docs specify $2 qualifying and $5 race per validator run. In-flight calls
+  can finish after the cap is reached, while new calls fail. Multiple validator
+  runs are independent; this is not a $5 total limit for an entire account.
+
+For the user's 90-task race scenario, $5/90 = $0.055555... mean USD per task.
+There is no $0.035 or other episode-dollar envelope in TOSKY.py. An illustrative
+$0.035/task envelope would allocate $3.15 across 90 tasks with $1.85 headroom;
+that is planning arithmetic, not a validated setting or an implemented control.
+
+The actual built-in limit is min(90, initial_max_steps*2+14) model attempts:
+20 initial world steps -> 54 attempts
+30 initial world steps -> 74 attempts
+38 or more initial steps -> 90 attempts
+The limit is constructed before bootstrap can lower the task's max_steps.
+Each attempt increments the counter before the request; max_retries=1 in the
+provided inference client prevents hidden multi-attempt client retries here.
+One logical inference may use two attempts (selected plus backup); a repaired
+action proposal can invoke infer twice, allowing four attempts for one plan.
+
+This controls request count, not money. model_cost merely sums numeric usage.cost
+from received responses after spending. It does not admit/reject a request,
+reserve the maximum payable amount, account conservatively for ambiguous charges,
+or enforce the run's total. Missing cost is not budgeted. An inference HTTP 402
+does not latch a credit-exhausted state: the controller may try the backup and
+further inference sites until the count limit. No explicit 429 backoff is added
+by the agent, and its max_retries=1 leaves no internal client retry/backoff cycle.
+
+Controlled full-controller profiles (no actual provider bill):
+healthy:              7 world steps, 17 model attempts (12 Haiku, 5 Sonnet)
+format_failure:       6 world steps, 14 model attempts (11 Haiku, 3 Sonnet)
+reference_dependency: 6 world steps, 14 model attempts (11 Haiku, 3 Sonnet)
+read_procedure:      17 world steps, 54 model attempts (21 Haiku, 33 Sonnet)
+The healthy profile orders successfully in its scripted world. The other three
+decline. These are not observations about the frequency of failures in a race.
+
+If every response used its full requested output allowance, using the fetched
+base-tier rates and excluding input entirely:
+healthy:         $0.098700-$0.108570/task; $8.8830-$9.7713 for 90 repetitions
+format_failure:  $0.069350-$0.076285/task; $6.2415-$6.86565 for 90 repetitions
+reference case:  $0.069350-$0.076285/task; $6.2415-$6.86565 for 90 repetitions
+read_procedure:  $0.407850-$0.448635/task; $36.7065-$40.37715 for 90 repetitions
+
+These are deliberately full-output-allowance scenarios, NOT actual measured or
+expected bills. Short replies cost less. Input tokens, uncertain charges, model
+overrides and changing routes can add cost. They are not universal upper bounds
+because they exclude input and long-context tiers. Prompt UTF-8 byte counts are
+retained only as instrumentation, not converted to purported exact token counts.
+
+The initial 3,300-token Sonnet allowance alone permits $0.033-$0.0363 output
+cost before its input or any world action. A naive $0.035 ledger pasted around
+the unchanged calls would reject or starve a legitimate path. If $0.010 were
+protected for finishing, its $0.025 working allowance would be smaller than that
+single initial reservation even at the cheapest fetched Sonnet route. A cutoff
+without feasible full-path allocations can preserve money by sacrificing score.
+
+Budget and correctness interact structurally:
+- Normally an action requires both a planner call and an observation call, with
+  candidate evaluation and procedure proof added separately.
+- basket_key includes offer_step; rereading a product changes offer metadata,
+  reevaluation changes the key, and an answered read obligation may become
+  pending again. The controlled procedure case reads the same item repeatedly,
+  performs 11 candidate evaluations and 10 process-proof calls, and reaches the
+  54-request quota. This wastes money and prevents the intended order.
+- A malformed evidence response can be marked current and never repaired;
+  repeated broader searches then consume work without curing the failed proof.
+- A reference needed for eligibility can be delayed until before-order, although
+  the controller requires eligibility before reaching before-order work.
+- Broad request/basket invalidation and independent semantic calls can repeat
+  analysis without a new decision-relevant fact. Request truncation limits some
+  prompt fragments by characters, not actual tokens or a dollar allowance.
+
+Time exposure is also uncontrolled at episode/run level. One inference timeout
+is 45 seconds; 54 sequential timeouts would occupy 2,430 seconds before world
+transport time. An environment action can try three 70-second requests at the
+same step. These are timeout exposure calculations, not measured latency; the
+validator's configured task/run deadlines can stop execution much earlier.
+Current docs state default limits of 5 minutes/task and 30 minutes/run.
+
+3. Operations, storage and submission boundaries
+
+Direct submitted-agent operations:
+- Only sanctioned ProxyClient imports and the two fixed proxy paths.
+- No requests/socket/http direct access, raw OpenRouter connection, remote
+  database, cloud storage or arbitrary URL reads.
+- No open/pathlib/io file operations, cache files, SQLite, Redis or vector store.
+- No subprocess/system calls, native-code bridge, pickle, eval, exec, dynamic
+  import or prohibited encoding-module import.
+- No imported grader/reward/runtime verifier or hidden evaluation files.
+- No fixed task/product identifiers, answer maps, attribute/unit conversion
+  registries detected in the source review. Tool-intent/schema/stock-status
+  vocabularies are general control/parsing logic, not product-selection tables.
+- Only SANDBOX_MODEL is read explicitly by submitted code. No phase, validator,
+  host, time-of-day or key-switch routing is present.
+- No alteration, replacement or deletion of the scoped inference key.
+
+Storage and state:
+- Lists, dictionaries, sets and dataclasses hold observations and derived facts
+  in RAM during one agent_main call. A fresh instance was checked to start with
+  empty question and conversion maps after another instance was mutated.
+- Runtime shape/unit/relation caches are populated from task-time interpretation;
+  there is no persistent product-answer cache reused across tasks.
+- No custom external filesystem destination, shared memory service or special
+  hardware resource is requested by the agent.
+- Full observations remain in history/candidate pages; there is no comprehensive
+  memory-byte cap or real-race peak-RAM measurement. Some retained structures
+  share references; do not multiply stored sizes as if every field were copied.
+
+Important supplied-library distinction:
+src/agent/proxy_client.py uses requests for its sanctioned transport and may
+append harness-owned request/statistics logs. RequestLog._write uses open(...,
+'a') at line 108 and InferenceStats._flush at line 307. The client reads runtime
+proxy/credential/log configuration itself. TOSKY.py neither chooses these log
+destinations nor reads them back as task memory.
+
+The offline resource trace intercepted one inference HTTP request and three log
+open attempts: two request-log appends and one statistics-log append. All callers
+were proxy_client.py; no actual HTTP or file write happened in the test. Its
+request body had exactly model/messages/temperature/max_tokens. Thus 'the agent
+has no direct file writes' does not mean 'the supplied harness never logs'. The
+documented reference also uses this supplied client; these library-managed logs
+are instrumentation, not agent-created persistent shopping storage. An agent
+must not exploit a writable mount or redirect logs to create its own memory.
+
+Some model catalogs advertise provider-native web_search or bash tools and
+prices. Availability in the catalog does not mean TOSKY uses them: the submitted
+request contains no native tools or plugins and no invocation of either.
+
+Local/source compliance findings:
+- UTF-8, one Python source file, well below 1 MB, synchronous agent_main.
+- ast.parse and compile passed; observed local parse about 0.013 seconds is not
+  the complete server security/integrity/similarity analysis.
+- Local source/security review and working-tree loader smoke passed, and the
+  three default model IDs were allowed in the live refresh.
+- No direct restricted resource or operation was found. This is not an official
+  backend admission certificate: private AST/integrity/similarity checks and
+  full server static-analysis timing have not been executed.
+- Operational safety is separate: lack of a dollar budget, ineffective credit
+  exhaustion handling and possible timeout/quota exhaustion remain unresolved.
+
+4. Preparation priorities without implementation
+
+First eliminate repeated work with no new evidence: isolate procedure identity
+from incidental offer refresh metadata, make reference dependencies executable,
+and bound evidence-repair attempts. Preserve evidence correctness, world-step
+protocol and the successful baseline path in separate offline regressions.
+
+Then construct one cost admission point at infer, with an in-memory per-task
+ledger, conservative input/output reservations for the actual selected model,
+fallback reservations and uncertain/missing-cost accounting. Allocate affordable
+purpose-specific outputs for a complete successful path, including legitimate
+checkout or decline. Validate that full path before enforcing a hard episode
+envelope. Latch terminal credit/auth failures appropriately; use bounded recovery
+for transient/format failures. Avoid file-backed run ledgers, direct provider
+requests and hidden phase/clock/validator strategy switches.
+
+For the 90-task planning scenario, choose a conservative uniform task envelope
+and headroom, then verify it under plausible hard-task paths and failure cases.
+No specific dollar setting is proven sufficient here. The provider's scoped
+run key remains the shared run-wide enforcement mechanism; it must not be changed
+to bypass the cap. Future configuration/price assumptions need explicit revision
+when models, tariffs or the evaluated task count change.
+
+No agent update was performed. The original source remains unchanged. The
+detailed source/function and counterexample audits are in the
+parent directory. New evidence is in architecture-budget-resources.json, the
+pricing snapshots, inspect_architecture.py and architecture.mmd beside this file.

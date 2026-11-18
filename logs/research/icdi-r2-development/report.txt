@@ -1,0 +1,284 @@
+ICDI_r2: analysis and update of ICDI_r1
+Reviewed 2026-11-16. No paid inference, submission, or dashboard activity.
+
+EVIDENCE AND LIMITS
+
+Run: LV_logs/local-8751a6f6bc7948028534ac90e8c7d730
+Its source hash matches agents/ICDI_r1.py exactly:
+24101d67e2943c9731c73e7aa272fee49dbf3cd674309b371a2077fdcda27a97
+The updated submission candidate is agents/ICDI_r2.py. The tested r1 and public
+KYO v6 baseline remain unchanged. Inputs reviewed: summary, trusted episode
+verdicts, public requests, environment observations, model outputs, controller
+traces, and inference usage. No private grader logic or accepted-answer data was
+used to construct the agent. Evaluation identifiers occur only in research
+artifacts/tests, never in the submitted agent's runtime data.
+
+The result was 18/30, or 60%. Twelve tasks failed: eight 'request not met', two
+'needs not found', and two 'did not finish'. Five failed tasks ended in a decline,
+five in an order, and two had no accepted terminal action. Sandbox completion
+status is not the same as the world accepting an order or decline.
+
+The public verdict reports a category, not the individual failed predicates.
+The trace proves several code defects. It does not prove that removing a defect
+would make its entire task pass. Two incorrect purchases have no decisive
+observable explanation in these artifacts. They are explicitly unresolved below.
+
+MEASURED RESOURCE USE
+
+The run used $0.59309982 and 641 physical inference requests. There were zero
+recorded inference failures. Models: 611 Haiku calls, costing $0.33725782; 30
+Sonnet calls, costing $0.255842. No spare-model calls. Cost per task ranged from
+$0.01160651 to $0.03385389; the average was about $0.01977.
+
+There were 85 shopper messages. The accepted reply interpretations contained 80
+indifferent answers, two substantive answers, and one unclear answer. Two sent
+answers were not accepted by the controller. There were 91 reply-parser calls,
+because some interpretations were retried. Those counts are different measures:
+an inference retry does not send another shopper message.
+
+Stage                         LLM calls       Actual USD
+Initial brief                      30         0.02917800
+Question planning                  30         0.25584200
+Shopper reply interpretation        91         0.04242330
+Store note interpretation           23         0.00915110
+Action planner                    378         0.20055632
+Cart review                        48         0.02324020
+Procedure review                   12         0.00778640
+Replacement selection              19         0.01898460
+Decline audit                       4         0.00480030
+Search schema interpretation         6         0.00113760
+TOTAL                             641         0.59309982
+
+Question planning consumed 43.14% of cost. Most messages produced no preference.
+This is a question-targeting weakness, not a reason to simply remove questions:
+two failures specifically concerned undiscovered needs. Changing the model or
+question budget simultaneously with controller repairs would confound evaluation.
+The model choices, question limits and inference budget therefore remain intact.
+
+There were 83 internal budget-admission denials. These were not provider errors
+and did not themselves incur calls. Every executed cart review in this run used
+the light model; the stronger model consumed its 30 calls on question planning.
+The byte-based reservation is conservative and may deny a strong review well
+before actual spend reaches the limit. This is an opportunity for a separate
+measured budget-allocation experiment, not evidence of account exhaustion.
+
+Median inference count was 19.5 per task; maximum 47. Median sandbox execution
+time was 80.50 seconds; maximum 210.65 seconds. Summed sandbox execution time was
+2598.79 seconds (43.31 task-minutes). These tasks ran concurrently, so this is not
+the elapsed duration of the entire validation run. Episode wall_seconds contains
+other waiting and should not be substituted for agent execution time.
+
+The $5 cap was not reached in this run. Scaling this observed average from 30 to
+90 tasks gives $1.7793, but that is arithmetic extrapolation, not a hidden-race
+forecast. The candidate retains a $0.050 per-invocation allocation, with $0.044
+for ordinary work and $0.006 held for recovery. At one invocation per task, the
+allocations sum to $1.50 for 30 and $4.50 for 90. This relies on the configured
+rate envelopes covering provider billing; external retries or billing changes
+are not an unconditional agent-enforceable run-wide guarantee. The 60 physical
+call cap and reserve-before-call accounting are unchanged.
+
+WHAT FAILED, TASK BY TASK
+
+1. t-70ef000b3f / hoodie or sweatshirt / did not finish / 9 calls, $0.01193
+   The last shopper reply was interpreted as indifferent. The model put the
+   question just asked in 'resolved'. valid_update allowed only questions already
+   in the ambiguity ledger, so it rejected this and the repeated interpretation.
+   work then broke, and the finish path returned an empty recovery reason while
+   its terminal action was blocked by pending_answers. No purchase or decline
+   was accepted. The model also proposed dropping the broad style constraint in
+   response to a question about a differently named property. These are visible
+   parser/scope/control-flow defects, not a failed API call.
+   Change: permit exact current-question references; preserve unrelated firm
+   constraints; retain a recovery reason and retry protocol feedback. Recorded
+   replies now pass the scoped parser offline, without proving a final score.
+
+2. t-ceb23f4007 / monitor resolution / did not finish / 7 calls, $0.01383
+   The first mounting-preference reply had the same 'resolved' protocol mismatch.
+   The agent stopped after only seven environment steps despite having candidate
+   records and substantial remaining budget. Same verified controller repair.
+
+3. t-eb5b2c8367 / monitor / request not met / 47 calls, $0.03385
+   The agent sent the requested advice before ordering. GATE's original wording
+   nevertheless required that the reply 'grants it', even for an information-only
+   duty. The shopper's indifference was not consent, so the reviewer repeatedly
+   reported the informational step incomplete. The planner treated the internal
+   hold as a store refusal and kept attempting checkout. There were only 17
+   environment steps. The final decline failed.
+   Change: separate information delivery from permission in the gate prompt;
+   retain strict evidence/affirmative consent for real approval duties; cache
+   unchanged negative gate results; bound unexecuted planner turns. Correct gate
+   semantics still depend on model interpretation and require paid measurement.
+
+4. t-559c052a99 / mules for a specified occasion / request not met
+   The brief contained no product musts despite a direct occasion predicate in
+   the request. Three questions concerned other properties. The cart reviewer
+   approved an order without restoring the omitted requirement. The omission is
+   visible; the verdict does not enumerate every failed condition.
+   Change: clarify the direct-product-predicate exception to 'story is context'
+   in BRIEF, and require CHECK to consider omitted explicit constraints while
+   honoring later withdrawals. No occasion-specific mapping was added.
+
+5. t-6be2dc60b6 / mules for another specified occasion / request not met
+   Again, the initial brief omitted the occasion. A later checkout reply both
+   reported stock loss and withdrew occasion. The interpreter invented an
+   unresolved question about which missing ledger requirement to remove. No
+   shopper messages remained, and internal holds caused repeated futile attempts.
+   Change: the interpretation prompt treats withdrawal of an already absent
+   property as an already-satisfied removal when its item scope is clear; genuine
+   scope ambiguity remains blocking. Repeated holds are bounded. This prompt
+   correction is not a measured counterfactual score.
+
+6. t-82a9890683 / watch / needs not found
+   Questions targeted finish, dial size and strap material; all replies were
+   indifferent. The verdict establishes an undiscovered shopper need but does
+   not reveal which one. Separately, the shopper explicitly withdrew the initial
+   color-family requirement. The reducer applied that correctly; a later cart
+   review nevertheless rejected a silver candidate using the retired requirement
+   from the original request. The final green purchase still missed a hidden need.
+   Change: show retired requirements explicitly in every ledger and establish
+   precedence over historical request/rule text. Question planning now emphasizes
+   the particular aspect hinted by the request. The hidden need remains unknown.
+
+7. t-a6d85e34f3 / outerwear / needs not found
+   The brief replaced the explicitly named department with a requested style
+   subtype. A later instruction withdrew that style, but the narrowed product
+   name remained. All three questions concerned generic catalog attributes while
+   the request also contained timing/use concerns. The accepted final order
+   missed an undiscovered need; its exact identity cannot be established here.
+   Change: keep requested department separate from style and retain concrete
+   hints when ranking questions. No guessed delivery requirement or fixed unit
+   conversion was inserted.
+
+8. t-abf1c45838 / cheapest square clock / request not met
+   Planner and reviewer disagreed about contradictory attributes on cheaper
+   candidates. One spelling stated a different shape while another listed the
+   requested shape among values. The reviewer rejected the current cart as not
+   cheapest; the planner repeatedly asserted the opposite. Negative review
+   caching provided no dispute route, and it eventually declined.
+   Change: identify internal reviews as fallible advice, require consistent use
+   of current evidence, and allow one focused light-model recheck per disputed
+   state, at most two such rechecks in a task. No rule claiming that one unknown
+   attribute spelling is universally authoritative was invented. A particular
+   cheaper candidate's correctness is not proved by these public observations.
+
+9. t-b516252b9f / knit item in a combined department / request not met
+   The reviewer invented a season constraint from the department's name although
+   the extracted product must concerned material. A candidate was rejected for
+   a season attribute; later search repeated this interpretation. The eventually
+   selected replacement sold out at checkout with little recovery time left,
+   and the agent declined.
+   Change: shared interpretation rules separate department membership from
+   independently stated property constraints; a disputed rejection can be
+   checked once. More efficient search after stock loss is still a separate
+   unresolved optimization problem.
+
+10. t-13e82f2c08 / cheapest wrap skirt / request not met
+    The agent spent many moves inspecting cheaper candidates, first attempted
+    checkout at step 34 of 38, then learned its chosen line had sold out. It
+    declined at step 35. The trace establishes late recovery with too few moves;
+    it does not establish which uninspected item would satisfy the optimum.
+    Change relevant here: a stock-only notice now invalidates cached decisions
+    even without a product ID. No blanket early-checkout rule was added: ordering
+    before verifying the cheapest fit could create a new failure. Search coverage
+    versus recovery reserve needs a separate controlled experiment.
+
+11. t-86888552db / long-sleeved top / request not met
+    The first line sold out, then a replacement was bought. Its observed category
+    and sleeve-length field appeared consistent with the visible request, and
+    both cart checks returned true. Public verdict flags did not identify the
+    rejected predicate. Some earlier candidates had different sleeve properties
+    conflated, but this does not establish why the final purchase failed.
+    Unresolved: no task-specific exception, forced purchase or guessed attribute
+    precedence was added. More detailed public feedback or a controlled local
+    experiment is needed to isolate the final rejection.
+
+12. t-9ab5c575f5 / baggy pants or jeans / request not met
+    After stock loss, the agent bought a Jeans listing with an observed baggy-fit
+    value. Visible fields appeared compatible with the request, yet the verdict
+    rejected the order. The category alternative and fit interpretation deserve
+    investigation, but neither is proved as the particular failing predicate.
+    Shared rules now explicitly preserve alternative product kinds; the exact
+    final rejection remains unresolved. No hidden matching rule was recreated.
+
+IMPLEMENTATION AND STAGED REVIEW
+
+The central failure is inconsistent interpretation across the brief, reply
+reducer, reviewer and action planner. More calls amplified disagreements instead
+of resolving them. Some of this was introduced by r1: strict reply validation
+and terminal guards were not tested against actual malformed-but-usable model
+responses. Prior synthetic tests exercised expected response shapes and therefore
+failed to demonstrate real semantic accuracy. They should not have been treated
+as evidence that the agent was ready to improve its race score.
+
+Stage 1 reproduced three failing reply contracts before modification. It now
+accepts a resolution of the exact question asked, rejects foreign references and
+out-of-range question indices, and prevents nearby-property indifference from
+erasing an existing must. Exact-property questions and explicitly scoped
+clarifications retain legitimate relaxation behavior.
+
+The full replay caught an overly broad first implementation of that safeguard:
+it blocked a legitimate relaxation in a previously passing case. That change
+was narrowed before completion, and a dedicated regression test was added.
+
+Stage 2 reproduced stale stock-only decisions, absent retired-state evidence,
+unhelpful repeated parsing and an empty recovery reason. These are corrected.
+Changes still require source quotes and valid scope; unresolved observations
+cannot authorize a purchase. No hardcoded answer fallback exists.
+
+Stage 3 reproduced repeated negative-gate inference, an unbounded unexecuted
+planner loop, and the absence of a review-dispute route. Negative gates are reused
+only while their cart, ledger, procedure evidence and message state are unchanged.
+New evidence reopens the gate; an inconclusive inference can be retried. A cart
+review dispute costs at most one additional light-model request for the state,
+at most two per task, inside existing budget/call limits. Failed/malformed
+rechecks never imply approval. Three planner turns with neither an environment
+step nor meaningful state/decision progress trigger bounded recovery. Newly
+discovered candidates and completed reviews count as progress.
+
+Stage 4 corrected prompt inconsistencies concerning direct product predicates,
+department names, current versus retired constraints, information versus consent,
+and hint-based questions. These edits add no compulsory inference stage and no
+extra shopper-message allowance. Their effect on LLM accuracy remains unmeasured.
+
+FINAL OFFLINE VERIFICATION
+
+- 69 tests passed: the 48 previous contracts plus 21 new regression tests.
+- Four prior synthetic end-to-end worlds still complete: ordinary shopping,
+  text-encoded records, changed checkout requirement, and customer approval.
+- Replayed all 114 recorded reply/note model outputs: r1 accepted 106 and rejected
+  eight; r2 accepted all 114. Repeated outputs are counted as separate recorded
+  interpretations, not separate benchmark tasks. No previously accepted output
+  was rejected by r2 in this replay.
+- All 18 previously passing tasks retained their final active requirements,
+  budgets and cleared pending state under the SAME recorded model outputs.
+  Seventeen retained identical full replay state; one acquired an additional
+  nonbinding indifference annotation because its first reply was now accepted.
+- A static review confirms valid Python/UTF-8, one synchronous agent_main,
+  unchanged imports, proxy-only transport, no agent filesystem writes or dynamic
+  code execution, no wall-clock strategy routing, and size below 1 MB. Source
+  hashes confirm r1 and KYO v6 are unchanged. Runtime budgets were stress-tested
+  by the existing contracts. The new source adds approximately eighty lines,
+  changes eleven controller methods and adds one evidence-cache-key helper;
+  eighty-four existing methods remain unchanged.
+- ORO's current published code requirements and model catalog were checked.
+  No new library or model was introduced. This is not server-side AST/integrity
+  approval: ORO alone can decide submission acceptance and structural similarity.
+
+Reproduce offline checks from the repository root:
+ICDI_TEST_SOURCE=agents/ICDI_r2.py python3 -m unittest -v agents.tests.test_icdi_r1 agents.tests.test_icdi_r2
+python3 logs/research/icdi-r2-development/replay_audit.py
+
+Supporting artifacts: analysis.json, per-task t-*.json, stage-costs.json,
+reply-replay.json, verification.txt, static-review.json, and plan.txt.
+
+For the user's paid comparison, keep this run and the exact r2 source hash. Check
+all 30 outcomes, changed passing cases, accepted terminal actions, discovered
+preferences, actual cost, physical inference counts and unexecuted-loop traces.
+Do not treat a higher aggregate score alone as proof that prior strengths are
+preserved. Do not infer a hidden-race score from these offline checks.
+
+REFERENCES
+https://oroagents.com/docs/miners/code-requirements
+https://oroagents.com/docs/miners/agent-interface
+https://api.oroagents.com/v1/public/inference/models?provider=openrouter
+Local docs/miner-guide.md explains the coarseness of published failure categories.

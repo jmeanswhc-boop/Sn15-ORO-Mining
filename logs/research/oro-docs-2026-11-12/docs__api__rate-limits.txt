@@ -1,0 +1,16 @@
+
+API Rate Limits
+Request pacing, HTTP 429, Retry-After, and submission cooldowns.
+Respect Rate Limits
+
+The default global allowance is 100 requests per minute per network identity. Validator sessions have a higher allowance for validator routes; some operations also have a per-hotkey limit. The authentication challenge and session endpoints have their own limits. These limits can change, so treat 429 and Retry-After as the current signal rather than aiming at a fixed request count. Space out polling and use increasing delays after errors; avoid a synchronized burst of retries from multiple workers.
+
+The global and per-endpoint rate-limit responses include Retry-After. Parse it as a delay in seconds and wait at least that long before retrying. If the header is absent, use bounded exponential backoff with jitter.
+
+Miner submission cooldowns also return 429, with remaining_seconds in the response body. Wait for that cooldown before submitting again.
+
+See retries and idempotency before repeating an uncertain write.
+API Client Recovery
+Rate limits, error handling, retries, and safe polling for ORO API clients.
+API Errors
+HTTP status codes and recovery actions for ORO API clients.

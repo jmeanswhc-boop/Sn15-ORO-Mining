@@ -1,0 +1,52 @@
+Validator
+Get problems for an evaluation run
+Returns the problems that should be evaluated for a given run.
+Server URLloading...GET/v1/validator/evaluation-runs/{eval_run_id}/problemsSendAuthorizationPath
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Path Parameterseval_run_id*string
+Evaluation run IDFormatuuid
+Response Body
+200
+application/json
+404
+application/json
+422
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X GET "https://api.oroagents.com/v1/validator/evaluation-runs/497f6eca-6276-4993-bfeb-53cbbbba6f08/problems"200404422
+{
+  "problems": [
+    {
+      "problem_id": "9edf0a7c-64c3-4960-a497-d801a548ec4c",
+      "suite_id": 0,
+      "metadata": {}
+    }
+  ]
+}
+{
+  "detail": "string",
+  "error_code": "EVAL_RUN_NOT_FOUND"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+Get an environment download for assigned work
+Return a time-limited download for the selected tasks. Requires active assigned work. Verify the delivered bytes against download_url_sha256.
+Get Weight Salt
+Per-epoch base standings for the weight setter.
+
+Serves the epoch-pinned base standings (top designation + finisher tail)
+snapshotted once per epoch, so every honest validator in the epoch builds the
+identical base vector regardless of tick phase. (The watermark
+decoy-overlay was removed — we rely on the chain's anti-copy features.)

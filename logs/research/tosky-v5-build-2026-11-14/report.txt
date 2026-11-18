@@ -1,0 +1,228 @@
+Tosky_v5 staged implementation and review — 2026-11-14
+
+Outcome
+
+Created agents/Tosky_v5.py from Tosky_v4. Original Tosky_v4, Tosky_v3,
+TOSKY.py, the PIRATE source and the v4 tests retain their recorded hashes.
+No paid inference, validation run, platform submission or commit was performed.
+This is an offline-verified candidate, not a measured accuracy improvement.
+
+The source changes 15 existing controller methods, adds six reachable methods,
+and leaves 231 existing controller methods unchanged. Budget accounting,
+physical retry accounting, terminal procedure enforcement, scoped stockout
+recognition, and reference-resolution transport were retained.
+
+Order and evidence
+
+0. Baseline preservation
+   Saved original source hashes and a complete v4 checkpoint. The original
+   50-test offline suite passed before implementation. Its coverage was not
+   treated as proof of accuracy: the previously diagnosed interview fixture
+   lacked catalog metadata and meaningful low-diversity preferences.
+
+1. Request-to-ledger coverage
+   Added one compact LIGHT audit after initial request extraction. It may add
+   missing explicit product requirements or restore alternative product kinds.
+   The original request must support an amendment with a literal quote. It
+   cannot overwrite an existing same-property requirement. Bounds, exclusions
+   and property alternatives cannot be stripped from a quoted constraint.
+   Product purpose requires a direct product-purpose statement, not an anecdote.
+   Later shopper relaxations still use the existing requirement-drop path.
+
+   Public observation replay, through read_request with scripted extraction:
+   - Wedding mules: occasion:wedding reaches the ledger; the recorded casual
+     choice is rejected by the existing property check.
+   - Logo clothing: pattern:logo reaches the ledger; the recorded solid-color
+     choice is rejected.
+   - Pants or jeans: Jeans ownership changes from 0 to item 1. The original
+     requirement on fit remains in force.
+   - Tunik: the explicit type-of-top predicate remains a requirement. The
+     observed replacement's style fields do not prove its type; its local
+     verdict remains unresolved. This is stronger coverage, not proof that
+     the next semantic review will reject that product or solve the case.
+
+   Review limitation: audit answers in these replays are supplied explicitly
+   from the public request. This verifies acceptance rules and downstream
+   wiring, not the live model's extraction success rate. The audit may still
+   omit a requirement or choose a poor semantic property label. Conservative
+   rejection of unsupported amendments preserves the original parse.
+
+2. Interview eligibility and bounded coverage
+   Catalog metadata is excluded unless explicitly requested. Requirements
+   already stated, answered properties, and explicitly free properties are
+   not asked again. Meaningful planner order replaces the diversity override.
+   Catalog diversity remains in the inherited fallback-key planning, rather
+   than overriding the selected meaningful first question.
+
+   The first question remains single-property. If it is unproductive and one
+   or two messages remain available, a later question may cover up to three
+   properties. Explicit single-property instructions and rejection of lists
+   keep single questions. A list with no new requirement and no list rejection
+   advances without adding restrictions to products. Message-field length
+   limits, multi-item scheduling and procedure-message reservation remain.
+
+   Public catalog/plan replay on the no-new-preference branch:
+   - Watch: color; then case shape/strap/dial size; then gender/movement type/
+     dial glass. Metadata options no longer takes a question.
+   - Hoodie: gender; then hoodie style/material/season; then pattern/neckline/
+     fit. Material is reachable within the allowance instead of being displaced
+     by season alone.
+   - Coat: material; pattern/collar/jacket coat styles; season/sleeve length/
+     occasion. Gender is still outside this bounded branch. We did not enlarge
+     the list or insert a catalog-specific priority merely to fit this case.
+
+   This replay supplies no new shopper answers. Coverage is not a score.
+   A shopper can reject a list, and the HEAR model can still misread an answer.
+
+3a. Consistent property evidence
+   Added a shared property-ranking helper for word predicates, numeric values,
+   same-unit bounds, and evidence explanations. A key naming the same predicate
+   and the observed category can outrank a generic key. Category vocabulary
+   comes from the current request/catalog, not a built-in product table.
+   A different component or predicate cannot get that rank. Conflicting equally
+   specific scoped keys stay unresolved. Semantic review receives the same
+   scope rule and retains raw keys.
+
+   Recorded skirt: generic style=casual no longer overrules skirt style=wrap
+   skirts for style:wrap. Recorded clock: generic shape=rectangle no longer
+   overrules clock shape=square for shape:square. Both local verdicts change
+   from false to true. Negative controls retain exclusions, reject an unrelated
+   handle field, distinguish type from style, and test numeric-bound edges.
+   This does not implement a synonym dictionary or claim to resolve arbitrary
+   semantic equivalence such as acne-care versus anti-pimple.
+
+3b. Candidate retention during stockout recovery
+   Protect up to four currently proven candidates per affected item before
+   filling the bounded replacement context by recency. Still cap the pool at
+   25. A cheapest replacement may recover an already-opened cheaper candidate
+   when its current requirements are proven; this is no longer restricted to
+   unopened rows. Category alternatives follow current item ownership. Stock,
+   budget and current requirements are checked again. Individually proven
+   attributes do not authorize this automatic rescue for a joint compatibility
+   task.
+
+   On the recorded clock state after the stockout, v4 omits the known 62-cent
+   listing and returns only the scripted 67-cent suggestion. V5 includes the
+   62-cent record and returns it before 67 cents. This is a deterministic
+   candidate-selection improvement under fixed observations, not a new checkout
+   result. Existing string truncation in review records remains a limitation;
+   the packing experiment below was not adopted as a speculative replacement.
+
+3c. Recovery action room
+   The early-cart threshold moves two steps earlier. Its default reserve covers
+   a first checkout, two cart mutations, and a second checkout, with the existing
+   procedure tail included. Explicit last-resort cart-fill calls still retain
+   their existing behavior. Nothing marks a failed checkout successful or makes
+   an unavailable listing purchasable.
+
+   A scripted search-until-late scenario completes stockout recovery within
+   16 actions and has at least three steps left after the first buy attempt.
+   The pre-change fixture also completed: this is a reserve/boundary check, not
+   evidence of a newly recovered score. Arbitrarily many surprises, missing
+   reference reads or repeated stockouts cannot be guaranteed within a finite
+   step limit.
+
+4. Public-evidence gaps reviewed without speculative patches
+   The final long-sleeved top and the first-run cleanser still match their
+   visible predicates in the supplied observations. Their exact failed
+   evaluation predicate is not exposed. Minimal reproductions with the actual
+   observed records are retained in 04-evidence-gaps.json. No hidden grading
+   state, private task suite, or winning-product lookup was used. Neither case
+   is marked solved. The coat interview gap and tunik semantic-review uncertainty
+   above also remain explicit limitations.
+
+5a. Dependency-aware reuse of completed procedure proof
+   For a stage whose duties are all explicitly non-cart-dependent, reuse an
+   observed completed explanation across a pure inventory/cart change. Its
+   cache key still includes the request, duties, current ledger and resolved
+   reference values, so requirement/budget/duty changes invalidate it.
+   Cart-dependent stages retain their cart/version key and fresh-evidence rule.
+   Mixed stages remain conservative; this is not a blanket approval cache.
+
+   Tests prove that a general explanation survives a stockout, while changed
+   requirements, budget, duties and cart-dependent approval trigger rechecking.
+   In the combined explanation/stockout fixture, v5 avoids one repeated gate
+   call; this offsets the one new audit call in that fixture.
+
+5b. Prompt-compaction feasibility check — not adopted
+   A lossless table encoding of observed records was tested outside the agent.
+   Against the currently clipped replacement context it increased character
+   count in five of six sampled contexts. The one reduction was only about 2%.
+   It is absent from the submitted candidate. Removing additional candidates
+   or evidence just to claim lower cost was not justified by this check.
+   This is a failed feasibility experiment, not a performance improvement.
+
+6. Final review of request-audit boundaries
+   Added separate negative controls for cropping a preceding negation out of a
+   quote and attaching one product's statement to another product. Both failed
+   before the follow-up guard and now pass. Multi-item additions must identify
+   their own product, and an immediately preceding negation cannot be cropped.
+   This deliberately conservative policy is not a complete natural-language
+   entailment verifier.
+
+Budget and timing
+
+The configured per-invocation envelope remains $0.050: $1.50 allocated for 30
+invocations and $4.50 for 90. The byte-based input estimate, 25% margin, output
+cap, reserved procedure allowance, uncertain-charge reservation, physical-call
+counting and immediate 402 stop are unchanged. The existing 90-invocation
+missing-billing stress test passes on v5. These allocations assume the configured
+rate envelope and number of invocations; they are not a provider invoice or a
+certified bound under arbitrary price changes and extra reruns.
+
+The audit adds one LIGHT request on normally parsed tasks. With the actual 30
+public requests and recorded parsed items, the unchanged admission estimator
+reserves $0.044748125 in total for these new audit calls, at most $0.001540625
+per case. This includes maximum audit output and the estimator's margin; it is
+not measured billing. The audit remains inside the same per-invocation cap.
+No measured latency reduction or net cost reduction is claimed.
+
+Paired integrated fixtures, v4 -> v5 (actions; scripted model requests):
+  Ordinary order:                 4 -> 4;   4 -> 5
+  Required explanation:           5 -> 5;   6 -> 7
+  Stockout replacement:           9 -> 9;  10 -> 11
+  Correct decline, renamed tools: 7 -> 7;   8 -> 9
+  Preferences and explanation:    9 -> 8;  11 -> 12
+  Explanation and stockout:      10 -> 10; 13 -> 13
+All six fixture contracts pass on both versions. No unknown prompts are silently
+accepted. These are scripted protocols, not ORO scores or live model benchmarks.
+
+Verification and submission boundaries
+
+Final suite: 38 top-level unittest methods pass. One aggregate method separately
+runs and checks 36 inherited budget, procedure, change and reference checks.
+Public-observation replays, source hashes and checkpoint diffs are retained.
+The source parses and compiles in about 0.21 seconds and is 437,725 bytes,
+below 1 MB. It has a synchronous agent_main, unchanged allowlisted imports,
+no direct network/filesystem/eval/exec operations in the agent, and only the
+existing inference and environment ProxyClient endpoints. New methods are
+reachable from run. No task, product or world identifiers were embedded.
+
+This local preflight is not ORO's private AST, plagiarism, integrity or acceptance
+service. That service was not invoked. The implementation was reviewed against:
+https://oroagents.com/docs/miners/agent-interface
+https://oroagents.com/docs/miners/code-requirements
+No benchmark-specific attribute registry, default shopper answer, task dispatch,
+private evaluator access, cross-task persistent storage or direct external API
+was added.
+
+Evidence index
+
+- build-review.json: final hash, method delta, local preflight, paired fixtures.
+- original-hashes.json: preserved source identities.
+- checkpoints/ and diffs/: isolated source stages and exact successive deltas.
+- 07-final-tests.txt and agents/tests/test_tosky_v5.py: final offline checks.
+- replay.py and public-replay.json: request pipeline and question coverage.
+- 03b-clock-replay.json: retained cheaper stockout replacement.
+- 04-evidence-gaps.json: unresolved long-sleeved top and cleanser observations.
+- 05-audit-admission.json: conservative incremental audit reservations.
+- 05b-packing-feasibility.json: rejected compaction experiment.
+
+Acceptance conclusion
+
+The diagnosed code handoffs have concrete local regression evidence and the
+six existing scripted success flows are preserved. Some failure causes remain
+unresolved, and all claims of qualifier/race accuracy improvement remain
+unmeasured. Future paid verification, if authorized, should record the exact
+source hash and compare per-task gains/losses on the same public roster before
+making a race-performance claim. No further paid test is initiated here.

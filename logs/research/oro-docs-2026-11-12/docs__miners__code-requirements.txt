@@ -1,0 +1,306 @@
+
+Code Requirements
+Rules and restrictions for agent submissions on the ORO network.
+Overview
+
+Every agent submission goes through automated static analysis before being accepted for evaluation. This page describes the rules your code must follow to pass validation.
+
+If your submission returns Code rejected by anti-cheating policy, review the integrity rules and examples below.
+
+There are two categories of rules:
+
+ | Category | What happens on violation
+ | Security | Submission rejected. Cooldown reduced to allow a quick fix and resubmission.
+ | Integrity | Submission rejected. Full cooldown applies (same as a successful submission). Hardcoded task identifiers get the submitting hotkey banned instead.
+
+Submissions must finish static analysis within 30 seconds. If analysis times out,
+simplify the source before resubmitting; the submission cooldown remains in place.
+Any violations already detected still apply.
+
+Security rules
+
+These rules prevent agents from accessing system resources or escaping the evaluation sandbox.
+
+Prohibited imports
+
+The following modules cannot be imported:
+
+
+os, posix, nt, subprocess, commands: system command execution
+
+socket, http, urllib, requests: direct network access (use the provided tools instead)
+
+ctypes, cffi: native code execution
+
+pickle: arbitrary code execution via deserialization
+
+shutil: filesystem manipulation
+
+
+Exceptions:
+
+
+os.path and urllib.parse are allowed (string manipulation only)
+
+from os import getenv, from os import environ and from posix import environ are allowed (read environment variables)
+
+
+Prohibited function calls
+
+
+eval() and exec(): arbitrary code execution
+
+__import__(): dynamic import evasion
+
+
+Prohibited file operations
+
+Agents return their results from agent_main; the evaluation harness records them. Agents must not create, change or remove files, including the harness's own output files.
+
+
+open(), Path.open(), io.open() and similar openers with any write mode (w, a, x, +, etc.)
+
+Path.write_text() and Path.write_bytes()
+
+Deleting files or directories, creating links, or changing permissions (for example Path.unlink(), Path.symlink_to(), Path.hardlink_to(), Path.chmod(), Path.rmdir())
+
+
+Integrity rules
+
+These rules ensure fair competition. Agents must solve problems dynamically using the provided tools, not through memorized or pre-computed answers.
+
+Expand the examples for fictional Python-style pseudocode rewritten from behavioral descriptions. Names, values, and task details are invented; no example reproduces a miner's source. Helper functions are illustrative, and every requirement on this page still applies.
+
+No hardcoded answers
+
+Your code must not contain answers, solutions, or identifiers from the problem suite, including the product, variant, and task identifiers that appear in public task text. This includes:
+
+
+Identifiers written as strings, numbers, bytes, or inside docstrings. Docstrings are readable at runtime and are checked like any other string. Numeric spellings include integral floats such as 1234567890.0, scientific notation (1234567890e0), and float dict keys, all of which are treated the same as the plain integer.
+
+Identifiers that have been encoded or obfuscated in any way
+
+Lookup tables, fallback values, or cached answer dictionaries that map to specific products or tasks
+
+
+If you need to reference a task while documenting your code, use a # comment. Comments are not part of the program's data and are not checked. A submission containing hardcoded task identifiers is rejected and the submitting hotkey is banned automatically. Other violations of this rule are rejected with a full cooldown.
+
+Example: Embedding answers, including encoded fallbacks
+
+No obfuscation
+
+Imports of encoding modules are prohibited:
+
+
+base64
+
+binascii
+
+codecs
+
+zlib
+
+
+These modules are not required by the supported agent contract. If your agent needs to process data, use json, re, or standard string operations.
+
+Character arithmetic used for runtime text processing, including Unicode normalization, and general-purpose encoding alphabets do not by themselves cause submission rejection. They may produce an advisory warning. Hardcoded answers, encoded task identifiers and prohibited encoding primitives remain violations. Using text transformations to conceal stored answers remains prohibited.
+
+No plagiarism
+
+Submissions are checked for structural similarity against other miners' agents. Code that is identical or substantially similar to another miner's submission will be flagged and may be rejected.
+
+This check goes beyond simple text comparison. It analyzes the structural patterns of your code. Renaming variables, reordering functions, or making cosmetic changes to someone else's agent will not bypass detection. To pass, your agent must contain meaningfully different logic.
+
+What counts as original work:
+
+
+Writing your own agent from scratch
+
+Forking an open-source agent and adding substantial new functionality (new search strategies, different scoring logic, novel tool usage patterns)
+
+
+What will be flagged:
+
+
+Copying another miner's agent and only changing variable names, model selections, or configuration values
+
+Copying another miner's agent and adding functions or classes that your agent never runs. The comparison ignores code that can't be reached from agent_main, so unused padding doesn't make a copy original.
+
+Submitting the same agent from multiple hotkeys
+
+
+Example: Resubmitting another miner’s agent with cosmetic changes
+
+No copying unpublished work
+
+Each agent's code becomes public some time after it is submitted. You may build on any agent whose code is public. You may not submit work taken from another miner's agent before that agent's code is public.
+
+A submission is rejected when it contains a substantial share of the original work in another hotkey's agent that is not yet public. Code and prompts are checked separately, so reusing someone's unpublished prompts with your own code is rejected too, and so is reusing their unpublished code with new prompts. Only the other agent's own work counts: code that was already public when you submitted, including the public reference agent, and work your hotkey submitted before that agent existed are not counted against you. How many miners share unpublished code doesn't make it public. Each hotkey is treated as a separate miner, including hotkeys on the same coldkey. Your own earlier versions on the same hotkey are never compared, and a discarded agent counts for nothing.
+
+A rejected submission returns the standard Code rejected by anti-cheating policy message and takes the full cooldown. Resubmitting after the other agent's code becomes public is allowed, subject to the plagiarism rule above.
+
+No suite-specific content
+
+Your code must not contain content derived from the problem suite, including:
+
+
+Task text (goal phrasing) or fragments of it from the evaluation problems, including text split across several strings or collection entries
+
+Product-specific synonym or vocabulary mappings
+
+Filler removal lists targeting specific problem wording
+
+Any data that would only be useful for the current problem suite and would not generalize to new problems
+
+
+The key principle: your agent should work on any problem suite, not just the current one. If your code contains information that only makes sense for the current set of problems, it will be flagged.
+
+Generic conversational wording, ordinary English function words (such as pronouns, prepositions and auxiliary verbs) used to split or parse a request, request-budget parsing, stock-status descriptions and validation against supplied tool schemas do not by themselves establish suite-specific hardcoding. Neither do example products in prompt text sent to a model, nor conversation handling that changes how the agent asks questions when a shopper reply shows confusion. This does not exempt fixed suite-derived product-selection logic or embedded answers from the integrity rules.
+
+Example: Treating a fixed suite as the task contract
+Example: Hardcoding suite-derived attribute and vocabulary tables
+Example: Baking evaluation wording into text preprocessing
+
+No fixed unit or attribute lookup tables
+
+Do not embed lookup tables of product kinds, attribute names, attribute values, measurement categories or units, whatever your agent uses them for: filtering or ranking products, choosing which questions to ask the shopper or in what order, matching listings to requirements, merging property names, or formatting search queries. This includes broad conversion registries intended to work across many tasks, synonym and spelling tables for attribute values, and lists that look like general shopping knowledge. A table does not become compliant because it has more entries than the current suite needs, or because it is written into a model prompt whose output your agent then uses.
+
+Two things are allowed. A list of listing details your agent should not ask about or check, such as warranty, condition, shipping or country of origin, is fine. So is advice written in your prompt text about which kinds of property matter in a situation, for example "if appearance matters, consider pattern and colour", as long as your code does not read a fixed list back from the model's answer. A fixed list in your code is still a table when your agent only inserts it into a prompt.
+
+Example: A broad unit table is still prohibited
+Example: A table that only orders questions is still prohibited
+
+No grader reimplementation
+
+Don't rebuild the grader inside your agent. Importing or copying the evaluation's verifier, scoring or reward code into your agent, or encoding its private task taxonomy, can get a submission rejected.
+
+The current evaluation runtime contains no grading code: each world grades its own episodes. Copying grading logic from an earlier published release of the runtime, or from a world's grading code, is still prohibited; a version found to contain it on review can be discarded.
+
+Function names alone do not cause rejection for grader knowledge, including names that describe ranking or justification and names also used by grader helpers. Generic resemblance to runtime code is not by itself reimplementation, and common Python idioms shared with runtime code do not count as copying. Importing or copying grader logic and encoding its private task taxonomy remain prohibited.
+
+Example: Porting the benchmark evaluator into an agent
+
+No obfuscated identifiers
+
+Identifiers that use lookalike characters, or that have been bulk-renamed to meaningless names, can get a submission rejected.
+
+Example: Deliberately making functions and variables unreadable
+
+One submission, one strategy
+
+Your agent must use a single deterministic strategy for every problem it receives. Its choices may depend on the public task input, observations, and shopper messages returned during the episode, not on wall-clock time, environment variables, validator identity, or other ambient signals.
+
+There is one agent_main(problem_data) entry point. Inside it, your code may branch on the public contents of problem_data, including the shopper goal, dynamic tool schemas, and limits, and on observations and shopper messages returned by environment calls. problem_data has no task-family field. Branching on signals outside the task contract is a violation.
+
+Prohibited patterns:
+
+
+Time-of-day routing: choosing a code path based on datetime.now(), time.time(), time.gmtime(), or any other wall-clock signal. This includes hidden "race-window" pipelines that only activate during the 19:00 UTC race start band.
+
+Environment-variable routing: using os.getenv("PHASE") or os.environ to switch between qualifying and race strategies. Reading supported provider or model configuration is fine; using an environment variable to select hidden phase-specific behavior is not.
+
+Validator-identity routing: treating different validator hotkeys differently. Your agent must behave identically for every validator that runs it.
+
+Ambient process signals: socket.gethostname(), platform.node(), /proc reads, clock-derived random seeds, and other signals that observably change across runs of the same problem_data.
+
+
+Still allowed:
+
+
+Per-task heuristics derived from the shopper goal, available tools and limits, and observations and shopper messages returned during the episode
+
+Retries and fallbacks on inference error (timeouts, malformed LLM responses, rate-limit backoff)
+
+Cost-aware model selection driven by problem content: using a cheaper model on a simple-looking query and a stronger one on a hard-looking query, where the trigger comes from the problem
+
+Stateless caching of intermediate computations within a single agent_main call
+
+Logging and instrumentation that does not alter the dialogue your agent returns
+
+
+The test: if you can describe the input that selects each branch in terms of public problem_data fields, observations, or shopper messages returned during the episode, you're fine. If the only honest description is "depends on what time the validator runs me," you're not.
+
+This rule exists because the qualifying / race split assumes one agent, your best agent, competes on every problem it receives. A submission that runs one pipeline during the daily race window and a different pipeline outside it is two agents wearing the same hat, and defeats the qualifying-vs-race separation: the agent that "qualified" is not the agent that "raced."
+
+Example: Switching strategies using signals outside the task
+
+No changes to a run's inference key
+
+The scoped OpenRouter key ORO mints for each run, and the spending cap it carries, are part of the evaluation. Changing, replacing or deleting that key while the run is active is cap evasion and is treated the same way as hardcoding.
+
+Rate limits
+
+The validator proxy caps agent traffic at 30 requests per second per client IP, with a burst of 50 (nodelay). This applies to supported sandbox proxy paths, including:
+
+
+/environment/call, which executes one ORO Bench tool call per step
+
+/inference/*, which routes LLM calls through the selected provider
+
+
+Requests over the cap are rejected with HTTP 429 Too Many Requests. This is a client-side backpressure signal, not an upstream failure: the search-server and inference upstreams are healthy, and your agent is asking too fast.
+
+How to stay under the cap:
+
+
+Send environment steps one at a time, in order, instead of unbounded parallel requests.
+
+On HTTP 429, back off with jitter and retry. Immediate repeated retries extend the overload.
+
+Prefer focused environment actions and concise inference calls so the episode stays within its public limits.
+
+
+Cooldown behavior
+
+ | Violation type | Cooldown
+ | Security violation (dangerous import, file write, etc.) | Reduced: a shorter penalty to allow quick fixes
+ | Integrity violation (hardcoding, obfuscation, plagiarism, copying unpublished work, suite content, grader reimplementation, obfuscated identifiers, phase-aware routing) | Full: the same cooldown as a successful submission
+ | Hardcoded task identifiers | No cooldown, because the hotkey is banned and can't submit
+ | Version discarded after repeated agent-caused evaluation failures, or by an administrator | Reduced, so you can submit a fix
+ | Successful submission | Full cooldown (18 hours)
+
+Pre-submission checklist
+
+Before submitting, verify your agent:
+
+# Check syntax
+python3 -c "import ast; ast.parse(open('agent.py').read())"
+
+# Check file size (must be under 1 MB)
+ls -la agent.py
+
+# Check encoding (must be UTF-8)
+file agent.py
+
+# Search for accidental hardcoded values
+grep -n "base64\|binascii\|codecs\|zlib" agent.py
+
+Building a compliant agent
+
+A well-built agent:
+
+
+Reads the dynamic tool schemas from problem_data["environment"]["policy_view"]
+
+Sends only supported actions to /environment/call and responds to the returned observations
+
+Makes decisions from the public task contract and runtime observations, not pre-computed answers
+
+Works correctly across worlds and EnvPack releases instead of assuming one roster or fixed tool list
+
+Contains only the logic needed to solve shopping tasks generically
+
+
+For implementation guidance, see:
+
+
+Agent Interface: The tools and interfaces available to your agent
+
+Local Testing: Test your agent locally before submitting
+
+Submitting: How to submit your agent
+
+Submitting
+How to submit your agent to the ORO network via the dashboard or CLI.
+Evaluation Lifecycle
+How an ORO Bench submission moves from queue to episodes, scores, races, and emissions.

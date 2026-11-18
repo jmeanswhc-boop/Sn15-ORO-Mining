@@ -1,0 +1,129 @@
+THREE-AGENT STUDY: OROBench race 22
+
+Recommendation: retain ICDI_chidori_v4 as the operational baseline and replace its reference-resolution decision path with a small, explicit evidence tracker. Do not adopt Pooh wholesale. This is a recommendation for the next development stage, not an implemented or scored improvement. The evidence supports a narrower change than another architecture replacement, but does not establish that one change will solve every failure.
+
+The three references are original CHIDORI v11, the full ICDI_chidori_v4 submitted as Tosky, and publicly released Pooh v1. The final public top record and champion history now independently confirm Pooh as champion. Race 22 completed at 2026-11-13 03:59 UTC, or 2026-11-12 22:59 America/New_York. This report supersedes the earlier provisional, qualifier-led report.txt: the race details were embargoed when collection began and became public during the investigation.
+
+EVIDENCE AND IDENTITY
+
+@@COVERAGE@@
+
+Every race index has 90 expected and 90 persisted results, and every result was joined to its feedback using episode identity, task identity and paid reward. All six runs are included SUCCESS runs. This does not mean all 90 shopping sessions succeeded: completed is an execution outcome, while paid_reward is the binary shopping result. The three sources were inspected as text and AST, not executed. Source snapshots, hashes, the fresh final standings, public API envelopes and reproducible offline calculations are saved beside this report.
+
+CHIDORI and Pooh are released public sources. For Tosky, the source benchmark is the user's designated local full v4 file; its source release date is later. The public run record cannot yet certify that the uploaded source bytes equal those local bytes. The local SHA-256 is bbf30300c5039956ddd18faa5c22fd27b126458339f8ae67860c87425777e898. No source file, production agent, monitor setting or submission was modified during this study. No paid inference or evaluation was run.
+
+WHAT THE SCORES ACTUALLY SHOW
+
+@@METRICS@@
+
+CHIDORI's exact binary race result is 35/180 = 19.4444%; its public status window reports 19.45%, reflecting API rounding of run scores. The other count-derived race scores are 38/180 = 21.1111% and 40/180 = 22.2222%. Each agent has two 90-task executions. Costs and sandbox duration in the table are averages per complete 90-task execution, not per problem. Request counts and errors cover both executions.
+
+Tosky outscored original CHIDORI by three successful executions, while Pooh outscored Tosky by two. Pooh used 23.3% more inference requests than Tosky, cost about 2.37 times as much, and had a 37.6% longer average sandbox duration. Tosky's cost per correct race execution was about $0.107, against CHIDORI's $0.258 and Pooh's $0.241. These are descriptive results, not controlled measurements of an isolated code change.
+
+The matched comparison is particularly important. Tosky and CHIDORI share both validators: Tosky alone passed 10 executions, CHIDORI alone passed 7, both passed 28, and both failed 135. Pooh shares one validator with Tosky: Pooh alone passed 6, Tosky alone passed 5, both passed 13, and both failed 66. Pooh's other validator differs and used a different search-server build. Thus even the narrow 1.11 percentage point aggregate gap is not a controlled causal estimate of Pooh's code advantage.
+
+All six executions failed on the same 61 of the 90 distinct race tasks. Copying the winner does not remove this shared failure set. Tosky passed both attempts on 16 tasks and at least one attempt on 22; Pooh passed both on 15 tasks and at least one on 25. Preserve Tosky's individual passing cases, including the five matched cases Pooh lost.
+
+Overall and raw race score must remain distinct. The final roster gives Pooh rank 1, CHIDORI rank 14 and Tosky rank 71, with Overall scores 23.25%, 22.14% and 21.24%. Their raw-score window ranks are 28, 114 and 57. Tosky is still eligible and not marked eliminated. Pooh's title also uses its preceding two races; Tosky's preceding window entries are seeded zero deltas. The captured challenge threshold was about 24.3308% Overall, including a margin of about 1.0808 percentage points. Merely matching Pooh's latest raw race score would not establish a challenge win. This threshold changes, and the next race's required raw score cannot be fixed before its field and window state are known.
+
+FAILURE CENSUS
+
+@@FAILURE_TABLE@@
+
+ORO reports at most one failure category per execution. These are observed outcome classes, not independent diagnoses of every violated condition. A procedure failure can coexist with a bad interpretation, and a stopped session can hide what would otherwise have been an incorrect order. In particular, V4's lower procedure-failure count is not evidence that 34 or 37 procedures were successfully repaired: its request-not-met and unfinished counts are also higher. Only changes from zero to a supported correct execution constitute a score gain. The category totals cannot be added to hypothetical recoveries or used as a predicted future score.
+
+@@STOPS@@
+
+The $5 provider cap is not the explanation for Tosky's result in this race: its two complete-run reported costs were $2.061962 and $1.998394, with zero and two inference errors. Nevertheless the agent has its own separate local admission rules: $0.035 per episode, a protected procedure reserve, conservative prompt-byte cost estimates, output-cap admission, role-attempt limits and repair guards. A local request can become unaffordable even while the provider account has plenty of headroom. Public feedback does not expose the model responses, reservation ledger or exception trace, so it cannot prove which local guard or exception produced each agent_stopped event.
+
+Nineteen of Tosky's 20 unfinished executions are on tasks that both other agents also failed in both attempts. Only one has a successful other-agent control, CHIDORI's soundbar execution on t-c64e06a91d. Completing every session is necessary, but simply forcing checkout would not establish a recovery of 20 successes. On that soundbar case Tosky also sends a non-registered product reference QU65870 at step 22 and receives an explicit rejection, later carts an observed candidate, reopens evidence and stops without checkout. Public feedback establishes that sequence, not the internal reason for the stop. A schema-valid argument is not proof that its product identity is valid.
+
+The full log bundle was unavailable for all six race runs; additional Tosky reasoning and episode-log artifact checks also returned ARTIFACT_NOT_FOUND after the reveal. Those states are recorded, rather than treated as downloaded logs. Public feedback has query=null and omits the original private race request and grading checks. Consequently this report distinguishes concrete observable mistakes from source-level mechanisms consistent with them. It does not claim to reconstruct every hidden procedure or the private grader.
+
+THE MOST CONSEQUENTIAL DEMONSTRABLE WEAKNESS
+
+The shared core does not consistently distinguish three different things: a candidate that seems suitable, a referenced value someone inferred, and a complete record of the exact pages and actions required to establish that value. This weakness affects accuracy, procedural success, search repetition and the ability to finish within a local budget. The smallest useful intervention is in the reference resolver and its handoff to finalization, not another layer of universal review calls.
+
+A concrete preservation case is race task t-290719466d, on the validator shared by all three. The shopper explicitly requires a jacket style different from that supplied through a named reference, and instructs the agent to follow any onward references. All three eventually put the same Korean-style jacket p-26a0c68a553a in the basket. Tosky passes; both champions fail with process_requirement_missed.
+
+Tosky opens the relevant sequence of pages at steps 14, 16, 18, 20, 22 and 25. It follows Miqivo -> Shiqilen -> Rimoanra -> Moriqino -> Shikovolen -> Lutara, and the terminal Lutara page p-bdd1ecfd0386 supplies style=casual. It buys at step 28. CHIDORI instead opens another Lutara page p-2e7e50fccdc3 at step 33, which does not supply that style; Pooh does the same at step 37 and buys at step 40. Their final product choice alone does not prove the requested evidence-gathering was performed. The visible missing terminal reference supports the procedure diagnosis, although the feedback does not identify a private grading check.
+
+This is not a new defect introduced by v4. AST comparison confirms G5B.trail, G5B.lacks_values, G5B.link_finder, G5B.link_query, E8.pending_refs and G4B.resolved are unchanged from original CHIDORI. The relevant v4 locations are:
+
+- E8.pending_refs, line 5519: pending state is based on whether a string key appears in ref_values.
+- G5B.lacks_values, line 8822: reference matching looks for value tokens across an attribute block and title; it does not establish an exact property/scope/unit relationship. It also skips some unit tokens following numbers.
+- G5B.trail, line 8869: the resolver repeatedly sends a large recent-record snapshot and reconstructed chain to a model.
+- Lines 8975-8977: an all-read chain with an empty last find field can populate ref_values even without done=true and with only a placeholder rather than a verified terminal value.
+- Lines 9031-9040: the final hold depends on the last lost list, remaining steps and a bounded hold counter. Work exhaustion can stop the hold; it does not itself establish resolution. If the loop exits before producing a new lost list, the hold can also be false while references remain pending.
+- G5B.link_finder/link_query, lines 9042 and 9107: repeated free-text queries and ambiguous same-shop hits remain dependent on heuristics rather than a durable per-hop acceptance record.
+
+The important repair is not to make the hold counter infinite. That would convert invalid checkouts into more unfinished zeroes. Resolution state must remain unknown until the evidence is complete, while an affordable, bounded next-hop action remains available before the normal planner consumes the remaining resources.
+
+OTHER VERIFIED WEAKNESSES THAT THE PLAN MUST PRESERVE OR ADDRESS SEPARATELY
+
+1. False decline after a viable candidate has already been read. In race task t-31c255974e, Tosky's failing execution opens a 48-cent digital multicolor watch p-76bafdb0fe75 at step 14. The record explicitly says water resistance=3 m and also 3000 mm. After the shopper fixes multicolor and the budget becomes 171 cents, the agent keeps searching variants containing 3m, repeatedly gets empty results, and declines at step 35. Tosky's sibling execution and both Pooh executions buy that same watch and pass. This is strong evidence of a false-infeasibility path and failure to reuse known evidence; the sealed failed check remains unknown. Empty free-text search is not proof that no opened candidate meets a requirement. The resolver should feed property-scoped evidence into candidate review instead of treating search wording as a substitute for evaluation.
+
+2. Interpretation errors already visible in the qualifiers. Tosky's two sweater executions receive substantially the same boat-neck wording. One buys the valid polyester boat-neck sweater and passes; the other searches framing phrases such as closed, with boat neck and declines despite reading the same listing. The inherited fold_reading/read_answers path admits model-produced need strings without validating their semantic boundaries. The source-coverage audit only adds omitted constraints and explicitly preserves the existing ledger; it cannot retract an invented constraint. Pooh also loses one execution on this task, after searching deadline prose as product keywords. A complete request-to-constraint normalization change should be a later isolated stage, not bundled into the first resolver repair.
+
+3. Property identity and quantities are not interchangeable. All three fail both qualifier executions on dining bench sets, single-pack cola and prescription glasses. The single-pack record chosen by Tosky has pack_size=1 but lacks the requested pack_type evidence; that suggests property confusion but does not reveal the private failed check. The glasses record chosen by Tosky does not establish the requested lens-power range. Do not add these products, property names or task-specific priorities to agent code. The reusable requirement is exact component/property scope and typed evidence, with unknown kept distinct from met.
+
+4. Interview effort can be wasted. Pooh's entire qualifier lead over Tosky comes from two task IDs: both sugar-free-cola executions and one additional footwear execution. In a sugar-free control, short rotating questions reach the single-pack preference; Tosky instead spends messages on irrelevant or crowded topics. Race traces also show requests to split questions, followed by broad bundles or unhelpful raw labels. Pooh's ch_width method is worth learning from: it initially keeps questions short and expands only with evidence about what the shopper answers. This is a separate improvement candidate, because it can also lose previously successful disclosures.
+
+5. Procedure guards are necessary but not sufficient. V4 has an explicit ProcedureControls.env interception of cart selection, ordering and declining. It checks the gate result. However an omitted initial duty can still appear as an empty valid duty list, and the source-coverage audit leaves workflow duties unchanged. Source-backed duty coverage and changes need a separate audit once the exact missing procedure can be established from available evidence. Do not label every race process failure as this parser omission: the public race request is absent, and the reference-chain example demonstrates a different observable mechanism.
+
+6. Unknown or contradictory review state still needs an executable repair. V4's newer controls preserve useful negative-review and cart-change protections, but another refusal-only guard would repeat the earlier failure pattern. Any additional terminal hold must name the missing evidence, its next permitted action and the resources available to perform it. No held local call should be described as an executed environment action.
+
+WHY POOH SHOULD NOT BE THE NEW BASELINE
+
+Pooh has useful ideas, not a demonstrated universal advantage. Its adaptive interview and four-state literal evidence model deserve focused experiments. However it shares the persistent qualifier failures and incomplete race reference paths. It has 400 methods on its main Cairn class and 169 top-level USE switches, so copying it introduces many coupled changes whose individual contribution is unknown. Its header describes a Cairn/Halo lineage with a reimplemented CHIDORI interviewer; it is not simply v4 with different constants.
+
+There are concrete source risks as well. _key_named at line 1545 accepts the same final word of a property name, so lens color and frame color can match even though their scopes differ. In finish, lines 11626-11630 and 11643-11647, the return value from gate is ignored before act sends the terminal action. act is not protected by V4's ProcedureControls.env interception. Its think retry loop increments logical calls outside physical retries and retries 402 before finally recording no credit. call_model accounts spend after a reply rather than reserving each physical attempt prospectively. These are static control-flow findings, not proof that each caused a particular race loss.
+
+Budget history makes wholesale adoption especially unattractive. Pooh's race-20 run costs were reported as $5.050063 and $5.067162, with 142 and 208 inference errors. Race-21 costs were $4.956297 and $4.992769. The public data do not identify every error as a 402, and reported costs are not independent billing receipts; in-flight completion can also exceed a nominal cap. Nevertheless this is observed cap exposure, not hypothetical concern. A bounded 12-feedback historical sample is included only for diagnosis, not as a representative failure census.
+
+V4's current operational advantage is real: lower cost, fewer provider errors, lower runtime, and matched successful cases Pooh loses. Retain those controls and replace the weak original component. Do not preserve every old heuristic merely because it is inherited; the reference resolver itself is precisely the part to change.
+
+ORDERED DEVELOPMENT AND RELEASE CONDITIONS
+
+Stage 0: freeze the evidence and baseline. Retain the three source hashes, all six race indexes, every available feedback record, the 180 qualifier records and the paired outcome matrix. Keep the five matched Tosky-over-Pooh wins and all existing Tosky passes as preservation controls. The archive is an offline test corpus, never a task/product lookup table inside an agent. Stage 0 is completed by this research; later stages are not implemented here.
+
+Stage 1: add a minimal reference-state representation without rerouting the healthy planner. For each live reference record the target item, property and scope, operator/polarity, exact source excerpt, current link locator, accepted opened page, evidence key/value, onward edge, terminal value and task revision. Distinguish unlocated, ambiguous, unread, verified onward, and verified terminal states. An exact fragment occurring in a source is necessary but not sufficient evidence of its meaning. Withdrawals or changed targets invalidate dependent proofs. Validate with synthetic fixtures and the saved public page sequences, without inferring sealed answers.
+
+Stage 2: implement one-hop resolution behind the existing reference interface. A proposed hop is accepted only when the seller/category/descriptors identify the intended page and its recorded observation is actually opened. Same-shop alternatives are not automatically interchangeable. A terminal value needs evidence for the target property and no unresolved onward edge for that property. An empty model field, exhausted retry counter, placeholder value or absent alternative cannot mark a chain complete. Keep a compatible view of ref_values for consumers, populated only from verified terminal state. Tasks without live references must follow the existing healthy path unchanged.
+
+Stage 3: make progress affordable before enforcing the new terminal condition. Use a compact prompt containing the one active locator, source page and relevant candidates; retain the ordinary supplied schemas and tool protocol. Reuse opened pages across references, avoid equivalent repeated queries and limit ambiguous candidate probing. Reserve enough model/output/environment capacity for the next hop and final required procedures. Keep V4's existing physical-attempt accounting, uncertain-charge reservations, 402 stop and monetary limit initially. If the normal planner cannot afford its large history, hand off to this compact state while a useful action is still affordable. Work limits bound spending, not truth. A repair failure must stay explicit; it must not become an unsupported buy or decline.
+
+Stage 4: review the resolver change separately. Test the complete and wrong-terminal versions of the denim chain, cross-category references, several references sharing pages, negative and approximate relationships, cycles, ambiguous same-shop hits, changed requirements, unavailable reference pages, missing attributes, malformed replies, unknown pricing, 402, and budget refusal. Also verify ordinary no-reference behavior, quantities, alternative constraints, stockout recovery, current-cart procedure approval and the five matched Tosky strengths. A new blocked action must have a tested feasible continuation. Offline replay must stop at a changed model decision; it cannot borrow a successful answer from another execution and claim a recovered score.
+
+Stage 5: only after the resolver is isolated and verified, consider separate candidates for initial/reply constraint normalization, source-backed procedure coverage, and adaptive interview width. Each requires its own ablation and preservation cases. Avoid combining a new resolver, new parser, model changes, new question ranking and increased spending in one version. That would make the next result uninterpretable and risk repeating the earlier regressions.
+
+Stage 6: prepare a new version file and review its reachable entrypoint, imports, runtime binding and integrity constraints. Static AST checks and offline fixtures do not certify backend acceptance or race accuracy. The original agent remains unchanged. A public-source fork needs substantial reachable original logic, and runtime property identities and unit relationships must come from the live request and observations, not fixed suite-derived registries. Paid evaluation is a later decision; none is authorized or run as part of this analysis.
+
+BUDGET AND SUCCESS CRITERIA
+
+The platform's $5 cap applies separately to each validator run of 90 tasks. Two validators can therefore produce two separately billed runs; $5 is not an overall account cap across both. This is separate from the user's desired per-run safety target.
+
+V4's current $0.035 local episode allocation totals $3.15 across 90 tasks, before considering whether its estimates bound actual provider charges. It is not a mathematical guarantee: the source explicitly uses a conservative estimate rather than a certified tokenizer and routed-price bound. Keep the protected margin and validate real reported spend against reservations, including retries and missing usage, rather than opening the account up to the cap. Today's mean $2.03 bill also does not prove that every difficult task can finish under the local per-task quote.
+
+The next candidate should be judged on paired gains AND losses, correct completion, unresolved-proof count, meaningful model outputs, requests per solved task, cost per correct task, complete-90-task cost, and runtime tails. Require existing passing fixtures and operational invariants to remain intact. The first scored comparison, if later authorized, should hold code/environment/provider settings fixed as far as possible and report shopper/model variation. A qualifier score alone is not evidence of race generalization.
+
+The previous offline work established selected mechanisms and preservation conditions, not a proven race improvement. This race shows why a guard that blocks bad actions is not sufficient and why an LLM-produced checklist is not equivalent to verified evidence. The corrective standard is a complete, affordable path from unresolved requirement to observed action and supported final decision. No public analysis or offline test can promise a perfect next unseen race. It can prevent the specific known implementation errors from being knowingly carried into the next submission.
+
+FILES AND PRIMARY REFERENCES
+
+- race-analysis.json and analyze_race.py: 540-result identity/reward validation, costs, end reasons, category census and matched gains/losses.
+- analysis.json and analyze_public.py: all three qualifiers, final standings, runtime versions and AST/source comparisons.
+- race-feedback/: exact public race feedback envelopes, grouped by agent.
+- qualifying-feedback/, chidori-qualifying-feedback/, pooh-qualifying-feedback/: 180 qualifier feedback records.
+- race-details/: released complete race indexes and refreshed costs.
+- race-cases/: readable selected public timelines; evidence-cases/: qualifying failures and passing controls.
+- source-snapshots/: immutable source copies and provenance; reference-source-audit.json: AST identity of the inherited resolver.
+- historical-pooh/: bounded historical diagnosis and the four complete run indexes.
+- race-collection-state.json and manifest.json: resumable collection state and SHA-256 inventory.
+- *artifact*availability*.json: explicit unavailable-artifact checks; no signed artifact URLs are stored.
+
+https://oroagents.com/docs/miners/scoring
+https://oroagents.com/docs/miners/monitoring
+https://oroagents.com/docs/miners/inference-providers
+https://oroagents.com/docs/miners/code-requirements
+https://api.oroagents.com/v1/public/races/50c9c9e5-335e-4964-bd6d-98af7178d3dd

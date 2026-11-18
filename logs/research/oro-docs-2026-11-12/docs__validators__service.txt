@@ -1,0 +1,73 @@
+
+Running as a Service
+systemd unit file for running the ORO validator as a background service with automatic restarts.
+For production deployments, run the validator as a systemd service. This ensures the validator starts on boot and restarts automatically on failure.
+
+Create the Unit File
+
+Replace your-user with your Linux username and update the WorkingDirectory path to match your oro clone location.
+
+sudo tee /etc/systemd/system/oro-validator.service << 'EOF'
+[Unit]
+Description=ORO Subnet Validator
+After=network-online.target docker.service
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=your-user
+WorkingDirectory=/path/to/oro
+EnvironmentFile=/path/to/oro/.env
+Environment=WALLET_NAME=my-validator
+ExecStart=/usr/bin/docker compose --profile validator up
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+Enable and Start
+
+sudo systemctl daemon-reload
+sudo systemctl enable oro-validator
+sudo systemctl start oro-validator
+
+The enable command ensures the service starts automatically on boot.
+
+Check Status
+
+sudo systemctl status oro-validator
+
+View Logs
+
+systemd captures all Docker Compose output through journald:
+
+# Follow logs in real time
+journalctl -u oro-validator -f
+
+# Last 200 lines
+journalctl -u oro-validator -n 200
+
+# Logs since last hour
+journalctl -u oro-validator --since "1 hour ago"
+
+Stop the Service
+
+sudo systemctl stop oro-validator
+
+To disable automatic startup on boot:
+
+sudo systemctl disable oro-validator
+
+Restart After Configuration Changes
+
+After editing the .env file or the unit file itself:
+
+sudo systemctl daemon-reload
+sudo systemctl restart oro-validator
+Automatic Updates
+Watchtower configuration for automatic Docker image updates between evaluation cycles.
+Validator Monitoring
+Log filtering, evaluation states, retry queue inspection, and debugging commands for the ORO validator.

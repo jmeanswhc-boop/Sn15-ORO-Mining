@@ -1,0 +1,45 @@
+Miner
+Store Chutes OAuth refresh token (legacy — use /inference-auth/chutes)
+Back-compat shim. Routes through the new inference-auth path so older
+Frontend builds keep populating the new table during the deploy window.
+Server URLloading...POST/v1/miner/chutes-authSendAuthorizationBody
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Request Body
+application/json
+TypeScript Definitions
+Use the request body type in TypeScript.Copyrefresh_token*string
+Chutes OAuth refresh token to store
+Response Body
+200
+application/json
+422
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/miner/chutes-auth" \  -H "Content-Type: application/json" \  -d '{    "refresh_token": "string"  }'200422
+{
+  "property1": true,
+  "property2": true
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+Pin agent version as race candidate
+Pin the given agent version as this miner's race candidate.
+Store an inference-provider credential
+Store (or overwrite) the miner's credential for the given provider.
+
+Validates the credential before persisting so bad input fails here rather
+than at first claim_work. The first stored provider becomes the miner's
+default; switching default afterward goes through the dedicated PATCH
+endpoint.

@@ -1,0 +1,849 @@
+"""Sandbox executor for running agents against problems in parallel."""
+
+import importlib.util
+import hashlib
+import json
+import logging
+import math
+import multiprocessing
+import os
+import queue
+import stat
+import sys
+import time
+import uuid
+from concurrent.futures import (
+    ThreadPoolExecutor,
+    TimeoutError as FutureTimeoutError,
+    as_completed,
+)
+from typing import Any, BinaryIO, Dict, List, Optional, Union, Callable
+from dataclasses import dataclass, field
+
+from src.agent.sandbox_status import SandboxProblemStatus
+
+logger = logging.getLogger(__name__)
+
+# Default "fork" start method on Linux deadlocks intermittently when
+# execute_problems_parallel forks children from a ThreadPoolExecutor:
+# fork-after-threads inherits locks (logging, malloc, mp.Queue feeder)
+# held by sibling threads, wedging the child until the per-problem
+# timeout fires. "forkserver" clones from a single-threaded helper
+# process and avoids the race.
+_MP_CTX = multiprocessing.get_context("forkserver")
+
+
+@dataclass
+class ErrorInfo:
+    """Structured error captured at the exception site (preserves type name)."""
+
+    type: str
+    message: str
+
+
+@dataclass
+class ExecutionResult:
+    """Result of executing an agent against a single problem."""
+
+    query: str
+    success: bool
+    result: Optional[Dict] = None
+    error: Union[str, ErrorInfo, None] = None
+    execution_time: float = 0.0
+    problem_id: Optional[str] = None
+    inference_failure_count: int = 0
+    inference_total: int = 0
+    inference_usage: Optional[Dict[str, Any]] = field(default=None, repr=False)
+    include_private_usage: bool = field(default=False, repr=False)
+    proxy_calls: Optional[List[Dict]] = None
+    status: SandboxProblemStatus = field(default=SandboxProblemStatus.FAILED)
+
+
+def load_problems(problem_file: str) -> List[Dict]:
+    """
+    Load problems from a JSONL file.
+
+    Args:
+        problem_file: Path to JSONL file containing problems
+
+    Returns:
+        List of problem dictionaries (with reward removed)
+    """
+    problems = []
+    try:
+        with open(problem_file, "r", encoding="utf-8") as f:
+            for line_num, line in enumerate(f, 1):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    problem = json.loads(line)
+                    if "query" not in problem:
+                        logger.warning(
+                            f"Skipping line {line_num}: missing 'query' field"
+                        )
+                        continue
+                    # Remove reward - agent should not see the expected answer
+                    if "reward" in problem:
+                        problem = {k: v for k, v in problem.items() if k != "reward"}
+                    problems.append(problem)
+                except json.JSONDecodeError as e:
+                    logger.error(
+                        f"Failed to parse line {line_num} in {problem_file}: {e}"
+                    )
+                    continue
+    except FileNotFoundError:
+        logger.error(f"Problem file not found: {problem_file}")
+        return []
+    except Exception as e:
+        logger.error(f"Error loading problems from {problem_file}: {e}")
+        return []
+
+    logger.info(f"Loaded {len(problems)} problems from {problem_file}")
+    return problems
+
+
+def load_agent_from_file(file_path: str) -> Callable:
+    """
+    Load agent_main function from a Python file.
+
+    Args:
+        file_path: Path to the agent Python file
+
+    Returns:
+        The agent_main function from the loaded module
+
+    Raises:
+        FileNotFoundError: If the file doesn't exist
+        ImportError: If the module can't be loaded or agent_main is missing
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Agent file not found: {file_path}")
+
+    if not os.path.isfile(file_path):
+        raise ValueError(f"Agent file path is not a file: {file_path}")
+
+    module_name = f"user_agent_{abs(hash(file_path))}"
+
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not create module spec from file: {file_path}")
+
+    module = importlib.util.module_from_spec(spec)
+    # Register before exec so dataclass + PEP 563 annotations can resolve
+    # string types via sys.modules[cls.__module__] during class definition.
+    sys.modules[module_name] = module
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        sys.modules.pop(module_name, None)
+        raise
+
+    if not hasattr(module, "agent_main"):
+        raise ImportError(f"Module {file_path} does not define 'agent_main' function")
+
+    agent_main = getattr(module, "agent_main")
+    if not callable(agent_main):
+        raise ImportError(f"'agent_main' in {file_path} is not callable")
+
+    return agent_main
+
+
+def _load_agent(agent_file: Optional[str] = None) -> Callable:
+    """Load agent_main function from file or the reference environment agent.
+
+    Args:
+        agent_file: Optional path to agent file. If None, uses src.agent.environment_agent.
+
+    Returns:
+        The agent_main callable.
+    """
+    if agent_file:
+        return load_agent_from_file(agent_file)
+    from src.agent.environment_agent import agent_main
+
+    return agent_main
+
+
+# An entry counts only with a valid request count; the other counters are
+# summed once admitted but cannot admit an entry on their own.
+_ADMITTING_COUNTERS = ("inference_success", "inference_total")
+_INFERENCE_COUNTERS = (
+    *_ADMITTING_COUNTERS,
+    "inference_failed",
+    "inference_cost_usd",
+    "inference_cost_missing",
+    "inference_byok_cost_usd",
+    "inference_byok_requests",
+    "prompt_tokens",
+    "cached_tokens",
+    "completion_tokens",
+)
+
+
+def _numeric_counter_map(entry: dict, keys: tuple[str, ...]) -> dict[str, int | float]:
+    numeric = {}
+    for key in keys:
+        value = entry.get(key)
+        if (
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and math.isfinite(value)
+            and value >= 0
+        ):
+            numeric[key] = value
+    return numeric
+
+
+def _numeric_inference_counters(entry: dict) -> dict[str, int | float]:
+    return _numeric_counter_map(entry, _INFERENCE_COUNTERS)
+
+
+def _model_inference_counters(
+    entry: dict, distribution: str
+) -> dict[str, dict[str, int | float]]:
+    models = entry.get(distribution)
+    if not isinstance(models, dict):
+        return {}
+    sanitized = {}
+    for model, counters in models.items():
+        if not isinstance(model, str) or not isinstance(counters, dict):
+            continue
+        numeric = _numeric_counter_map(
+            counters,
+            (
+                "requests",
+                "failed_requests",
+                "prompt_tokens",
+                "cached_tokens",
+                "completion_tokens",
+                "cost_usd",
+                "cost_missing",
+                "byok_cost_usd",
+                "byok_requests",
+            ),
+        )
+        if numeric:
+            sanitized[model[:200] or "Unknown model"] = numeric
+    return sanitized
+
+
+def _merge_model_inference_counters(total: dict, entry: dict) -> None:
+    for distribution in ("requested_models", "served_models"):
+        for model, counters in _model_inference_counters(entry, distribution).items():
+            model_total = total.setdefault(distribution, {}).setdefault(model, {})
+            for key, value in counters.items():
+                model_total[key] = model_total.get(key, 0) + value
+
+
+# Composed dialogues run ~1.4 MB per episode.
+MAX_SANDBOX_OUTPUT_BYTES = 512 * 1024 * 1024
+
+
+def open_regular_file(
+    path: str | os.PathLike, max_bytes: int, *, single_link: bool = False
+) -> BinaryIO:
+    """Open a sandbox output file of at most ``max_bytes`` without blocking.
+
+    Callers must keep the parent path evaluator-controlled; resolving it allows
+    trusted aliases such as a platform's symlinked temporary directory.
+    ``single_link`` also rejects hard-linked files. Use it only where the agent
+    cannot create links itself; on agent-written output it would let one extra
+    link block every read.
+    """
+    parent_path = os.path.realpath(os.path.dirname(path) or ".")
+    parent_fd = os.open(parent_path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        fd = os.open(
+            os.path.basename(path),
+            os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+            dir_fd=parent_fd,
+        )
+    finally:
+        os.close(parent_fd)
+    try:
+        metadata = os.fstat(fd)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise ValueError(f"{path} must be a regular file")
+        if single_link and metadata.st_nlink != 1:
+            raise ValueError(f"{path} must have exactly one link")
+        if metadata.st_size > max_bytes:
+            raise ValueError(f"{path} exceeds {max_bytes} bytes")
+        return os.fdopen(fd, "rb")
+    except BaseException:
+        os.close(fd)
+        raise
+
+
+def read_regular_file(
+    path: str | os.PathLike, max_bytes: int, *, single_link: bool = False
+) -> bytes:
+    """Read a sandbox output file, bounded to ``max_bytes``."""
+    with open_regular_file(path, max_bytes, single_link=single_link) as source:
+        content = source.read(max_bytes + 1)
+    if len(content) > max_bytes:
+        raise ValueError(f"{path} exceeds {max_bytes} bytes")
+    return content
+
+
+def append_attempt(earlier: str | os.PathLike, later: str | os.PathLike, max_bytes: int) -> None:
+    """Append a re-run's output file ``later`` to the run's own ``earlier``.
+
+    Both live in directories the sandbox can write, so neither is trusted: each is read without
+    following links or blocking (a FIFO, a symlink or an oversized file reads as nothing), and the
+    merged bytes go to a new file this process creates, then replace ``earlier``. Writing through
+    ``earlier`` itself would follow an agent-planted link as root.
+    """
+
+    def read(path) -> bytes:
+        try:
+            return read_regular_file(path, max_bytes)
+        except (OSError, ValueError):
+            return b""
+
+    extra = read(later)
+    if not extra:
+        return
+    body = read(earlier)
+    if body and not body.endswith(b"\n"):
+        body += b"\n"
+    merged = os.path.join(os.path.dirname(earlier) or ".", f".merge-{uuid.uuid4().hex}")
+    try:
+        fd = os.open(merged, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
+        with os.fdopen(fd, "wb") as out:
+            out.write(body + extra)
+        os.replace(merged, earlier)
+    except OSError:  # e.g. ``earlier`` is a directory: optional output must never change the evaluation
+        logger.warning("could not merge re-run output into %s", earlier)
+        try:
+            os.unlink(merged)
+        except OSError:
+            pass
+
+
+def read_inference_stats(
+    path: str | list[str], execution_id: str | None = None
+) -> dict[str, dict]:
+    """Merge latest cumulative counters from one or more isolated files.
+
+    With ``execution_id``, only lines written by that execution count, so repeated
+    runs of one problem that share a stats file stay separate.
+    """
+
+    latest_by_source = {}
+    paths = [path] if isinstance(path, str) else path
+    for source, stats_path in enumerate(paths):
+        try:
+            found = {}
+            with open_regular_file(stats_path, MAX_SANDBOX_OUTPUT_BYTES) as f:
+                read = 0
+                for line in f:
+                    read += len(line)  # the file can grow after the size check at open
+                    if read > MAX_SANDBOX_OUTPUT_BYTES:
+                        raise ValueError(f"{stats_path} exceeds the size limit")
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entry = json.loads(line)
+                    except ValueError:  # malformed JSON or invalid UTF-8
+                        continue
+                    if not isinstance(entry, dict):
+                        continue
+                    if "dialogue" in entry:
+                        nested = entry.get("_shadow_inference_usage")
+                        if not isinstance(nested, dict):
+                            continue
+                        entry = {**nested, "problem_id": entry.get("problem_id")}
+                    if execution_id is not None and entry.get("execution_id") != execution_id:
+                        continue
+                    # Each client writes cumulative totals; keep the latest per client.
+                    key = (str(entry.get("problem_id")), source, str(entry.get("instance_id") or ""))
+                    found[key] = entry
+            latest_by_source.update(found)
+        except FileNotFoundError:
+            pass
+        except (OSError, ValueError) as exc:
+            logger.warning("Skipping inference stats %s: %s", stats_path, exc)
+    totals: dict[str, dict] = {}
+    for (problem_id, _source, _instance), entry in latest_by_source.items():
+        numeric = _numeric_inference_counters(entry)
+        if numeric.keys().isdisjoint(_ADMITTING_COUNTERS):
+            continue
+        total = totals.setdefault(problem_id, {"problem_id": problem_id})
+        for counter in _INFERENCE_COUNTERS:
+            total[counter] = total.get(counter, 0) + numeric.get(counter, 0)
+        _merge_model_inference_counters(total, entry)
+    return totals
+
+
+def merge_inference_stats(*sources: dict[str, dict]) -> dict[str, dict]:
+    """Add independent episode counters from trusted or isolated sources."""
+
+    totals: dict[str, dict] = {}
+    for source in sources:
+        for problem_id, entry in source.items():
+            if not isinstance(entry, dict):
+                continue
+            numeric = _numeric_inference_counters(entry)
+            if numeric.keys().isdisjoint(_ADMITTING_COUNTERS):
+                continue
+            total = totals.setdefault(problem_id, {"problem_id": problem_id})
+            for counter, value in numeric.items():
+                total[counter] = total.get(counter, 0) + value
+            _merge_model_inference_counters(total, entry)
+    return totals
+
+
+def _read_inference_stats(path: str, problem_id: str) -> tuple:
+    """Return the latest failure and request counts for one problem."""
+
+    entry = read_inference_stats(path).get(str(problem_id), {})
+    return entry.get("inference_failed", 0), entry.get("inference_total", 0)
+
+
+def _read_request_log(path: str) -> List[Dict]:
+    """Read all proxy call entries from the JSONL sidecar file."""
+    entries = []
+    try:
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    entries.append(json.loads(line))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        pass
+    return entries
+
+
+def _problem_id_for(problem: Dict) -> str:
+    """Return an explicit problem id or a stable local-suite fallback id."""
+    problem_id = problem.get("problem_id") or problem.get("id")
+    if problem_id:
+        return str(problem_id)
+
+    payload = json.dumps(problem, sort_keys=True, separators=(",", ":"), default=str)
+    digest = hashlib.sha1(payload.encode("utf-8")).hexdigest()[:16]
+    return f"local-{digest}"
+
+
+def _run_in_process(
+    problem: Dict,
+    agent_file: Optional[str],
+    result_queue,
+    stats_file: Optional[str] = None,
+    request_log_file: Optional[str] = None,
+    execution_id: Optional[str] = None,
+) -> None:
+    """Target function executed in a child process.
+
+    Loads the agent, runs it against *problem*, and puts the outcome into
+    *result_queue*.  Any exception is caught and sent back as an error string
+    so the parent never blocks on a dead queue.
+    """
+    if stats_file:
+        os.environ["INFERENCE_STATS_FILE"] = stats_file
+    if execution_id:
+        os.environ["INFERENCE_STATS_EXECUTION_ID"] = execution_id
+    if request_log_file:
+        os.environ["REQUEST_LOG_FILE"] = request_log_file
+    os.environ["PROBLEM_DATA"] = json.dumps(problem)
+    try:
+        agent_fn = _load_agent(agent_file)
+        result = agent_fn(problem)
+        result_queue.put(("success", result))
+    except Exception as e:
+        result_queue.put(("error", {"type": type(e).__name__, "message": str(e)}))
+
+
+def execute_single_problem(
+    problem: Dict,
+    timeout: float = 300.0,
+    agent_file: Optional[str] = None,
+) -> ExecutionResult:
+    """Execute agent_main() for a single problem with timeout.
+
+    Spawns the agent in a child **process** so that a timed-out execution can
+    be reliably terminated via SIGTERM/SIGKILL (unlike threads which continue
+    running after ``future.result(timeout=...)`` raises).
+
+    Args:
+        problem: Problem dictionary with 'query' key (reward removed).
+        timeout: Maximum execution time in seconds.
+        agent_file: Path to agent file (loaded in child process). If None,
+            uses the reference ``src.agent.environment_agent``.
+
+    Returns:
+        ExecutionResult with execution outcome.
+    """
+    query = problem.get("query", "")
+    problem_id = _problem_id_for(problem)
+    start_time = time.time()
+
+    # All processes append to a shared JSONL file alongside output.jsonl.
+    # Each line includes problem_id so the reader can match.
+    output_file = os.environ.get("SANDBOX_OUTPUT_FILE", "")
+    output_dir = os.path.dirname(output_file) if output_file else "/tmp"
+    stats_file = os.path.join(output_dir, "inference_stats.jsonl")
+    execution_id = uuid.uuid4().hex  # scopes this run's lines in the shared stats file
+    request_log_file = os.path.join(output_dir, f"request_log_{problem_id}.jsonl")
+    result_queue: multiprocessing.Queue = _MP_CTX.Queue()
+    process = _MP_CTX.Process(
+        target=_run_in_process,
+        args=(problem, agent_file, result_queue, stats_file, request_log_file, execution_id),
+    )
+    process.start()
+    deadline = time.monotonic() + timeout
+    queued_result = None
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        try:
+            queued_result = result_queue.get(timeout=min(remaining, 0.1))
+            break
+        except queue.Empty:
+            if not process.is_alive():
+                # A normal exit flushes the queue; recover a result that arrived
+                # after the timed read. Abnormal exits may leave a partial item.
+                if process.exitcode == 0:
+                    try:
+                        queued_result = result_queue.get_nowait()
+                    except queue.Empty:
+                        pass
+                break
+
+    process.join(timeout=max(0.0, deadline - time.monotonic()))
+    execution_time = time.time() - start_time
+
+    timed_out = process.is_alive()
+    if timed_out:
+        logger.warning(
+            f"Problem '{query}' exceeded timeout of {timeout}s, terminating process"
+        )
+        process.terminate()
+        process.join(timeout=5)
+        if process.is_alive():
+            process.kill()
+            process.join()
+
+    inference_usage = read_inference_stats(stats_file, execution_id).get(str(problem_id))
+    include_private_usage = problem.get("category") == "generated_environment"
+    inf_failures = int((inference_usage or {}).get("inference_failed", 0))
+    inf_total = int((inference_usage or {}).get("inference_total", 0))
+    proxy_calls = _read_request_log(request_log_file)
+
+    if timed_out:
+        result_queue.close()
+        return ExecutionResult(
+            query=query,
+            success=False,
+            error=f"Execution exceeded timeout of {timeout}s",
+            execution_time=execution_time,
+            problem_id=problem_id,
+            inference_failure_count=inf_failures,
+            inference_total=inf_total,
+            inference_usage=inference_usage,
+            include_private_usage=include_private_usage,
+            proxy_calls=proxy_calls or None,
+            status=SandboxProblemStatus.TIMED_OUT,
+        )
+
+    try:
+        if queued_result is not None:
+            status, data = queued_result
+            if status == "success":
+                return ExecutionResult(
+                    query=query,
+                    success=True,
+                    result=data,
+                    execution_time=execution_time,
+                    problem_id=problem_id,
+                    inference_failure_count=inf_failures,
+                    inference_total=inf_total,
+                    inference_usage=inference_usage,
+                    include_private_usage=include_private_usage,
+                    proxy_calls=proxy_calls or None,
+                    status=SandboxProblemStatus.SUCCESS,
+                )
+            error_payload: Union[str, ErrorInfo]
+            if isinstance(data, dict):
+                error_payload = ErrorInfo(
+                    type=str(data.get("type", "RuntimeError")),
+                    message=str(data.get("message", "")),
+                )
+            else:
+                error_payload = str(data)
+            return ExecutionResult(
+                query=query,
+                success=False,
+                error=error_payload,
+                execution_time=execution_time,
+                problem_id=problem_id,
+                inference_failure_count=inf_failures,
+                inference_total=inf_total,
+                inference_usage=inference_usage,
+                include_private_usage=include_private_usage,
+                proxy_calls=proxy_calls or None,
+                status=SandboxProblemStatus.FAILED,
+            )
+        return ExecutionResult(
+            query=query,
+            success=False,
+            error=f"Process exited with code {process.exitcode} but produced no result",
+            execution_time=execution_time,
+            problem_id=problem_id,
+            inference_failure_count=inf_failures,
+            inference_total=inf_total,
+            inference_usage=inference_usage,
+            include_private_usage=include_private_usage,
+            proxy_calls=proxy_calls or None,
+            status=SandboxProblemStatus.FAILED,
+        )
+    finally:
+        result_queue.close()
+
+
+def _classify_error_type(
+    error_message: Optional[str], status: SandboxProblemStatus
+) -> str:
+    """Best-effort error type classification from message + status.
+
+    No traceback — sandbox stderr already captured in the logs bundle.
+    """
+    if status == SandboxProblemStatus.TIMED_OUT:
+        return "TimeoutError"
+    if not error_message:
+        return "UnknownError"
+    # Cheap heuristic: error_message often starts with the exception class name
+    head = error_message.split(":", 1)[0].strip()
+    return head if head.isidentifier() else "RuntimeError"
+
+
+def _format_single_result(result: ExecutionResult) -> str:
+    return json.dumps(build_result_envelope(result))
+
+
+def build_result_envelope(result: ExecutionResult) -> Dict[str, Any]:
+    """Canonical on-the-wire shape for an ExecutionResult.
+
+    Stamps per-step extra_info, distributes proxy_calls across dialogue steps,
+    and normalizes errors to {type, message}. Used by both the JSONL writer
+    and the HTTP server so consumers see identical envelopes.
+    """
+    dialogue: Optional[List[Dict]] = None
+    summary_calls = [
+        call for call in (result.proxy_calls or []) if call.get("kind") != "attempt"
+    ]
+    if result.success and isinstance(result.result, list):
+        dialogue = result.result
+        for i, step in enumerate(dialogue):
+            step.setdefault("extra_info", {})
+            step["extra_info"].setdefault("step", i + 1)
+            step["extra_info"].setdefault("query", result.query)
+            step["extra_info"].setdefault("timestamp", int(time.time() * 1000))
+            if result.problem_id:
+                step["extra_info"].setdefault("problem_id", result.problem_id)
+        # Stamp per-problem execution time onto the first step only — consumers
+        # that look at dialogue[0].extra_info still find it there.
+        if dialogue:
+            dialogue[0]["extra_info"].setdefault(
+                "execution_time", result.execution_time
+            )
+        # Distribute proxy calls across steps by timestamp approximation.
+        # Calls before the first step go to step 0; calls between step N and
+        # N+1 go to step N.
+        if result.proxy_calls and dialogue:
+            step_timestamps = [s["extra_info"].get("timestamp", 0) for s in dialogue]
+            # Per-attempt entries (kind="attempt") are diagnostic only — keep
+            # them out of the trajectory the judge sees.
+            buckets: Dict[int, List[Dict]] = {}
+            for call in summary_calls:
+                call_ts = call.get("timestamp", 0)
+                target = 0
+                for i, st in enumerate(step_timestamps):
+                    if st <= call_ts:
+                        target = i
+                    else:
+                        break
+                buckets.setdefault(target, []).append(call)
+            for idx, calls in buckets.items():
+                dialogue[idx]["extra_info"]["proxy_calls"] = calls
+
+    error_obj: Optional[Dict[str, Any]] = None
+    if not result.success and result.error is not None:
+        if isinstance(result.error, ErrorInfo):
+            error_obj = {"type": result.error.type, "message": result.error.message}
+        else:
+            error_obj = {
+                "type": _classify_error_type(result.error, result.status),
+                "message": result.error,
+            }
+
+    envelope = {
+        "problem_id": result.problem_id,
+        "status": result.status.value,
+        "execution_time": result.execution_time,
+        "inference_failure_count": result.inference_failure_count,
+        "inference_total": result.inference_total,
+        "error": error_obj,
+        "dialogue": dialogue,
+    }
+    if result.include_private_usage and result.inference_usage is not None:
+        envelope["_shadow_inference_usage"] = result.inference_usage
+    if result.include_private_usage and summary_calls:
+        envelope["_shadow_proxy_calls"] = summary_calls
+    return envelope
+
+
+def execute_problems_parallel(
+    problems: List[Dict],
+    max_workers: Optional[int] = None,
+    timeout_per_problem: float = 300.0,
+    agent_file: Optional[str] = None,
+    output_file: Optional[str] = None,
+) -> List[ExecutionResult]:
+    """Execute multiple problems in parallel, writing results incrementally.
+
+    Each problem runs in its own child process (via ``execute_single_problem``)
+    so that timeouts reliably kill the work.  A ``ThreadPoolExecutor`` controls
+    concurrency — at most *max_workers* processes run simultaneously.
+
+    When *output_file* is provided, each result is appended and flushed
+    as its future completes, enabling real-time progress monitoring.
+    """
+    if not problems:
+        logger.warning("No problems to execute")
+        return []
+
+    if max_workers is None:
+        max_workers = multiprocessing.cpu_count()
+
+    if agent_file:
+        logger.info(f"Using agent from {agent_file}")
+    else:
+        logger.info("Using reference agent from src.agent.environment_agent")
+
+    logger.info(
+        f"Executing {len(problems)} problems with {max_workers} workers, timeout={timeout_per_problem}s"
+    )
+
+    fout = None
+    if output_file:
+        from pathlib import Path
+
+        Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+        fout = open(output_file, "a", encoding="utf-8")
+
+    results: List[ExecutionResult] = []
+    start_time = time.time()
+
+    try:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_problem = {
+                executor.submit(
+                    execute_single_problem, problem, timeout_per_problem, agent_file
+                ): problem
+                for problem in problems
+            }
+
+            completed = 0
+            for future in as_completed(future_to_problem):
+                completed += 1
+                try:
+                    result = future.result(timeout=timeout_per_problem + 30)
+                    results.append(result)
+                    status = "OK" if result.success else "FAIL"
+                    logger.info(
+                        f"[{completed}/{len(problems)}] {status} {result.query[:50]}... "
+                        f"({result.execution_time:.2f}s)"
+                    )
+
+                    if fout is not None:
+                        fout.write(json.dumps(build_result_envelope(result)) + "\n")
+                        fout.flush()
+
+                except FutureTimeoutError:
+                    problem = future_to_problem[future]
+                    query = problem.get("query", "unknown")
+                    problem_id = _problem_id_for(problem)
+                    logger.error(
+                        f"Future for problem '{query}' timed out during result retrieval"
+                    )
+                    results.append(
+                        ExecutionResult(
+                            query=query,
+                            success=False,
+                            error="Future timeout during result retrieval",
+                            execution_time=timeout_per_problem,
+                            problem_id=problem_id,
+                            status=SandboxProblemStatus.TIMED_OUT,
+                        )
+                    )
+                except Exception as e:
+                    problem = future_to_problem[future]
+                    query = problem.get("query", "unknown")
+                    problem_id = _problem_id_for(problem)
+                    logger.error(
+                        f"Unexpected error retrieving result for '{query}': {e}"
+                    )
+                    results.append(
+                        ExecutionResult(
+                            query=query,
+                            success=False,
+                            error=f"Unexpected error: {str(e)}",
+                            execution_time=0.0,
+                            problem_id=problem_id,
+                            status=SandboxProblemStatus.FAILED,
+                        )
+                    )
+    finally:
+        if fout is not None:
+            fout.close()
+
+    total_time = time.time() - start_time
+    succeeded = sum(1 for r in results if r.success)
+    logger.info(
+        f"Completed {len(results)} problems in {total_time:.2f}s "
+        f"({succeeded} succeeded, {len(results) - succeeded} failed)"
+    )
+
+    return results
+
+
+def format_results(results: List[ExecutionResult]) -> Dict:
+    """
+    Format execution results for evaluation.
+
+    Args:
+        results: List of ExecutionResult objects
+
+    Returns:
+        Dictionary with formatted results
+    """
+    completed = [r for r in results if r.success]
+    failed = [r for r in results if not r.success]
+
+    total_time = sum(r.execution_time for r in results)
+    avg_time = total_time / len(results) if results else 0.0
+
+    return {
+        "summary": {
+            "total": len(results),
+            "completed": len(completed),
+            "failed": len(failed),
+            "completion_rate": len(completed) / len(results) if results else 0.0,
+            "total_execution_time": total_time,
+            "average_execution_time": avg_time,
+        },
+        "results": [
+            {
+                "query": r.query,
+                "success": r.success,
+                "result": r.result,
+                "error": r.error,
+                "execution_time": r.execution_time,
+            }
+            for r in results
+        ],
+    }

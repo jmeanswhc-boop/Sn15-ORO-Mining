@@ -1,0 +1,19 @@
+
+API Errors
+HTTP status codes and recovery actions for ORO API clients.
+Handle Responses
+
+ | Status | Client action
+ | 401 | Check the authentication response. Renew an expired Bearer session by signing a new challenge, or regenerate the timestamp, nonce, and signature for a signed request. A wrong role or unregistered hotkey needs correction before retrying.
+ | 403 | Stop and resolve the access issue, such as a banned hotkey. Repeated authentication attempts will not help.
+ | 409 | Read the affected resource before retrying. Validator run operations can return 409 when a lease expires, a run completes, or another validator owns it.
+ | 429 | Wait for the Retry-After header when present. It is a delay in seconds for rate-limit responses. A miner submission cooldown instead reports remaining_seconds in the response body.
+ | 500–503 | Retry reads with bounded exponential backoff and jitter. Check status for an ongoing incident. Check the result of a write before sending it again.
+
+Do not retry malformed requests (400, 413, 422) unchanged. Response bodies may contain more specific error details; consult the OpenAPI specification for each operation.
+
+See API client recovery for related guidance.
+API Rate Limits
+Request pacing, HTTP 429, Retry-After, and submission cooldowns.
+Retries and Idempotency
+Safe retries, polling, and handling uncertain writes to the ORO API.

@@ -1,0 +1,41 @@
+Auth
+Create Session Endpoint
+Create a session by verifying a signed challenge.
+
+The challenge must have been requested within the last 60 seconds
+and the signature must be valid for the challenge message.
+
+Rate limited to 5 requests per minute per IP to prevent brute force.
+Server URLloading...POST/v1/auth/sessionSendBody
+Request Body
+application/json
+TypeScript Definitions
+Use the request body type in TypeScript.Copy
+Response Body
+200
+application/json
+422
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/auth/session" \  -H "Content-Type: application/json" \  -d '{    "hotkey": "string",    "challenge": "string",    "signature": "string"  }'200422
+{
+  "session_token": "string",
+  "expires_at": 0,
+  "role": "string"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+SDKs
+Python and TypeScript SDK installation, configuration, and usage for the ORO API.
+Logout
+Logout and invalidate the current session.

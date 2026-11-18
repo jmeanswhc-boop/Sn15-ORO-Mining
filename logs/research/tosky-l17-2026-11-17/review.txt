@@ -1,0 +1,177 @@
+HISTORICAL REPORT - pre-correction source.
+Current prompt-format correction: ../tosky-l17-format-correction/review.txt
+The source hash and codec measurements below describe the earlier build.
+
+Tosky_l17: implementation and offline review
+
+Artifact: agents/Tosky_l17.py
+SHA-256: 1f27e0d3d07655833f4829b0726514d20dff243231aa8ce7afedbb10a64ecd3c
+Size: 367,113 bytes, 6,248 lines
+Baseline: public Miyagi v2, the previously reviewed Cairn derivative.
+The archived Miyagi v2 and Cairn v2 sources and ICDI_r2 are unchanged; hashes are in source-review.json.
+
+Source: AI Agents in Depth, Chapter 2, printed pages 38-85 (PDF pages 46-93).
+The relevant sections are 2.2 API context, 2.3 cache-friendly context, 2.4 prompt authoring,
+2.5 dynamic prompts, 2.6 controller status and 2.7 compression. This implementation adapts
+their mechanisms to ORO's hosted inference and single-file sandbox. It does not require
+new world tools, filesystem memory, server KV tensors or a summarization model.
+
+1. Instructions, task data and workflow
+
+The planner uses a workflow prompt with explicit decision boundaries instead of a long,
+flat list of instructions. The always-loaded guide is 5,228 characters versus
+9,442 in the baseline (44.6% shorter). This is character count,
+not a measured token reduction. Specialist instructions are system messages; requests,
+records, replies and the current procedure stage are separately labeled task data.
+Eight JSON specialists plus the interview ranker/parser use this separation. Prompts retain
+the existing output contracts, so the Cairn controller can consume their results.
+
+A deterministic tail status carries the complete current ledger, retired constraints,
+reference values, cart, step count, message use/reserve, model attempts and accounted cost.
+It does not force the model to reconstruct these counters from old messages. Source
+observations remain authoritative evidence; the derived ledger can still be mistaken.
+The guide distinguishes facts, controller advice and instructions embedded in store data.
+
+2. Stable prefixes and provider caching
+
+The world-supplied tool definitions stay unchanged and in their original order for planner
+inference. The existing offered() restrictions still govern execution, and available action
+names appear in the tail status. No tools, argument schemas or tool descriptions are added.
+
+Anthropic requests receive explicit five-minute cache breakpoints on the fixed prefix,
+the previous planner boundary and the latest boundary, with at most three inserted marks.
+One-off specialist data is not marked for caching; its reusable instructions are. Request
+annotations are applied to copies, so historical messages are not edited in place. OpenAI
+fallback requests retain their standard format and can use automatic provider caching.
+Observed prompt, completion, cache-read, cache-write and charge fields are returned in
+inference_usage trace entries. These diagnostics will distinguish actual cache reads from
+an intended cache-friendly prefix during future paid verification.
+
+This is API prompt caching. ORO does not expose raw server KV tensors. Exact prefix
+matching makes reuse possible; provider placement, eligibility, cache lifetime and actual
+hits remain provider decisions. No live cache hit or latency gain was measured here.
+
+3. Dynamic guidance
+
+References, compatibility, optimization and procedures are separate instruction modules.
+They are appended when public task/state conditions make them relevant and emitted once
+per context epoch. A new epoch after compaction reloads needed active guidance beside the
+fresh status. The core retains the safety-critical workflow even before any module loads.
+There is no model-selected plugin, filesystem skill loader or extra tool.
+
+4. Information-preserving context
+
+Every successful environment response is copied into an episode-local evidence log before
+Cairn restores spellings or merges fields. Each entry keeps the source tool, arguments,
+step and exact parsed response. The opening observation is retained too. Pending source
+observations enter the planner context once; long source text is not discarded. Specialist
+candidate views carry complete records with source tool/step provenance. Cached previews,
+cart records, audits, replacements, references and long interpreted replies no longer cut
+through encoded JSON or truncate decisive record fields at arbitrary character offsets.
+Candidate selection/count limits remain the controller's existing task-specific views;
+the full received evidence remains in the source history.
+
+The generic cairn-pack-v1 format removes repeated JSON keys via positional tables and
+reuses exact repeated text through explicit reference paths. Canonical JSON strings and
+multiline text can be packed reversibly. All dictionaries and text come from current
+runtime data: this is not a fixed product/unit/attribute table. Literal marker-like source
+data is escaped. Missing keys, null, booleans, numbers, empty values, conflicting fields,
+key spelling, text and order are preserved. The agent checks reconstruction against the
+original compact JSON serialization before using a packed display. If packing would
+increase size, it uses plain JSON instead. There are no paid summarization calls.
+
+The old history trimmer replaced early tool messages with 400-character fragments.
+The new trimmer waits until history exceeds the cost-oriented 120,000-byte threshold,
+requires a complete tool-call/result boundary, and checkpoints the entire history only
+when reversible packing saves at least 15%. It retains the original history in memory,
+verifies reconstruction, starts a new cache epoch and uses threshold hysteresis. Repeated
+checkpoints flatten prior history instead of nesting old checkpoint strings. Old reasoning
+is treated as historical data, not retained as active provider thinking after a changed
+prefix. If compression cannot help, history is kept intact; admission can deny an oversized
+inference request rather than silently deleting evidence. Lossless packing cannot guarantee
+a small representation for arbitrary unique data.
+
+5. Cost controls
+
+Allocation: $0.050 per episode, including a $0.006 completion reserve. Ordinary work has
+$0.044 available; recovery can use the reserve, and every inference request still passes the
+same admission check. For 90 tasks this targets $4.50, leaving $0.50 below the race cap;
+for 30 qualifiers it targets $1.50, leaving $0.50 below the qualifying cap. This is an internal
+allocation, not a modification to ORO's run key or the provider's account cap.
+
+Each physical request, including retries, reserves its maximum output allowance plus a
+conservative input bound, using the verified maximum five-minute cache-write/input and
+output rate envelopes and 10% additional headroom. Cache hits are never presumed. New
+text uses a UTF-8 byte-based token allowance plus protocol overhead. Where the same
+model has returned prompt usage for an identical prefix and identical schemas/settings,
+that observed count plus a conservative allowance for new messages tightens the bound.
+An edited prefix, changed schema/settings or absent usage falls back to the cold bound.
+This avoids treating every byte of a known prefix as a new token without assuming that
+its cache will hit. All 44 active provider/tier combinations in the downloaded price
+snapshots fit the configured envelopes, including long-prompt tiers and regional prices.
+
+Reported charges replace reservations, even for errors with no choices. Missing, invalid
+or uncertain charges retain reservations. A price/count envelope breach stops further
+inference. HTTP 402 stops immediately. ALL_CALLS now limits physical attempts, rather
+than undercounting retries. Unfunded heavy-model calls fall back through the existing
+model sequence; JSON output limits are not silently reduced to make a review affordable.
+
+These are conservative bounds under the checked pricing and token/accounting assumptions,
+not a measured bill or a guarantee against future provider price changes. Unknown charges
+or large unique contexts can reduce the number of affordable calls. Funding a response is
+separate from proving that the response's decision is correct.
+
+6. Verification and measured results
+
+Command: python3 -m unittest discover -s agents/tests -p test_tosky_l17.py -v
+Result: 37 tests passed. Test output is in offline-tests.txt.
+The tests include 400 generated JSON round trips and four complete fictional workflows:
+structured purchase, text-formatted records, a checkout-time requirement change, and
+required shopper approval. Other tests cover stable schema identity, append-only context,
+module loading, repeated checkpoints, pending tool calls, conflicting raw fields, long
+selectors/replies, literal format markers, reservations, retry counts, credit errors,
+charge accounting, price tiers and exact-prefix token estimates. Transport is stubbed;
+an unscripted network call fails the tests. These tests do not reproduce model reasoning.
+
+Replay measurement: 120 already-released feedback episodes, including every received
+observation in each measured payload. The input was 9,681,782 bytes of minified JSON;
+reversible packing used 5,942,147 bytes, a 38.63% aggregate reduction.
+Median reduction: 36.45%; range: 18.91%-56.31%.
+Every replay reconstructed the original JSON data exactly. Total local packing time was
+1.10 seconds. These are whole-episode observation payload measurements, not actual
+live prompt-token savings. Incremental batches can have less cross-result redundancy.
+Retaining facts that the baseline discarded can also make some live prompts larger.
+
+Local source checks: synchronous agent_main, UTF-8 Python below 1 MB, the same allowed
+imports as Cairn, only the environment/inference proxy endpoints, no filesystem writes,
+no dynamic execution or prohibited modules, no new fixed product/unit vocabulary tables,
+and the three model IDs present in ORO's current public allowlist. Runtime data packing and
+budget controls are reachable from agent_main. Local checks do not reproduce ORO's
+proprietary AST similarity/integrity checker; platform admission has not been requested.
+
+7. Scope and limits for subsequent evaluation
+
+This is a context-engineering implementation with independently checked preservation and
+transport/budget contracts. Its inherited search, matching, interviewer question selection
+and terminal decision policies remain the Cairn/Miyagi controller. Improved availability
+of source evidence does not by itself establish improved use of that evidence. Earlier
+findings about permissive missing-review handling, requirement interpretation and other
+controller-level behavior are not all repaired by a context layer. In particular a missing
+review is not evidence of correctness; the existing controller still needs empirical
+review under such conditions. Do not interpret a passing stubbed workflow as a hidden
+race score or claim that Tosky_l17 surpasses the champion.
+
+No paid inference, local validator run, submission, dashboard operation or background
+service was started. Race accuracy, provider cache-hit rate, realized token cost and latency
+remain to be established by separately authorized paid verification. The future trace
+should be inspected for cached_tokens, cache_write_tokens, budget_denied, actual cost,
+checkpoint frequency and whether source details survive into the final decision.
+
+Primary references checked in this session:
+- Local PDF: AI_Agents_in_Depth_Bojie_Li_latest_en.pdf, Chapter 2.
+- https://openrouter.ai/docs/guides/best-practices/prompt-caching
+- https://openrouter.ai/api/v1/models (and the linked per-model provider endpoints)
+- https://oroagents.com/docs/miners/code-requirements
+- https://oroagents.com/docs/miners/agent-interface
+- https://oroagents.com/docs/miners/inference-providers
+- https://api.oroagents.com/v1/public/inference/models?provider=openrouter

@@ -1,0 +1,257 @@
+"""Shared Docker sandbox utilities for local runs and the validator.
+
+Centralises sandbox image/network configuration, host-path mapping, and
+Docker command construction so the call sites stay in sync.
+"""
+
+import os
+from pathlib import Path
+
+from src.agent.sandbox_executor import MAX_SANDBOX_OUTPUT_BYTES
+
+# Docker configuration shared by local runs and the validator
+SANDBOX_IMAGE = os.environ.get("SANDBOX_IMAGE", "ghcr.io/oro-ai/oro/sandbox:latest")
+SANDBOX_NETWORK = os.environ.get("SANDBOX_NETWORK", "sandbox-network")
+# Hard per-file write ceiling for the sandbox (SIGXFSZ past this): the same cap the
+# validator rejects oversized reads at, so the container can't write a file every
+# reader then refuses. The validator bounds aggregate run disk use separately.
+SANDBOX_MAX_FILE_BYTES = MAX_SANDBOX_OUTPUT_BYTES
+# The sandbox container runs as this uid.
+SANDBOX_UID = 1000
+HOST_PROJECT_DIR = os.environ.get("HOST_PROJECT_DIR")
+
+
+def host_path(path: str, workspace_dir: str | None = None) -> str:
+    """Map a container-local path to its host equivalent for Docker volume mounts.
+
+    When running inside a container with the Docker socket mounted, volume mount
+    paths must reference *host* paths.  ``HOST_PROJECT_DIR`` provides the
+    host-side path to the project root.
+
+    Args:
+        path: The container-local path to translate.
+        workspace_dir: If provided (validator case), strip this prefix from
+            *path* before joining with ``HOST_PROJECT_DIR``.  When ``None``
+            (local-run case), the function strips well-known prefixes
+            (``/app/``, ``/workspace/``).
+
+    Returns:
+        The translated host path, or *path* unchanged when ``HOST_PROJECT_DIR``
+        is not set.
+    """
+    if not HOST_PROJECT_DIR:
+        return path
+
+    if workspace_dir is not None:
+        if path.startswith(workspace_dir):
+            relative = path[len(workspace_dir) :].lstrip("/")
+            return str(Path(HOST_PROJECT_DIR) / relative)
+        return path
+
+    # Strip well-known container prefixes for local runs.
+    if path.startswith("/app/"):
+        return str(Path(HOST_PROJECT_DIR) / path[len("/app/") :])
+    if path.startswith("/workspace/"):
+        return str(Path(HOST_PROJECT_DIR) / path[len("/workspace/") :])
+    return path
+
+
+def attach_title_embeddings(reward, title_embeddings) -> None:
+    """Attach precomputed title embeddings to reward dict(s) in-place.
+
+    Rewards can be a single dict (Product) or a list of dicts (Shop/Voucher).
+    Modifies the reward structure directly — no return value.
+    """
+    if not title_embeddings:
+        return
+    if isinstance(reward, dict):
+        reward["_title_embeddings"] = title_embeddings
+    elif isinstance(reward, list):
+        for item in reward:
+            if isinstance(item, dict):
+                item["_title_embeddings"] = title_embeddings
+
+
+def build_sandbox_command(
+    *,
+    agent_host_path: str,
+    logs_host_path: str,
+    problem_file_arg: str,
+    output_path: str,
+    output_host_path: str | None = None,
+    image: str = SANDBOX_IMAGE,
+    network: str = SANDBOX_NETWORK,
+    extra_volumes: list[tuple[str, str]] | None = None,
+    max_workers: int | None = None,
+    timeout: float | None = None,
+    inference_access_token: str | None = None,
+    inherit_inference_access_token: bool = False,
+    inference_provider: str | None = None,
+    inference_base_url: str | None = None,
+    inference_model: str | None = None,
+    inherit_inference_model: bool = False,
+    agent_container_path: str | None = None,
+    container_name: str | None = None,
+) -> list[str]:
+    """Build a ``docker run`` command for the sandbox container.
+
+    Args:
+        agent_host_path: Host path to the agent Python file.  When the agent
+            file lives inside the logs directory (validator case), pass an
+            empty string and set *agent_container_path* to the path within the
+            already-mounted ``/app/logs`` volume — this avoids a separate file
+            bind mount which can fail on Docker Desktop for Mac due to
+            filesystem caching delays.
+        logs_host_path: Host path to the logs directory.
+        problem_file_arg: Container-side path to the problem file (passed as
+            ``--problem-file`` to ``run_sandbox``).
+        output_path: Container-side path where sandbox writes output JSONL.
+        output_host_path: If set, mount this writable directory at /app/output
+            and mount logs_host_path read-only for evaluator-owned inputs.
+        image: Docker image to use.
+        network: Docker network to attach to.
+        extra_volumes: Optional list of ``(host_path, container_path)`` tuples
+            mounted read-only.
+        max_workers: If set, passed as ``--max-workers`` to ``run_sandbox``.
+        inference_access_token: If set, injected as the ``INFERENCE_ACCESS_TOKEN``
+            env var.
+        inherit_inference_access_token: Pass the token variable name to Docker
+            without embedding its value in the command arguments. The caller
+            must supply the value in the subprocess environment.
+        inference_provider: If set, injected as ``INFERENCE_PROVIDER`` env var.
+            Identifies which inference backend the access token belongs to.
+        inference_base_url: If set, injected as ``INFERENCE_BASE_URL`` env var.
+            Default agent template uses this to route inference calls.
+        agent_container_path: If set, use this as the ``--agent-file`` path
+            inside the container instead of mounting *agent_host_path* to
+            ``/app/user_agent.py``.  Useful when the agent file is already
+            accessible via the logs volume mount.
+        container_name: If set, passed as ``--name`` so the container can be
+            killed by name on timeout. ``docker run`` is attached, so SIGKILLing
+            the CLI client leaves the container running on the daemon; a stable
+            name lets the caller ``docker kill`` the orphan (ORO-1414).
+
+    Returns:
+        Complete ``docker run`` command as a list of strings.
+    """
+    effective_agent_path = agent_container_path or "/app/user_agent.py"
+
+    cmd = [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        network,
+    ]
+
+    if container_name:
+        cmd.extend(["--name", container_name])
+
+    cmd.extend(
+        [
+            # Force json-file with a hard 10 MB cap. The prod daemon default is
+            # awslogs, which rejects max-size / max-file at container-create
+            # time (would break every eval), and which shipped 78 GB of CW
+            # ingest during race 80 when a runaway agent spun in a tight
+            # print loop in its LLM-error retry path. Sandbox stdout is
+            # already redundant with trajectory JSON (in S3) and the
+            # sandbox_metadata.stderr_tail persisted on eval_run, so the
+            # json-file sink is only needed for live SSH `docker logs` debug.
+            # Typical eval writes ~150 KB → 10 MB is ~66x headroom.
+            "--log-driver",
+            "json-file",
+            "--log-opt",
+            "max-size=10m",
+            "--log-opt",
+            "max-file=1",
+            # Resource limits — prevent runaway miner agents from impacting the host
+            "--memory",
+            "4g",
+            "--memory-swap",
+            "4g",
+            "--pids-limit",
+            "256",
+            # Leave a core for the validator's pack workers: an agent that saturates
+            # every core could push pack code into wall-clock trips.
+            "--cpus",
+            str(max(1, (os.cpu_count() or 2) - 1)),
+            "--ulimit",
+            # 4096 fds: at SANDBOX_MAX_WORKERS=60 a typical agent holds ~5 sockets
+            # in flight per worker (HTTP + DNS + keepalive), pushing toward the
+            # 1024 cap and silently capping throughput before the worker count.
+            "nofile=4096:4096",
+            "--ulimit",
+            f"fsize={SANDBOX_MAX_FILE_BYTES}:{SANDBOX_MAX_FILE_BYTES}",
+            # CPU priority — sandbox runs during the validator's blocked
+            # subprocess.run(); only the heartbeat + weight-setter threads compete
+            # for CPU at that point, so giving sandbox 2x the default share keeps
+            # those threads responsive while no longer starving sandbox workers on
+            # smaller (8 vCPU) validator hosts at SANDBOX_MAX_WORKERS=60.
+            "--cpu-shares",
+            "2048",
+            "--user",
+            f"{SANDBOX_UID}:{SANDBOX_UID}",
+            # Security hardening — minimize container attack surface
+            "--cap-drop=ALL",
+            "--security-opt",
+            "no-new-privileges=true",
+            "--read-only",
+            "--tmpfs",
+            "/tmp:rw,noexec,nosuid,size=256m",
+            "-e",
+            "SANDBOX_PROXY_URL=http://proxy:80",
+            "-e",
+            "ORO_ENVIRONMENT_SESSIONS_FILE=/app/logs/environment_sessions.json",
+        ]
+    )
+
+    # Only mount agent file separately when it's not already in the logs dir
+    if not agent_container_path:
+        cmd.extend(["-v", f"{agent_host_path}:/app/user_agent.py:ro"])
+
+    logs_mode = ":ro" if output_host_path is not None else ""
+    cmd.extend(["-v", f"{logs_host_path}:/app/logs{logs_mode}"])
+    if output_host_path is not None:
+        cmd.extend(["-v", f"{output_host_path}:/app/output"])
+
+    if inference_access_token:
+        if inherit_inference_access_token:
+            cmd.extend(["-e", "INFERENCE_ACCESS_TOKEN"])
+        else:
+            cmd.extend(["-e", f"INFERENCE_ACCESS_TOKEN={inference_access_token}"])
+    if inference_provider:
+        cmd.extend(["-e", f"INFERENCE_PROVIDER={inference_provider}"])
+    if inference_base_url:
+        cmd.extend(["-e", f"INFERENCE_BASE_URL={inference_base_url}"])
+    if inference_model:
+        if inherit_inference_model:
+            cmd.extend(["-e", "SANDBOX_MODEL"])
+        else:
+            cmd.extend(["-e", f"SANDBOX_MODEL={inference_model}"])
+
+    if extra_volumes:
+        for host, container in extra_volumes:
+            cmd.extend(["-v", f"{host}:{container}:ro"])
+
+    cmd.extend(
+        [
+            image,
+            "python",
+            "-m",
+            "src.agent.run_sandbox",
+            "--agent-file",
+            effective_agent_path,
+            "--problem-file",
+            problem_file_arg,
+            "--output",
+            output_path,
+        ]
+    )
+
+    if max_workers is not None:
+        cmd.extend(["--max-workers", str(max_workers)])
+
+    if timeout is not None:
+        cmd.extend(["--timeout", str(timeout)])
+
+    return cmd

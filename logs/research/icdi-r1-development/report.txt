@@ -1,0 +1,247 @@
+ICDI_r1 — implementation and offline review
+
+Outcome
+-------
+Created agents/ICDI_r1.py from the archived public KYO v6 source with the user's
+explicit baseline selection. The original is unchanged. No paid model call,
+evaluation, submission, dashboard restart or repository commit was performed.
+
+48 offline tests pass. Four complete scripted interaction flows pass. This is
+an offline-verified candidate for the user's paid validation, not evidence of
+a higher race score or a promise of championship performance.
+
+Scope and evidence
+------------------
+The target is reliability as the observed shopping state evolves: interpreting
+unfamiliar observation formats, clarifying incomplete or misunderstood customer
+instructions, applying explicit changes, and keeping purchase decisions aligned
+with the current requirements. Public leaderboard scores were not an optimization
+target. No suite answers, product vocabulary tables or grader logic were added.
+
+The two locally preserved KYO race-24 run records have 90 completed episodes each,
+with 18 and 19 correct respectively. These are historical baseline observations,
+not an identification of the user's reported 5% result. Only two detailed KYO
+feedback files were present locally for this race. Both report
+process_requirement_missed, and neither includes the initial query. They cannot
+establish the prevalence of ambiguity or changes across the complete race.
+
+Nevertheless, the released observations reveal a concrete portability problem:
+listing records and their attributes are often embedded in text. Replaying every
+observation through KYO's original ingestion produces zero attribute records in
+both saved traces. Replaying them through the candidate produces 14 and 18
+attribute records respectively (40 and 154 listing records). These are ingestion
+counts, not newly solved tasks. They establish that evidence previously absent
+from the ledger is now available for questioning and review.
+
+One archived interaction also contains three confused replies followed by questions
+on different properties. The new interview protocol explicitly distinguishes a
+confused answer from indifference and can repair a question before moving on.
+Whether the model correctly makes this distinction on unseen wording remains
+for paid verification.
+
+The race filenames and reproduction results are recorded in
+02-observation-replay.json. The excerpts are used only as observations, not as
+embedded answers or instructions in the submission.
+
+Critical review of successors
+-----------------------------
+Inspected PIRATE and Pooh's relevant ingestion, reply-update and procedure paths,
+as well as PIRATE's questioning prompt and reply correction path. PIRATE gives
+more attention to observed attribute coverage, differing values and contextual
+hints; it also tries to repair specific semantic interpretation mistakes. These
+are useful ideas, but better historical results do not validate every inherited
+method. In the inspected source, the dict/list-oriented ingestion, divergent
+reply/note reducers, and permissive procedure completion patterns remain.
+
+The candidate therefore retains evidence-informed question planning and the
+baseline's search, comparison and candidate machinery, and supplies the missing
+text observations to it. It does not transplant a successor's large collection
+of semantic heuristics. A narrow fix to the shared observation/update boundary
+is more directly testable for this iteration. The earlier local Tosky v6 budget
+and review work was also consulted as a design reference, not used as a new
+baseline. TOSKY.py was not edited or resumed.
+
+Stages and results
+------------------
+1. Baseline reproduction.
+   Created 15 transport-disabled behavioral tests; 13 failed on unmodified KYO
+   and two preservation controls passed. The failures cover budget-only updates,
+   replacement/reinstatement, invalid item scope, missed or consumed notes,
+   quantities, review invalidation, text ingestion, and permissive reviews.
+   Evidence: 01-baseline-tests.txt.
+
+2. Observation and state updates.
+   Added one general syntax adapter for JSON strings and explicit pipe-separated
+   fields, including nested key=value records. Names and values are learned from
+   the observation; there is no fixed product or attribute registry. The raw pipe
+   record is retained alongside its parsed view. Duplicate field names remain raw
+   rather than being silently overwritten. Native object observations remain
+   semantically unchanged. The adapter is used for ordinary and internal calls.
+
+   Interview replies, store notes and approval replies use one delta format and
+   one reducer. Supported changes include firm needs, explicit replacements and
+   removals, reinstatement, quantities, budget, budget scope/unit, objective and
+   stock/decline policy. Item indices are validated instead of clamped. Compatible
+   additional bounds are retained. Reference requirements are updated with the
+   active constraints; a retired reference loses its resolved value.
+
+   Changed decisions are invalidated: review results, approval caches, stale
+   automatic replacement candidates and confirmed-cart shortcuts. Observed
+   listings and unrelated requirements are preserved. Budget-only changes now
+   invalidate a review. A review key also includes current quantities, ledger,
+   evidence and reference values, so changed price/stock is not hidden behind an
+   unchanged product ID.
+
+   Every production semantic update requires source quotes; fabricated quotes
+   or invalid shapes are rejected. Quotes establish provenance, not semantic
+   correctness. Failed interpretations remain pending and can be retried; they
+   are not silently marked consumed. A claimed change with no represented effect
+   cannot be acknowledged as applied.
+
+   All 12 stage-specific state/observation tests passed before moving forward.
+   Evidence: 02-state-tests.txt, 02-observation-replay.json.
+
+3. Clarification and terminal review.
+   The initial interpretation can retain consequential ambiguous instructions as
+   sourced questions without inventing a firm value. Ordinary undisclosed
+   preferences are not automatically treated as blocking ambiguity.
+
+   Questions are sent and interpreted sequentially. Later questions skip properties
+   already answered or explicitly left open. Confusion can receive one simpler
+   retry per property in that interview, within the message/step allowance. Failed
+   model parsing retries the interpretation, not the shopper message. Explicit
+   unresolved instructions retain priority over speculative preference discovery.
+
+   Every message required on the longer terminal procedure path is reserved,
+   including pre-choice duties. The old maximum-of-single-messages rule could
+   reserve one message even when two separate required steps each needed one.
+
+   Procedures require coverage of every due step and actual current record lines.
+   Missing, partial, malformed or stale proof does not grant permission. Approval
+   replies enter the same update reducer; a changed requirement returns control
+   for replanning. Ordinary purchase and recovery use the same gates. Negative
+   reviews remain negative on repeated attempts; malformed reviews are unknown,
+   not approvals. Explicit holds are returned to the planner as such instead of
+   being described as network failures.
+
+   The first 20 cumulative checks passed after this stage. Evidence: 03-before.txt
+   and 03-after.txt. Later combined checks cover additional preservation risks.
+
+4. Inference budget admission.
+   The original spend thresholds were checked after calls, could be exceeded by
+   recovery, and did not reliably account for missing usage or every retry.
+
+   Every physical inference attempt now obtains a reservation before transmission.
+   Text bytes plus framing overhead conservatively estimate prompt tokens. Model
+   rate envelopes include cache-write/long-prompt allowances and a 25% margin.
+   Output is bounded before the request; requests without useful output room are
+   refused and can fall back to an affordable model. Existing model IDs remain.
+
+   Actual finite nonnegative reported cost settles the reservation. Missing usage
+   or uncertain transport keeps the full reservation charged. Every physical
+   attempt counts. Credit exhaustion stops retries immediately. A charge or token
+   count exceeding its envelope stops further inference instead of continuing
+   with a knowingly invalid estimate. Transient retries are bounded to one per
+   model attempt.
+
+   Allocation: $0.050 per invocation, of which $0.006 is protected until recovery.
+   This gives $4.50 for exactly 90 invocations and $1.50 for exactly 30. No shared
+   file, global cross-task balance, phase detection or validator-specific routing
+   is used. The same strategy applies to every task.
+
+   The missing-usage stress test, including the recovery allowance, permits 15
+   physical requests in its fixture and accounts for $0.04796775 per task:
+   $4.3170975 for 90 identical invocations. This is a reservation test, not a
+   forecast of actual run cost. Unexpected provider prices, billing behavior or
+   additional task invocations can invalidate the aggregate bound. The provider's
+   scoped key remains the authoritative cap.
+
+   Six budget regressions failed before the change; all passed afterward.
+   Evidence: 04-before.txt, 04-after.txt, static-review.json.
+
+5. Combined review and verification.
+   Added cross-stage controls for multi-item preservation, independent numeric
+   bounds, obsolete references, idempotent replay, raw observation retention,
+   product-description separation, source validation, current approval evidence,
+   partial procedures and cached review outcomes.
+
+   Combined testing exposed queued actions continuing after the first action's
+   observation changed the requirements. The remaining actions now receive tool
+   results explaining that replanning is required; no environment step is spent
+   executing the obsolete plan. A delimiter case involving a URL inside a value
+   and malformed update/procedure identifiers were also corrected before final
+   verification.
+
+   Full agent_main flows use only scripted proxy clients and fictional products:
+     ordinary purchase:              6 environment steps, 6 scripted model calls
+     text-form listing records:      6 environment steps, 6 scripted model calls
+     checkout requirement change:    12 environment steps, 12 scripted model calls
+     required approval:              7 environment steps, 9 scripted model calls
+   The ordinary unchanged baseline control also takes 6 steps and 6 model calls.
+   These counts show fixture behavior, not real-model latency or cost.
+
+   All 48 final tests pass. See verification.txt and static-review.json.
+   Reproduce with: python3 -B -m unittest agents.tests.test_icdi_r1 -v
+   The test harness removes only the ProxyClient import and supplies clients that
+   cannot contact a service. No credentials are read or needed.
+
+Submission review
+-----------------
+The candidate parses as Python, is UTF-8, has one synchronous agent_main, and is
+181,869 bytes / 2,923 lines. It retains precisely the baseline import set: json,
+random, re, time, typing.Any, future annotations and the supported ProxyClient.
+No filesystem operations, direct network calls, encoding modules, eval/exec,
+wall-clock strategy routing, product/unit tables or grader imports were added.
+Time is used only for retry sleep. Decisions depend on the task and observations.
+All four new controller methods and the observation adapter are reachable.
+67 original controller methods retain identical ASTs; 24 are changed.
+
+This is local review against the public rules, not execution of ORO's private
+server-side integrity/similarity checker. Meaningful logic was added, but server
+acceptance cannot be guaranteed without that service's response.
+
+Source SHA256:
+  baseline: e5964499683e5e65afac8c215245cbcd9de7e979bd2c3b6ffaa14b897311b1c4
+  candidate: 24101d67e2943c9731c73e7aa272fee49dbf3cd674309b371a2077fdcda27a97
+Provenance: agents/ICDI_r1.provenance.json.
+
+Boundaries and paid-verification handoff
+--------------------------------------
+The next paid result must determine semantic accuracy, not merely legal endings.
+Inspect failures at the first incorrect observation/interpretation/update/action
+transition. Separate misunderstood requirements, undiscovered preferences,
+changes missed, procedure mistakes, wrong optimization, noncompletion and
+resource exhaustion. These categories can overlap; one reported failure category
+is not a complete causal inventory.
+
+Use identical practice cases and seed for a baseline/candidate comparison where
+possible, with repeated comparisons before attributing a small difference to
+code. Practice/qualifying results remain regression signals, not estimates of a
+new hidden world. Actual subsequent race feedback is the competitive evidence.
+
+Remaining limitations:
+- Semantic extraction, property prioritization, equivalence and procedure evidence
+  interpretation still depend on model accuracy. Source quotes are not proof of
+  correct understanding; the offline replies do not test live model behavior.
+- The text adapter handles explicit supported syntax, not all possible prose or
+  markup. Unrecognized text remains visible but may not populate the ledger.
+- Added/removed product categories and arbitrary new workflow instructions are not
+  represented by a general item/workflow editing engine in this scoped iteration.
+- Few allowed messages may make all hidden needs impossible to discover. A bounded
+  clarification retry also consumes an opportunity to ask another property.
+- The stricter purchase checks can increase unfinished tasks if interpretation or
+  review cannot be recovered within the remaining resources. Four passing fixture
+  flows and preservation controls do not establish absence of unseen regressions.
+- Requirement revisions invalidate decision caches conservatively. Unrelated raw
+  product evidence is retained, but some reviews/procedure checks may repeat.
+- No measured improvement in race accuracy, inference cost or runtime is claimed.
+
+Public references checked during this implementation:
+https://oroagents.com/docs/miners/code-requirements
+https://oroagents.com/docs/miners/agent-interface
+https://oroagents.com/docs/miners/scoring
+https://oroagents.com/docs/oro-bench
+https://api.oroagents.com/v1/public/inference/models?provider=openrouter
+https://openrouter.ai/anthropic/claude-haiku-5.5
+https://openrouter.ai/anthropic/claude-sonnet-5.5
+https://openrouter.ai/openai/gpt-6-luna

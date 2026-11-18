@@ -1,0 +1,49 @@
+..........FFEFF..............
+======================================================================
+ERROR: test_unavailable_item_cannot_bypass_last_step_guard (test_tosky_v4.ChangeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 335, in test_unavailable_item_cannot_bypass_last_step_guard
+    self.assertIsNone(self.e.act('purchase', {}))
+  File "/home/vboxuser/Documents/oro/agents/Tosky_v4.py", line 1306, in act
+    if isinstance(result.data, dict):
+AttributeError: 'NoneType' object has no attribute 'data'
+
+======================================================================
+FAIL: test_ambiguous_stockout_marks_scope_without_declaring_every_line_gone (test_tosky_v4.ChangeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 310, in test_ambiguous_stockout_marks_scope_without_declaring_every_line_gone
+    self.assertEqual(set(getattr(self.e, 'availability_pending', {})), {'synthetic-item', 'other-item'})
+AssertionError: Items in the second set but not the first:
+'other-item'
+'synthetic-item'
+
+======================================================================
+FAIL: test_price_and_quantity_change_invalidate_review (test_tosky_v4.ChangeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 320, in test_price_and_quantity_change_invalidate_review
+    self.assertNotEqual(key, self.e.check_key(['synthetic-item']))
+AssertionError: 'synthetic-item#0' == 'synthetic-item#0'
+
+======================================================================
+FAIL: test_unnamed_single_line_stockout_invalidates_attempted_line (test_tosky_v4.ChangeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 302, in test_unnamed_single_line_stockout_invalidates_attempted_line
+    self.assertTrue(self.e.sold_out('synthetic-item'))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_unrelated_boolean_change_does_not_mean_sold_out (test_tosky_v4.ChangeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v4.py", line 315, in test_unrelated_boolean_change_does_not_mean_sold_out
+    self.assertFalse(self.e.sold_out('synthetic-item'))
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 29 tests in 5.877s
+
+FAILED (failures=4, errors=1)

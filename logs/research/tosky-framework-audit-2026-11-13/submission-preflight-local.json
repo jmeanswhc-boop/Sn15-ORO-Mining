@@ -1,0 +1,510 @@
+{
+  "source": "agents/TOSKY.py",
+  "sha256": "31b083e8ac95bc6863a4a01f9768a61879914fed4eb9116ea0f27b394d825a18",
+  "bytes": 82547,
+  "utf8": true,
+  "ast_parse_seconds": 0.012771,
+  "compile_passed": true,
+  "entrypoints": [
+    {
+      "name": "agent_main",
+      "line": 1498,
+      "async": false
+    }
+  ],
+  "imports": [
+    {
+      "line": 10,
+      "kind": "from",
+      "module": "__future__",
+      "names": [
+        "annotations"
+      ]
+    },
+    {
+      "line": 12,
+      "kind": "import",
+      "names": [
+        "json"
+      ]
+    },
+    {
+      "line": 13,
+      "kind": "import",
+      "names": [
+        "heapq"
+      ]
+    },
+    {
+      "line": 14,
+      "kind": "import",
+      "names": [
+        "re"
+      ]
+    },
+    {
+      "line": 15,
+      "kind": "from",
+      "module": "dataclasses",
+      "names": [
+        "dataclass",
+        "field"
+      ]
+    },
+    {
+      "line": 16,
+      "kind": "from",
+      "module": "decimal",
+      "names": [
+        "Decimal",
+        "InvalidOperation"
+      ]
+    },
+    {
+      "line": 17,
+      "kind": "from",
+      "module": "os",
+      "names": [
+        "getenv"
+      ]
+    },
+    {
+      "line": 18,
+      "kind": "from",
+      "module": "typing",
+      "names": [
+        "Any"
+      ]
+    },
+    {
+      "line": 20,
+      "kind": "from",
+      "module": "src.agent.proxy_client",
+      "names": [
+        "ProxyClient"
+      ]
+    }
+  ],
+  "prohibited_calls": [],
+  "environment_reads": [
+    {
+      "line": 323,
+      "argument": "SANDBOX_MODEL"
+    }
+  ],
+  "literal_proxy_paths": [
+    {
+      "line": 337,
+      "path": "/inference/chat/completions"
+    },
+    {
+      "line": 367,
+      "path": "/environment/call"
+    }
+  ],
+  "literal_collections_for_review": [
+    {
+      "line": 157,
+      "dict_keys": [
+        "object",
+        "array",
+        "string",
+        "integer",
+        "number",
+        "boolean",
+        "null"
+      ]
+    },
+    {
+      "line": 483,
+      "dict_keys": [
+        "search",
+        "open",
+        "offer",
+        "compare",
+        "message",
+        "cart_view",
+        "cart",
+        "checkout",
+        "decline"
+      ]
+    },
+    {
+      "line": 522,
+      "values": [
+        "rows_path",
+        "id_key",
+        "price_key",
+        "stock_key",
+        "category_key",
+        "next_path",
+        "next_arg",
+        "count_path",
+        "price_unit"
+      ]
+    },
+    {
+      "line": 1111,
+      "dict_keys": [
+        "contract",
+        "item",
+        "target_id",
+        "desired",
+        "cart",
+        "steps_left",
+        "messages_left",
+        "active_challenges",
+        "recent_observations",
+        "attempted_actions"
+      ]
+    },
+    {
+      "line": 333,
+      "dict_keys": [
+        "model",
+        "messages",
+        "temperature",
+        "max_tokens"
+      ]
+    },
+    {
+      "line": 484,
+      "values": [
+        "search",
+        "find",
+        "browse",
+        "list products"
+      ]
+    },
+    {
+      "line": 485,
+      "values": [
+        "detail",
+        "open",
+        "product page",
+        "view product"
+      ]
+    },
+    {
+      "line": 486,
+      "values": [
+        "offer",
+        "availability",
+        "current price",
+        "stock status"
+      ]
+    },
+    {
+      "line": 488,
+      "values": [
+        "message shopper",
+        "ask shopper",
+        "send message",
+        "talk to"
+      ]
+    },
+    {
+      "line": 489,
+      "values": [
+        "view cart",
+        "get cart",
+        "inspect cart",
+        "show cart"
+      ]
+    },
+    {
+      "line": 490,
+      "values": [
+        "update cart",
+        "add to cart",
+        "set cart",
+        "remove from cart"
+      ]
+    },
+    {
+      "line": 491,
+      "values": [
+        "checkout",
+        "place order",
+        "complete purchase"
+      ]
+    },
+    {
+      "line": 492,
+      "values": [
+        "decline",
+        "end without",
+        "no purchase",
+        "give up"
+      ]
+    },
+    {
+      "line": 785,
+      "dict_keys": [
+        "items",
+        "budget",
+        "budget_unit",
+        "objective",
+        "measure",
+        "objective_item",
+        "relations",
+        "revision"
+      ]
+    },
+    {
+      "line": 920,
+      "dict_keys": [
+        "lines",
+        "revision",
+        "market",
+        "cart",
+        "budget",
+        "cart_lines"
+      ]
+    },
+    {
+      "line": 1491,
+      "dict_keys": [
+        "kind",
+        "finished",
+        "steps",
+        "model_calls",
+        "model_cost",
+        "request_revision",
+        "active_challenges",
+        "notes"
+      ]
+    },
+    {
+      "line": 434,
+      "values": [
+        "any",
+        "cheapest",
+        "most",
+        "least"
+      ]
+    },
+    {
+      "line": 457,
+      "values": [
+        "before_selection",
+        "before_order",
+        "before_decline"
+      ]
+    },
+    {
+      "line": 1026,
+      "values": [
+        "cheapest",
+        "most",
+        "least"
+      ]
+    },
+    {
+      "line": 1173,
+      "values": [
+        "approval",
+        "question",
+        "message"
+      ]
+    },
+    {
+      "line": 1248,
+      "values": [
+        "cheapest",
+        "most",
+        "least"
+      ]
+    },
+    {
+      "line": 1295,
+      "values": [
+        "approval",
+        "message",
+        "question"
+      ]
+    },
+    {
+      "line": 1297,
+      "values": [
+        "approval",
+        "message",
+        "question"
+      ]
+    },
+    {
+      "line": 1505,
+      "dict_keys": [
+        "kind",
+        "error",
+        "finished",
+        "steps"
+      ]
+    },
+    {
+      "line": 144,
+      "values": [
+        "out of stock",
+        "sold out",
+        "unavailable",
+        "backorder",
+        "back order"
+      ]
+    },
+    {
+      "line": 146,
+      "values": [
+        "in stock",
+        "available now",
+        "on hand",
+        "ready to ship"
+      ]
+    },
+    {
+      "line": 381,
+      "dict_keys": [
+        "step",
+        "tool",
+        "args",
+        "observation",
+        "finished",
+        "purpose"
+      ]
+    },
+    {
+      "line": 383,
+      "dict_keys": [
+        "role",
+        "content",
+        "tool_call",
+        "environment_result"
+      ]
+    },
+    {
+      "line": 451,
+      "dict_keys": [
+        "item",
+        "property",
+        "why",
+        "mandatory"
+      ]
+    },
+    {
+      "line": 474,
+      "values": [
+        "search",
+        "open",
+        "offer",
+        "compare",
+        "message",
+        "cart",
+        "cart_view",
+        "checkout",
+        "decline"
+      ]
+    },
+    {
+      "line": 526,
+      "values": [
+        "rows_path",
+        "next_path",
+        "count_path"
+      ]
+    },
+    {
+      "line": 785,
+      "dict_keys": [
+        "item",
+        "role",
+        "quantity",
+        "hard",
+        "soft"
+      ]
+    },
+    {
+      "line": 1102,
+      "dict_keys": [
+        "item",
+        "property",
+        "why",
+        "mandatory"
+      ]
+    },
+    {
+      "line": 1307,
+      "values": [
+        "checkout",
+        "decline",
+        "cart"
+      ]
+    },
+    {
+      "line": 1417,
+      "values": [
+        "cheapest",
+        "most",
+        "least"
+      ]
+    },
+    {
+      "line": 1021,
+      "dict_keys": [
+        "kind",
+        "item",
+        "id",
+        "price",
+        "detail"
+      ]
+    },
+    {
+      "line": 1125,
+      "values": [
+        "cart",
+        "checkout",
+        "decline",
+        "approval",
+        "procedure"
+      ]
+    },
+    {
+      "line": 1024,
+      "dict_keys": [
+        "kind",
+        "item",
+        "id",
+        "detail"
+      ]
+    },
+    {
+      "line": 1029,
+      "dict_keys": [
+        "kind",
+        "item",
+        "detail",
+        "next"
+      ]
+    },
+    {
+      "line": 601,
+      "values": [
+        "id",
+        "sku",
+        "listing_id",
+        "product_id"
+      ]
+    },
+    {
+      "line": 666,
+      "values": [
+        "cart",
+        "items",
+        "lines",
+        "products"
+      ]
+    }
+  ],
+  "benchmark_identifier_pattern_hits": [],
+  "working_tree_loader_smoke_test": "passed",
+  "smoke_test_network_calls": 0,
+  "agent_source_unchanged": true
+}

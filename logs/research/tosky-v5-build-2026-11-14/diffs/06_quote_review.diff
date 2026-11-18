@@ -1,0 +1,24 @@
+--- 05a_procedure_reuse.py
++++ 06_quote_review.py
+@@ -1519,7 +1519,10 @@
+                 continue
+             number = _count(amendment.get('item'))
+             quote = str(amendment.get('quote') or '').strip()
+-            if not number or not 1 <= number <= len(entries) or not quote or len(quote) > 600 or not re.search(r'(?<!\w)' + re.escape(_words(quote)) + r'(?!\w)', _words(self.request)):
++            match = re.search(r'(?<!\w)' + r'\s+'.join(re.escape(w) for w in quote.split()) + r'(?!\w)', self.request, re.I) if quote else None
++            prefix = self.request[max(0, match.start() - 80):match.start()] if match else ''
++            cropped_negative = bool(re.search(r"(?:\bnot|\bno|n't|n’t|\bwithout|\bavoid|\bexclude)(?:\s+(?:want|need|choose|buy|a|an|any|the)){0,3}\s*$", prefix, re.I))
++            if not number or not 1 <= number <= len(entries) or not match or len(quote) > 600 or cropped_negative:
+                 rejected += 1
+                 continue
+             entry = entries[number - 1]
+@@ -1545,6 +1548,9 @@
+                 supported = supported and direct and (len(entries) == 1 or _roots(name) <= _roots(quote))
+             else:
+                 supported = supported and amendment.get('kind') == 'property' and bool(_value_words(prop)) and _value_words(prop) <= words
++            if len(entries) > 1:
++                own = _roots(str(entry.get('name') or ''))
++                supported = supported and bool(own) and own <= _roots(quote)
+             musts = [str(m) for m in _items(entry.get('musts')) if m]
+             existing = [m for m in musts if _same_prop(m.partition(':')[0], prop)]
+             if not supported or existing:

@@ -1,0 +1,24 @@
+--- 03b_recovery.py
++++ 03c_action_room.py
+@@ -105,7 +105,7 @@
+ UPPER = r'at most|up to|not? more than|(?:less|fewer) than|maximum'  # (v900 g5) the upper-limit side of BOUND
+ KEY_HOLDS = 2  # (v900 g8) checkouts held at most this often for a line whose own key states another value
+ CAP_ROOM = 2  # (v900 g6) steps beyond the cart calls and the checkout at which an empty cart takes opened fits
+-CHECKOUT_ROOM = 2  # (v900 g12) more steps kept before the first checkout: stores refuse it once with a budget or price change
++CHECKOUT_ROOM = 4  # First checkout, remove/add recovery, and a second checkout.
+ LOOP_TOKENS = 8000  # (v900 g12) the loop model's reply budget (a reply cut short loses its tool call)
+ LINK_CHECK = 'A description picks out one listing of a store; it may also mention the page that names that listing. Decide whether the page below is the listing it picks out: the page must show every value the description gives for THAT listing (its shop or brand, its kind of product and each property value; a value counts when the page states it under any attribute, in its title or in its description, in any spelling or spacing). The shop, brand and values of a page that names it are not that listing\'s values. Return ONE JSON object and nothing else: {"match": true or false, "missing": [the values described for that listing the page does not show]}'  # (v900 g23, g26)
+ VALUE_WALK = 4  # (v900 g13) pages a cheapest pick's value search reads past its first
+@@ -5629,7 +5629,11 @@
+             return f"[Cairn] {line} does not meet '{bad[0][0]}': {bad[0][1]}. The key that names a property decides, whatever the title or another key says. Opened listings of item {number} ({self.items[number - 1].name}) whose own keys state it: {', '.join(alts[:3])}. Take {line} out and add {alts[0]} at {units} unit(s) (the cart tool's own way), then check out; keep {line} only if its value means exactly what the requirement asks."
+         return ''
+ 
+-    def cap_cart(self, spare: int=2) -> str:  # (v900 g35) spare: steps kept for the finish (2: a refused first one and the second)
++    def recovery_room(self) -> int:
++        return self.tail() + (3 if self.buys == 0 else 0)
++
++    def cap_cart(self, spare: int | None=None) -> str:
++        spare = self.recovery_room() if spare is None else spare
+         # (v900 g6) near the cap with an empty cart: per item, the cheapest opened buyable listing whose own keys state every need in force
+         self.chain_catchup()  # (v900 g15)
+         self.name_needs()  # (v900 g22)

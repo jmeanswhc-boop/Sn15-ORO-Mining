@@ -1,0 +1,59 @@
+--- 03a_properties.py
++++ 03b_recovery.py
+@@ -5820,21 +5820,27 @@
+             return ''
+         return self.reread_offers() if ids else ''
+ 
++    def recovery_pool(self, lost: list[str], limit: int=25) -> list[str]:
++        numbers = {self.item_of(i) for i in lost} - {0}
++        eligible = [i for i in reversed(self.seen_order) if i not in lost and i not in self.gone and not self.sold_out(i) and (not numbers or self.item_of(i) in numbers)]
++        # Protect the best currently proven candidates for each affected item before recency packing.
++        protected = []
++        for number in sorted(numbers):
++            fits = [i for i in eligible if i in self.full and self.item_of(i) == number and self.buyable(i) and self.price_fits(i, number) and self.proven(i, number) and not self.unfit(i, number)]
++            if self.brief.get('pick') == 'cheapest':
++                fits.sort(key=lambda i: (self.price_of(i) if self.price_of(i) is not None else float('inf'), i))
++            protected += fits[:4]
++        return list(dict.fromkeys(protected + eligible))[:limit]
++
+     def replacements(self, lost: list[str]) -> list[str]:
+         if not self.judges():
+             return []
+-        records = []
+-        for ident in reversed(self.seen_order):
+-            if ident in lost or ident in self.gone or self.sold_out(ident):
+-                continue
+-            records.append(_dump(_clip(self.full.get(ident) or self.rows.get(ident), 200))[:1200])
+-            if len(records) >= 25:
+-                break
++        records = [_dump(_clip(self.full.get(i) or self.rows.get(i), 200))[:1200] for i in self.recovery_pool(lost)]
+         if not records:
+             return []
+         prompt = SWAP + '\n\nREQUEST:\n' + self.request + '\n\nREQUIREMENTS IN FORCE:\n' + self.ledger()
+         prompt += '\n\nSOLD-OUT CART LINE:\n' + '\n'.join((f'{i}: {self.record_of(i)}' for i in lost)) + '\n\nCART NOW:\n' + self.cart_text()
+-        prompt += '\n\nOTHER LISTING RECORDS SEEN (newest first):\n' + '\n'.join(records)
++        prompt += '\n\nOTHER LISTING RECORDS SEEN (protected fitting candidates, then recent records):\n' + '\n'.join(records)
+         got = self.ask_json(prompt, self.judges()[::-1], 3500)
+         fits: list[tuple[float, str]] = []
+         for entry in _items((got or {}).get('fits')):
+@@ -5846,12 +5852,15 @@
+         ranked = [i for _, i in sorted(fits, key=lambda f: f[0])] if self.brief.get('pick') == 'cheapest' else [i for _, i in fits]
+         broken = [i for i in ranked if self.breaks_need(i) or (i in self.full and self.unfit(i))]  # (v900 g7, g6) a replacement Cairn proposes passes the stricter reading
+         ranked = [i for i in ranked if i not in broken]
+-        cat_key = self.category_key()
+-        kind = str((self.rows.get(lost[0]) or {}).get(cat_key) or '').strip().lower() if lost and cat_key else ''
+-        if self.brief.get('pick') == 'cheapest' and kind:  # (v900 g32) a row cannot show what its page states: the cheapest rows first
++        numbers = {self.item_of(i) for i in lost} - {0}
++        if self.brief.get('pick') == 'cheapest' and numbers:
+             top = min((self.price_of(i) for i in ranked if self.price_of(i) is not None), default=float('inf'))
+-            low = sorted((i for i in self.seen_order if i not in lost and i not in ranked and i not in self.full and i not in self.gone and not self.sold_out(i) and self.buyable(i) and self.price_of(i) is not None and self.price_of(i) < top and str((self.rows.get(i) or {}).get(cat_key) or '').strip().lower() == kind and self.price_fits(i, self.item_of(lost[0]))), key=lambda i: (self.price_of(i), i))[:2]
+-            ranked = low + ranked
++            low = [i for i in self.seen_order if i not in lost and i not in ranked and i not in self.cart_ids() and i not in self.gone and not self.sold_out(i) and self.item_of(i) in numbers and self.buyable(i) and self.price_of(i) is not None and self.price_of(i) < top and self.price_fits(i, self.item_of(i))]
++            # An unopened row remains a lead. An opened candidate needs affirmative evidence;
++            # individual predicates alone do not prove compatibility of a joint purchase.
++            low = [i for i in low if i not in self.full or (not self.bound and self.proven(i, self.item_of(i)) and not self.unfit(i))]
++            low.sort(key=lambda i: (self.price_of(i), i))
++            ranked = low[:2] + ranked
+         self.trace.append({'kind': 'swap', 'lost': lost, 'fits': fits, 'broken': broken})
+         return ranked[:4]
+ 

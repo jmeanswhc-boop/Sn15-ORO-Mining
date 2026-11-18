@@ -1,0 +1,616 @@
+{
+  "summary": {
+    "task": "t-3254025544",
+    "episode": "be67b4a7-4bc0-4d08-8df9-9b8813410532",
+    "passed": false,
+    "category": "request_not_met",
+    "termination": "placed_order",
+    "end_reason": "finished",
+    "steps": 13,
+    "messages": [
+      {
+        "step": 5,
+        "question": "What flavor or capacity would you like for the cola?",
+        "reply": "Pick whichever you like, I won't be fussed."
+      },
+      {
+        "step": 6,
+        "question": "What capacity, dietary needs or packaging type would you like for the cola?",
+        "reply": "That's a blank page for me, so fill it in as you see fit."
+      },
+      {
+        "step": 7,
+        "question": "What dietary needs, packaging type or series would you like for the cola?",
+        "reply": "On packaging type, I'll only accept cans, the same way I only accept balanced books."
+      }
+    ],
+    "issues": [],
+    "calls_by_tool": {
+      "find_goods": 3,
+      "contrast_products": 3,
+      "contact_customer": 3,
+      "put_quantity": 1,
+      "detail_product": 1,
+      "trolley_contents": 1,
+      "submit_purchase": 1
+    },
+    "source": "pooh-qualifying-feedback/be67b4a7-4bc0-4d08-8df9-9b8813410532.json"
+  },
+  "goal": "Only show me what's actually on the shelf, nothing that's out of stock or on back order. When month-end closes and the last reconciliation finally balances, I take one cola out to the courtyard step behind the office. It's my little curtain call, ten quiet minutes with the lights low before I drive home. I want a cola, and it's the single pack type I want: one can or one bottle, not a multipack. Nobody else on the team drinks the stuff, so it's only ever for me. The rest of the month I stick to water, so this is a once-a-month thing. I can spend 126 US cents on it, not a cent over, so anything priced above that is off the programme. Total of 3 messages from your side, no more. Wrap up inside 38 steps, otherwise it doesn't count. Nothing found? Just say so, and don't offer a substitute.",
+  "calls": [
+    {
+      "step": 1,
+      "call_id": "1",
+      "tool_name": "find_goods",
+      "args": {
+        "free_search_for": "cola"
+      },
+      "observation": {
+        "count_count": 192,
+        "further": "vuvepa4",
+        "listings_set": [
+          {
+            "about_text": "Vexbelvo Original TasteCoca\u00e2Cola history began in 1886\u00c2\u00a0when Dr. John Pemberton created a distinctive soft drink now known as Vexbelvo Original Taste.Today, you can find Vexbelvo Original Taste in a variety of sizes to suit every lifestyle and occasion.",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "id": "p-461880415d96",
+            "name": "Vexbelvo Original Taste Pet Bottle - The Classic Refreshing Soft Drink Perfect for Every Occasion Meal and Lifestyle",
+            "price": 18,
+            "stock_ok": true
+          },
+          {
+            "about_text": "Vexbelvo Original TasteCoca\u00e2Cola history began in 1886\u00c2\u00a0when Dr. John Pemberton created a distinctive soft drink now known as Vexbelvo Original Taste.Today, you can find Vexbelvo Original Taste in a variety of sizes to suit every lifestyle and occasion.",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "id": "p-3b21626173d3",
+            "name": "Vexbelvo Original Taste Pet Bottle - The Classic Refreshing Soft Drink Perfect for Every Occasion Meal and Lifestyle",
+            "price": 18,
+            "stock_ok": true
+          },
+          {
+            "about_text": "",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "id": "p-137822d008c1",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "stock_ok": true
+          },
+          {
+            "about_text": "",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "id": "p-49ac068a9d5b",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "stock_ok": true
+          }
+        ]
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 2,
+      "call_id": "2",
+      "tool_name": "contrast_products",
+      "args": {
+        "chosen_listings": [
+          "p-461880415d96",
+          "p-3b21626173d3",
+          "p-137822d008c1",
+          "p-49ac068a9d5b"
+        ]
+      },
+      "observation": {
+        "listings_set": [
+          {
+            "about_text": "Vexbelvo Original TasteCoca\u00e2Cola history began in 1886\u00c2\u00a0when Dr. John Pemberton created a distinctive soft drink now known as Vexbelvo Original Taste.Today, you can find Vexbelvo Original Taste in a variety of sizes to suit every lifestyle and occasion.",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "facts": {
+              "capacity": "1250",
+              "color family": "multicolor",
+              "color_family": "multicolor",
+              "dietary needs": "gluten free",
+              "dietary_needs": "gluten free",
+              "flavor": "cola",
+              "options": "multicolor / 1pc / 1.25l",
+              "organic": "no",
+              "pack size": "1",
+              "pack type": "multipack",
+              "pack_type": "multipack",
+              "packaging type": "bottle",
+              "packaging_type": "plastic bottles",
+              "series": "original taste",
+              "storage type": "cupboard",
+              "storage_type": "cupboard",
+              "storage_type_gr": "cupboard"
+            },
+            "id": "p-461880415d96",
+            "name": "Vexbelvo Original Taste Pet Bottle - The Classic Refreshing Soft Drink Perfect for Every Occasion Meal and Lifestyle",
+            "price": 18,
+            "stock_ok": true
+          },
+          {
+            "about_text": "Vexbelvo Original TasteCoca\u00e2Cola history began in 1886\u00c2\u00a0when Dr. John Pemberton created a distinctive soft drink now known as Vexbelvo Original Taste.Today, you can find Vexbelvo Original Taste in a variety of sizes to suit every lifestyle and occasion.",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "facts": {
+              "capacity": "290",
+              "color": "multicolor",
+              "color family": "multicolor",
+              "color_family": "multicolor",
+              "dietary needs": "gluten free",
+              "dietary_needs": "gluten free",
+              "flavor": "cola",
+              "options": "multicolor / 3pcs / 290ml",
+              "organic": "no",
+              "pack size": "3",
+              "pack type": "multipack",
+              "pack_type": "multipack",
+              "packaging type": "bottle",
+              "packaging_type": "plastic bottles",
+              "series": "original taste",
+              "storage": "cupboard",
+              "storage_type": "cupboard",
+              "storage_type_gr": "cupboard"
+            },
+            "id": "p-3b21626173d3",
+            "name": "Vexbelvo Original Taste Pet Bottle - The Classic Refreshing Soft Drink Perfect for Every Occasion Meal and Lifestyle",
+            "price": 18,
+            "stock_ok": true
+          },
+          {
+            "about_text": "",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "facts": {
+              "capacity": "320 ml",
+              "dietary needs": "sugar free",
+              "dietary_needs": "trans fat free, sugar free, caffeine free",
+              "flavor": "cola zero",
+              "options": "4 x 320ml",
+              "organic": "no",
+              "pack size": "4 pieces",
+              "packaging type": "cans",
+              "packaging_type": "cans",
+              "series": "zero sugar",
+              "storage type": "cupboard",
+              "storage_type": "cupboard",
+              "storage_type_gr": "cupboard"
+            },
+            "id": "p-137822d008c1",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "stock_ok": true
+          },
+          {
+            "about_text": "",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "facts": {
+              "capacity": "320",
+              "dietary needs": "trans fat free",
+              "dietary_needs": "trans fat free, sugar free, caffeine free",
+              "flavor": "cola zero",
+              "options": "1 x 320ml",
+              "organic": "no",
+              "pack size": "1",
+              "packaging": "cans",
+              "packaging type": "cans",
+              "packaging_type": "cans",
+              "series": "zero sugar",
+              "storage": "cupboard",
+              "storage_type": "cupboard",
+              "storage_type_gr": "cupboard"
+            },
+            "id": "p-49ac068a9d5b",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "stock_ok": true
+          }
+        ]
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 3,
+      "call_id": "3",
+      "tool_name": "find_goods",
+      "args": {
+        "free_search_for": "cola single can"
+      },
+      "observation": {
+        "count_count": 12,
+        "further": "vuvepa4",
+        "listings_set": [
+          {
+            "about_text": "Pepsi is a carbonated soft drink manufactured by PepsiCo. Originally created and developed in 1893 by Caleb Bradham and introduced as Brad's Drink, it was renamed as Pepsi-Cola in 1898, and then shortened to Pepsi in 1961.",
+            "aisle_name": "Cola",
+            "brand": "Vokora",
+            "id": "p-69b1d52e8e6e",
+            "name": "Pepsi Cola (320mL)",
+            "price": 59,
+            "stock_ok": true
+          },
+          {
+            "about_text": "We deliver to Metro Manila. Delivery Period: 1-2 days No minimum order required. Budget-friendly quality items.;",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "id": "p-e1b30d1f9444",
+            "name": "Coke Regular Can 320ml",
+            "price": 62,
+            "stock_ok": true
+          },
+          {
+            "about_text": "It containszerocalories and sugar while providing the signature Coca-Colaflavor, making it an appealing drink among those trying to reduce their sugar intake or control their weight. This article takes a detailed look atCoke Zeroand explains whether it's a healthy choice",
+            "aisle_name": "Cola",
+            "brand": "Vokora",
+            "id": "p-f7a3ce088ba4",
+            "name": "Coke Zero Sugar (320mL)",
+            "price": 71,
+            "stock_ok": true
+          },
+          {
+            "about_text": "Rite 'n Lite is a no sugar-no carbs-no calories, carbonated drink. It is free from aspartame too. It uses sucralose.;This is keto-friendly and could quench your craving for sugary drinks!;Check this out: each 250ml can of Rite \u2018n Lite contains no sugar, no carbs and no calories, making each gulp a guilt-free indulgence especially as you crave ice cold drinks this scorching summer season. What\u2019s more, Rite \u2018n Lite contains no aspartame and is 0% on the glycemic index\u2014which means even diabetics can join in on the fun.;Rite \u2018n Lite even fits right into a Keto dieter\u2019s menu! A trusty drink if you\u2019",
+            "aisle_name": "Cola",
+            "brand": null,
+            "id": "p-06d9cce41aa6",
+            "name": "Rite n Lite Keto-friendly Drink",
+            "price": 71,
+            "stock_ok": true
+          }
+        ]
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 4,
+      "call_id": "4",
+      "tool_name": "contrast_products",
+      "args": {
+        "chosen_listings": [
+          "p-69b1d52e8e6e",
+          "p-e1b30d1f9444",
+          "p-f7a3ce088ba4",
+          "p-06d9cce41aa6"
+        ]
+      },
+      "observation": {
+        "listings_set": [
+          {
+            "about_text": "Pepsi is a carbonated soft drink manufactured by PepsiCo. Originally created and developed in 1893 by Caleb Bradham and introduced as Brad's Drink, it was renamed as Pepsi-Cola in 1898, and then shortened to Pepsi in 1961.",
+            "aisle_name": "Cola",
+            "brand": "Vokora",
+            "facts": {
+              "capacity": "320 ml",
+              "dietary_needs": "nil",
+              "flavor": "cola",
+              "options": "",
+              "pack size": "single",
+              "pack type": "single",
+              "pack_type": "single",
+              "packaging": "cans",
+              "packaging type": "cans",
+              "packaging_type": "cans"
+            },
+            "id": "p-69b1d52e8e6e",
+            "name": "Pepsi Cola (320mL)",
+            "price": 59,
+            "stock_ok": true
+          },
+          {
+            "about_text": "We deliver to Metro Manila. Delivery Period: 1-2 days No minimum order required. Budget-friendly quality items.;",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "facts": {
+              "capacity": "320 ml",
+              "dietary needs": "cholesterol free",
+              "dietary_needs": "cholesterol free",
+              "flavor": "",
+              "options": "",
+              "organic": "no",
+              "pack type": "single",
+              "pack_type": "single",
+              "packaging type": "cans",
+              "packaging_type": "cans",
+              "storage type": "cupboard",
+              "storage_type": "cupboard",
+              "storage_type_gr": "cupboard",
+              "warranty_type": "local supplier refund warranty"
+            },
+            "id": "p-e1b30d1f9444",
+            "name": "Coke Regular Can 320ml",
+            "price": 62,
+            "stock_ok": true
+          },
+          {
+            "about_text": "It containszerocalories and sugar while providing the signature Coca-Colaflavor, making it an appealing drink among those trying to reduce their sugar intake or control their weight. This article takes a detailed look atCoke Zeroand explains whether it's a healthy choice",
+            "aisle_name": "Cola",
+            "brand": "Vokora",
+            "facts": {
+              "capacity": "320 ml",
+              "dietary needs": "low sugar",
+              "dietary_needs": "low sugar",
+              "flavor": "coca-cola",
+              "options": "",
+              "organic": "no",
+              "pack size": "single",
+              "pack type": "single",
+              "pack_type": "single",
+              "packaging": "cans",
+              "packaging type": "cans",
+              "packaging_type": "cans"
+            },
+            "id": "p-f7a3ce088ba4",
+            "name": "Coke Zero Sugar (320mL)",
+            "price": 71,
+            "stock_ok": true
+          },
+          {
+            "about_text": "Rite 'n Lite is a no sugar-no carbs-no calories, carbonated drink. It is free from aspartame too. It uses sucralose.;This is keto-friendly and could quench your craving for sugary drinks!;Check this out: each 250ml can of Rite \u2018n Lite contains no sugar, no carbs and no calories, making each gulp a guilt-free indulgence especially as you crave ice cold drinks this scorching summer season. What\u2019s more, Rite \u2018n Lite contains no aspartame and is 0% on the glycemic index\u2014which means even diabetics can join in on the fun.;Rite \u2018n Lite even fits right into a Keto dieter\u2019s menu! A trusty drink if you\u2019",
+            "aisle_name": "Cola",
+            "brand": null,
+            "facts": {
+              "capacity": "250",
+              "dietary needs": "sugar free",
+              "dietary_needs": "sugar free, healthier choice",
+              "flavor": "cola taste",
+              "options": "rootbeer",
+              "organic": "no",
+              "pack type": "single",
+              "pack_type": "single",
+              "packaging type": "can",
+              "packaging_type": "can"
+            },
+            "id": "p-06d9cce41aa6",
+            "name": "Rite n Lite Keto-friendly Drink",
+            "price": 71,
+            "stock_ok": true
+          }
+        ]
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 5,
+      "call_id": "5",
+      "tool_name": "contact_customer",
+      "args": {
+        "note_text": "What flavor or capacity would you like for the cola?"
+      },
+      "observation": {
+        "value": "Pick whichever you like, I won't be fussed."
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 6,
+      "call_id": "6",
+      "tool_name": "contact_customer",
+      "args": {
+        "note_text": "What capacity, dietary needs or packaging type would you like for the cola?"
+      },
+      "observation": {
+        "value": "That's a blank page for me, so fill it in as you see fit."
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 7,
+      "call_id": "7",
+      "tool_name": "contact_customer",
+      "args": {
+        "note_text": "What dietary needs, packaging type or series would you like for the cola?"
+      },
+      "observation": {
+        "value": "On packaging type, I'll only accept cans, the same way I only accept balanced books."
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 8,
+      "call_id": "8",
+      "tool_name": "find_goods",
+      "args": {
+        "free_search_for": "cans cola"
+      },
+      "observation": {
+        "count_count": 57,
+        "further": "vuvepa4",
+        "listings_set": [
+          {
+            "about_text": "",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "id": "p-49ac068a9d5b",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "stock_ok": true
+          },
+          {
+            "about_text": "",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "id": "p-137822d008c1",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "stock_ok": true
+          },
+          {
+            "about_text": "",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "id": "p-a87949d87c76",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "stock_ok": true
+          },
+          {
+            "about_text": "",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "id": "p-1f717736631e",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "stock_ok": true
+          }
+        ]
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 9,
+      "call_id": "9",
+      "tool_name": "contrast_products",
+      "args": {
+        "chosen_listings": [
+          "p-a87949d87c76",
+          "p-1f717736631e"
+        ]
+      },
+      "observation": {
+        "listings_set": [
+          {
+            "about_text": "",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "facts": {
+              "dietary needs": "trans fat free, sugar free, caffeine free",
+              "dietary_needs": "trans fat free, sugar free, caffeine free",
+              "flavor": "cola zero",
+              "options": "12 x 320ml",
+              "organic": "no",
+              "pack size": "12",
+              "packaging type": "cans",
+              "packaging_type": "cans",
+              "series": "zero sugar",
+              "storage type": "cupboard",
+              "storage_type": "cupboard",
+              "storage_type_gr": "cupboard"
+            },
+            "id": "p-a87949d87c76",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "stock_ok": true
+          },
+          {
+            "about_text": "",
+            "aisle_name": "Cola",
+            "brand": "Vexbelvo",
+            "facts": {
+              "capacity": "320 ml",
+              "dietary needs": "trans fat free, sugar free, caffeine free",
+              "dietary_needs": "trans fat free, sugar free, caffeine free",
+              "flavor": "cola zero",
+              "options": "24 x 320ml",
+              "organic": "no",
+              "pack size": "24 pieces",
+              "packaging type": "cans",
+              "packaging_type": "cans",
+              "series": "zero sugar",
+              "storage type": "cupboard",
+              "storage_type": "cupboard",
+              "storage_type_gr": "cupboard"
+            },
+            "id": "p-1f717736631e",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "stock_ok": true
+          }
+        ]
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 10,
+      "call_id": "10",
+      "tool_name": "put_quantity",
+      "args": {
+        "article": "p-49ac068a9d5b",
+        "count_needed": 1,
+        "verb_type": "plus"
+      },
+      "observation": {
+        "id": "p-49ac068a9d5b",
+        "qty": 1
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 11,
+      "call_id": "11",
+      "tool_name": "detail_product",
+      "args": {
+        "chosen_item_id": "p-49ac068a9d5b"
+      },
+      "observation": {
+        "about_text": "",
+        "aisle_name": "Cola",
+        "brand": "Vexbelvo",
+        "facts": {
+          "capacity": "320",
+          "dietary needs": "trans fat free",
+          "dietary_needs": "trans fat free, sugar free, caffeine free",
+          "flavor": "cola zero",
+          "options": "1 x 320ml",
+          "organic": "no",
+          "pack size": "1",
+          "packaging": "cans",
+          "packaging type": "cans",
+          "packaging_type": "cans",
+          "series": "zero sugar",
+          "storage": "cupboard",
+          "storage_type": "cupboard",
+          "storage_type_gr": "cupboard"
+        },
+        "id": "p-49ac068a9d5b",
+        "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+        "price": 18,
+        "stock_ok": true
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 12,
+      "call_id": "12",
+      "tool_name": "trolley_contents",
+      "args": {},
+      "observation": {
+        "grand_total_cost": 18,
+        "lines_lines": [
+          {
+            "id": "p-49ac068a9d5b",
+            "name": "Vexbelvo Zero Sugar Soft Drink - All the Classic Taste You Love Zero Sugar and Zero Compromise",
+            "price": 18,
+            "qty": 1
+          }
+        ]
+      },
+      "done": null,
+      "error_code": null
+    },
+    {
+      "step": 13,
+      "call_id": "13",
+      "tool_name": "submit_purchase",
+      "args": {},
+      "observation": {
+        "fine": true
+      },
+      "done": null,
+      "error_code": null
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+flowchart TD
+    A["agent_main(problem_data)"] --> B["New Tosky instance: task state in RAM"]
+    B --> C["bootstrap: interpret request and discover tool roles"]
+    C --> D["run: fixed priority controller"]
+    D --> E["Assess evidence, questions, search coverage, baskets and procedures"]
+    E --> F["plan_action: propose one world action"]
+    F --> G["Validate arguments and execute one numbered step"]
+    G --> H["Provided ProxyClient: /environment/call"]
+    H --> I["absorb: interpret observation and update task state"]
+    I --> D
+    D --> J["Stop when finished, blocked or limited"]
+    J --> K["Return dialogue trace and diagnostics"]
+    C -. "semantic work" .-> L["infer: selected Haiku or Sonnet, then backup on failure"]
+    E -. "semantic work" .-> L
+    F -. "semantic work" .-> L
+    I -. "semantic work" .-> L
+    L --> M["Provided proxy: /inference/chat/completions to OpenRouter"]

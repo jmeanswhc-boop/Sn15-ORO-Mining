@@ -1,0 +1,749 @@
+{
+  "schema_version": "oro.episode_feedback.v1",
+  "episode_result_id": "8654002e-a2f3-4a50-9f31-b54d08f2031f",
+  "task_id": "TF6-recovery-200233",
+  "query": "Shopping for a smartphone today, at or below 3350.00 PHP, in stock only; a genuine smartphone, not a feature phone or accessory listing. Top of my list: the XS19PRO in black. If that exact one is not available, keep budget and stock firm, and move to another color of the same model before another model.\n\nTask rules:\nYou are a shopping agent. The shopper's critical constraints are category, budget, and in-stock availability; never relax those. The shopper may also name preferred model and color. Those preferences are relaxable only after the exact item becomes unavailable: first try the same model in another color, and only then consider changing models. Prices or stock can change while you shop, so if the exact item disappears after a cart action, recover by finding the least-relaxed in-stock option within budget before ordering. For model identity, use the product's model fact first. Only when that fact is absent may you use an unambiguous model in the title. An unusable or ambiguous model fact cannot be overridden by the title. For color, use the selected variant's options first, then a color fact, then the title. If a source names conflicting colors, treat color as unresolved rather than falling back to another source. A category label alone does not establish model or color. Choose an option with resolved identity. Any eligible listing matching the preferred model and color is a valid first choice. Inspect that actual choice before adding it, and inspect the replacement's identity and current stock after the event. The ordered product must genuinely be a smartphone, judged from its own product facts and the selected variant, not from the title or a category label alone.\nThe catalog category_path is available in view and compare. Check that classification against the required category. Reject accessories and non-device listings when a device is requested.\nRead shopper messages returned after cart actions before placing an order. The shopper may clarify requirements or tighten the budget; once stated, those updates apply to later choices. Answer any direct clarification request.\nUnless the shopper asks for a reason, structured justification is optional. If you supply it, use only field/value claims supported by view or compare of the final product and its current price/stock. Specification claims need raw product facts, not title guesses. Do not include summary or evidence free text.",
+  "family": "recovery",
+  "phase": "RACE",
+  "outcome": "completed",
+  "passed": true,
+  "paid_reward": 1.0,
+  "step_count": 15,
+  "tool_call_count": 15,
+  "search_call_count": 2,
+  "termination_code": "placed_order",
+  "interaction": [
+    {
+      "step_index": 0,
+      "turn": 1,
+      "calls": [
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-1-1",
+          "tool_name": "search",
+          "args": {
+            "in_stock": true,
+            "k": 10,
+            "query": "XS19PRO black"
+          },
+          "observation": {
+            "action": "search",
+            "results": [
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2658.0,
+                "product_id": "578265939159601623",
+                "sku": "4886486266-4",
+                "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 148.12,
+                "product_id": "3028717839227381977",
+                "sku": "4489247177-2",
+                "title": "Large Mouse Pad Baal Raiden Shogun Desk Mouse Pad Cute HD Desk Pad Extended Gaming Keyboard Mats XXL 900x400mmm Gamer Mousepad"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 388.0,
+                "product_id": "1142683645504237488",
+                "sku": "4852383326-1",
+                "title": "Half Life Large Gaming Mouse Pad XXL Computer Mousepad PC Gamer Mouse Mat Laptop Mausepad Mouse Carpet Keyboard Mat Desk Pad"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 388.0,
+                "product_id": "2967188401899021935",
+                "sku": "4964021980-1",
+                "title": "Limbus Company Mouse Pad Large Gaming Pad XXL Desk Mat Non Slip Double Sided PU Game Mouse Computer Leather Keyboard Mat"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 388.0,
+                "product_id": "110514193953461794",
+                "sku": "4852335850-5",
+                "title": "Apothecary Diaries Anime Gamer XL Computer HD Home Mousepad XXL Mouse Mat Natural Rubber Non-Slip Carpet Table Mat Mouse Mat"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 343.0,
+                "product_id": "212588090431866501",
+                "sku": "4962010256-7",
+                "title": "Zenless Zone Zero Mouse Pad Cartoon rubber Small mouse pad desktop computer office keyboard e-sports ROGs game"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2658.0,
+                "product_id": "1697680695832131315",
+                "sku": "4886486266-7",
+                "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2658.0,
+                "product_id": "3864804315817939764",
+                "sku": "4886486266-3",
+                "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2658.0,
+                "product_id": "4544416534444645697",
+                "sku": "4886486266-8",
+                "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2658.0,
+                "product_id": "7003233892073309494",
+                "sku": "4886486266-6",
+                "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-1-2",
+          "tool_name": "search",
+          "args": {
+            "in_stock": true,
+            "k": 10,
+            "query": "XS19PRO smartphone"
+          },
+          "observation": {
+            "action": "search",
+            "results": [
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2658.0,
+                "product_id": "1697680695832131315",
+                "sku": "4886486266-7",
+                "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2439.0,
+                "product_id": "8311715752667914182",
+                "sku": "4591684320-1",
+                "title": "HTRC 20A 12V/24V 10A Smart Battery Charger for Car Battery Pulse Repair Auto Moto Lead Acid AGM GEL PB Lithium LiFePo4 Battery"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 40.0,
+                "product_id": "6711541964737746126",
+                "sku": "5025700233-1",
+                "title": "Timy #   Long Neck One Touch Car Mount Cellphone Holder"
+              },
+              {
+                "brand": "Hol",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 46.0,
+                "product_id": "5057982734852455042",
+                "sku": "4862924457-1",
+                "title": "Dashboard Car Phone Holder 360º Rotation Universal Cell Phone Car Clip Mount Stand 360 Degree Car Navigation Bracket"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 866.46,
+                "product_id": "5551700715425810732",
+                "sku": "4547722712-2",
+                "title": "For DJI RS4 Organizer Bag Shoulder Crossbody Bag for RS4 Portable Bag Handbag Accessories"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 177.0,
+                "product_id": "1397048659777351126",
+                "sku": "4898289396-4",
+                "title": "DSFG Scope-Cover Protective Case Anti-Scratch Dustproof Scope-Cover For Scope-Sights 507K 507C"
+              },
+              {
+                "brand": "Manfrotto",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 472.0,
+                "product_id": "6809406705950940016",
+                "sku": "112408163-1",
+                "title": "MANFROTTO MCLAMP SMARTPHONE CLAMP"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 295.0,
+                "product_id": "3857349912195658393",
+                "sku": "4849237374-default",
+                "title": "X3 BluetoothController For Smartphone PC wireless play"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 60.0,
+                "product_id": "315359734237939192",
+                "sku": "272780161-1",
+                "title": "Portable Gamepad 3 in 1 Joystick Controller Phone Holder"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 208.0,
+                "product_id": "2076554043665574627",
+                "sku": "2715813084-1",
+                "title": "M.2 Solid State Drive Storage Box NVMe Mobile Hard Disk Protective Case Shockproof Anti-Fall Pressure Resistant Bag Digital Accessories"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-1-3",
+          "tool_name": "filter",
+          "args": {
+            "category": "smartphone",
+            "in_stock": true,
+            "k": 10,
+            "max_price": 3350.0
+          },
+          "observation": {
+            "action": "filter",
+            "results": [
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 1386.0,
+                "product_id": "1001064389879452186",
+                "sku": "4851775050-8",
+                "title": "Mobile Phone VIV0 Y15 Smartphone 6.7 inch 12+512GB 6800mAh Android 11 Phone 12 Months Warranty"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 1038.29,
+                "product_id": "1001807420149291745",
+                "sku": "5046677414-1",
+                "title": "Q8 GSM 2G Rugged Mobile Phone Big Battery Double Flashlight 2.4inch HD Screen Dual Sim Large Button Cheap Cellphone For Elderly"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 1895.0,
+                "product_id": "1002201762800849698",
+                "sku": "4870767874-4",
+                "title": "Phone Galaxy S23+ mobile phone Dual Sim 8GB RAM + 128GB ROM (SM-G9960) Snapdragon 888 Ultra HD COD"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 1457.0,
+                "product_id": "1004223361149547623",
+                "sku": "4979116422-7",
+                "title": "Smartphone OPPQ A3X 6.7 inch 12+512GB 6800mAh Android 11 5G mobile phone 12 months warranty"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2302.3,
+                "product_id": "1006448546430009337",
+                "sku": "5127986601-2",
+                "title": "Infiix HOT 50i 8GB+256GB MediaTek Helio G81 Gaming Processor | 48 MP Rear AI Dual Camera | 6.8\" IPS 120hz Punch-Hole Display with Dynamic Bar | 8000 mAh (1 year local warranty) Smart Phone"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 3152.0,
+                "product_id": "1008944550140191801",
+                "sku": "5108831189-3",
+                "title": "Smartphone VIV0 Y27 7.5 inch 16+512GB 6800mAh 5G WIFI Android 11 5G mobile phone 12 months warranty"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 1999.0,
+                "product_id": "1011557266357127379",
+                "sku": "5105230308-2",
+                "title": "Infinix Smart 8 Smartphone up to 8GB [8GB + 128GB 90hz Punch-Hole Display (1 year local warranty)"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 1299.0,
+                "product_id": "101192025428041929",
+                "sku": "4141618754-8",
+                "title": "[Bagong produkto + COD] S23UItra RAM 16GB + ROM 1TB 7.3 pulgada 120hz mataas na refresh rate 7800mAh na baterya sinusuportahan ng telepono ang pagkilala sa mukha at pag-unlock ng fingerprint"
+              },
+              {
+                "brand": "Poco",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 10.0,
+                "product_id": "1013845350703209544",
+                "sku": "4590909235-7",
+                "title": "POCO M6 Pro Smartphone 5G Connectivity Snapdragon Processor AI Triple Camera Long Battery Life"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 1386.52,
+                "product_id": "1013955199804169736",
+                "sku": "5090054045-7",
+                "title": "A15 5G Smart Phone HD Screen 6.7 Inch 16+512GB 7000mAh Double SIM Baterya Sinusuportahan ang Android 13"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-1-4",
+          "tool_name": "filter",
+          "args": {
+            "brand": "XS19PRO",
+            "category": "smartphone",
+            "in_stock": true,
+            "k": 10,
+            "max_price": 3350.0
+          },
+          "observation": {
+            "action": "filter",
+            "results": [],
+            "returned": 0
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 1,
+      "turn": 2,
+      "calls": [
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-2-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "578265939159601623"
+          },
+          "observation": {
+            "brand": "OEM",
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "1950mah",
+              "condition": "new",
+              "description_operating_system": "Operating system: Android 12",
+              "device_operating_system": "android",
+              "display": "384*854",
+              "model": "soyes xs19pro",
+              "operating_system": "android",
+              "size": "3.88 inches"
+            },
+            "product_id": "578265939159601623",
+            "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "black / 3gb+32gb",
+                "price": 2658.0,
+                "sku": "4886486266-4"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-2-2",
+          "tool_name": "view",
+          "args": {
+            "product_id": "1697680695832131315"
+          },
+          "observation": {
+            "brand": "OEM",
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "1950mah",
+              "condition": "new",
+              "description_operating_system": "Operating system: Android 12",
+              "device_operating_system": "android",
+              "display": "384*854",
+              "model": "soyes xs19pro",
+              "operating_system": "android",
+              "size": "3.88 inches"
+            },
+            "product_id": "1697680695832131315",
+            "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "pink / 3gb+32gb",
+                "price": 2658.0,
+                "sku": "4886486266-7"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-2-3",
+          "tool_name": "view",
+          "args": {
+            "product_id": "3864804315817939764"
+          },
+          "observation": {
+            "brand": "OEM",
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "1950mah",
+              "condition": "new",
+              "description_operating_system": "Operating system: Android 12",
+              "device_operating_system": "android",
+              "display": "384*854",
+              "model": "soyes xs19pro",
+              "operating_system": "android",
+              "size": "3.88 inches"
+            },
+            "product_id": "3864804315817939764",
+            "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "pink / 4gb+64gb",
+                "price": 2658.0,
+                "sku": "4886486266-3"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-2-4",
+          "tool_name": "view",
+          "args": {
+            "product_id": "4544416534444645697"
+          },
+          "observation": {
+            "brand": "OEM",
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "1950mah",
+              "condition": "new",
+              "description_operating_system": "Operating system: Android 12",
+              "device_operating_system": "android",
+              "display": "384*854",
+              "model": "soyes xs19pro",
+              "operating_system": "android",
+              "size": "3.88 inches"
+            },
+            "product_id": "4544416534444645697",
+            "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "blue / 3gb+32gb",
+                "price": 2658.0,
+                "sku": "4886486266-8"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-2-5",
+          "tool_name": "view",
+          "args": {
+            "product_id": "7003233892073309494"
+          },
+          "observation": {
+            "brand": "OEM",
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "1950mah",
+              "condition": "new",
+              "description_operating_system": "Operating system: Android 12",
+              "device_operating_system": "android",
+              "display": "384*854",
+              "model": "soyes xs19pro",
+              "operating_system": "android",
+              "size": "3.88 inches"
+            },
+            "product_id": "7003233892073309494",
+            "title": "SOYES XS19PRO 2025 New 4G Mini Smart Phone Flagship Experience in Miniature 3.88-inch HD Vision Easy to Control Anytime",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "pink / 4gb+128gb",
+                "price": 2658.0,
+                "sku": "4886486266-6"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 2,
+      "turn": 3,
+      "calls": [
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-3-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "578265939159601623",
+            "sku": "4886486266-4"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": false,
+              "price": 2658.0,
+              "product_id": "578265939159601623",
+              "sku": "4886486266-4"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 2658.0,
+                "in_stock": false,
+                "price_at_add": 2658.0,
+                "product_id": "578265939159601623",
+                "sku": "4886486266-4"
+              }
+            ],
+            "market_event": {
+              "contract_version": "oro_event_v3",
+              "currency": "PHP",
+              "in_stock_after": false,
+              "in_stock_before": true,
+              "kind": "stockout",
+              "new_price": null,
+              "old_price": 2658.0,
+              "target": {
+                "product_id": "578265939159601623",
+                "sku": "4886486266-4"
+              }
+            }
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 3,
+      "turn": 4,
+      "calls": [
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-4-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "4544416534444645697",
+            "sku": "4886486266-8"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 2658.0,
+            "product_id": "4544416534444645697",
+            "sku": "4886486266-8"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": "wait, is that still available?",
+      "message": null
+    },
+    {
+      "step_index": 4,
+      "turn": 5,
+      "calls": [
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-5-1",
+          "tool_name": "message",
+          "args": {
+            "content": "The black XS19PRO just went out of stock. Per your fallback rule, I'm moving to another color of the same SOYES XS19PRO model. The blue variant is in stock at 2658 PHP, within budget."
+          },
+          "observation": {
+            "sent": true
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-5-2",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "4544416534444645697",
+            "sku": "4886486266-8"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": true,
+              "price": 2658.0,
+              "product_id": "4544416534444645697",
+              "sku": "4886486266-8"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 2658.0,
+                "in_stock": false,
+                "price_at_add": 2658.0,
+                "product_id": "578265939159601623",
+                "sku": "4886486266-4"
+              },
+              {
+                "currency": "PHP",
+                "current_price": 2658.0,
+                "in_stock": true,
+                "price_at_add": 2658.0,
+                "product_id": "4544416534444645697",
+                "sku": "4886486266-8"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 5,
+      "turn": 6,
+      "calls": [
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-6-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "4544416534444645697",
+            "sku": "4886486266-8"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 2658.0,
+            "product_id": "4544416534444645697",
+            "sku": "4886486266-8"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 6,
+      "turn": 7,
+      "calls": [
+        {
+          "call_id": "30fdd078a74244a89c35b65e59a94b17-turn-7-1",
+          "tool_name": "place_test_order",
+          "args": {
+            "product_id": "4544416534444645697",
+            "sku": "4886486266-8"
+          },
+          "observation": {
+            "order": {
+              "currency": "PHP",
+              "in_stock_at_order": true,
+              "price_at_order": 2658.0,
+              "target": {
+                "product_id": "4544416534444645697",
+                "sku": "4886486266-8"
+              }
+            },
+            "status": "placed"
+          },
+          "done": true,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    }
+  ],
+  "observable_issues": [],
+  "diagnostics_state": "available",
+  "failure_category": null,
+  "end_reason": null
+}

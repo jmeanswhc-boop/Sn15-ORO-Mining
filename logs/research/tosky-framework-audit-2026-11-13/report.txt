@@ -1,0 +1,262 @@
+TOSKY FRAMEWORK — COMPLETE SOURCE REVIEW AND COMPETITIVE ASSESSMENT
+2026-11-13
+
+Assessment
+
+TOSKY.py is a useful basis for developing a new architecture. Its explicit controller, per-item state, combination search and procedure gates provide a clearer place to implement reliable decisions than a growing collection of overlapping heuristics. The current implementation does not support a claim that it can surpass the champion. It has confirmed correctness failures and no financial control that can keep a ninety-task race within $5. A successful simple scripted purchase does not close those gaps.
+
+The most significant accuracy weakness is the lifecycle connecting interpreted evidence, committed state and the next action. Eligibility can be accepted without a product-type claim, stale or cross-product evidence can pass, unknown interpretation is cached without a repair route, and evidence-producing procedures can be scheduled after the decisions that depend on them. The resulting false acceptances, false declines and repeated reads share that underlying boundary. Financial admission and deadline control are an additional independent requirement.
+
+Recommendation: retain this framework and improve its evidence/state/dependency controller in isolated stages. Keep the current file unchanged as a baseline. A wholesale copy of the champion would retain several of the same problems while discarding the opportunity to make this architecture easier to verify. Competitive superiority must be established by paired scored evaluations after the controller and budget defects are corrected.
+
+Scope and evidence
+
+Audited file: agents/TOSKY.py
+SHA-256: 31b083e8ac95bc6863a4a01f9768a61879914fed4eb9116ea0f27b394d825a18
+Size: 82,547 bytes; 1,510 lines.
+
+All 61 function definitions, including the two local helper functions, and all four data classes were reviewed. function-audit.txt provides their exact line ranges and individual assessments. The file was not modified. The previous 125-check result for agents/Tosky_v3.py applies to that different implementation and is not a validation result for TOSKY.py.
+
+This investigation used the current public ORO contract, a live champion/status snapshot, the released Pooh and CHIDORI_v11 sources, the existing complete public race-22 research corpus, and the supplied ten-case practice observations. No private grader was inspected or incorporated. No paid inference, local paid evaluation or submission was performed.
+
+Offline characterization confirmed 34 controller counterexamples, with nine positive controls. Four additional full-entrypoint simulations exercised a straightforward purchase, a transient evidence-format failure, a reference dependency and a required-read procedure. These are deliberately selected controller tests with controlled interpreter/world replies. They are not 34 failed benchmark problems, a score estimate or evidence of the frequency of model errors. Some counterexamples deliberately supply a wrong interpreter projection to determine whether the claimed validation boundary catches it. Others fail with a faithful projection, including same-property replacement, mixed measurement units and the reference/read scheduling cycles.
+
+Current competitive baseline
+
+ORO's live top record fetched at 2026-11-13 13:46:10 UTC / 08:46:10 America/New_York identifies Pooh v1, version 06af354f-5c57-794a-8000-8b0c8413c3ae, as champion. CHIDORI_v11 is an earlier champion and remains a useful control. Race 23 was qualifying-open in the accompanying snapshot; no race-23 result was available.
+
+Published figures and existing race-22 run data:
+
+Agent/source             Qualifier executions        Race 22 executions    Mean reported USD/90    Mean sandbox seconds/90
+Pooh v1                  53/60 correct                40/180 correct        $4.81043                531.6
+CHIDORI v11              52/60 correct                35/180 correct        $4.51998                514.8
+Tosky / ICDI_chidori_v4   50/60 correct                38/180 correct        $2.03018                386.2
+New TOSKY.py             No result established        No result established No result established   No result established
+
+These aggregates combine two included validator runs, repeating the same thirty qualifier tasks or ninety race tasks. They are not sixty or one hundred eighty independent tasks. Public reported usage is not an independently audited invoice. Different agents' public runs do not form a controlled paired model experiment.
+
+The refreshed published qualifier scores were 0.8834 for Pooh and 0.8667 for CHIDORI; race-22 raw scores were 0.2222 and 0.1945. Small discrepancies from the fractions above reflect public rounding. The earlier Tosky row refers to ICDI_chidori_v4, not this new framework.
+
+Pooh's Overall was 0.2325, with an additive margin of 0.010147713555557304 and a strict challenge threshold of 0.2426477135555573 at the top snapshot. A new version must exceed the difficulty-adjusted Overall threshold; exceeding one raw race score or qualifier score is insufficient. With the next three-race window retaining Pooh's race-21 and race-22 deltas, a first-race challenger with zero prior deltas would need approximately 0.05754 more raw score than Pooh in that race at this snapshot's margin. This is an illustrative calculation, not an absolute target: the margin decays, the next field and results are unknown, and another challenger can also win.
+
+The largest published failure category in the two Pooh race-22 runs was process_requirement_missed: 83 executions, followed by request_not_met: 44, not_the_best_option: 12 and did_not_finish: 1. A category exposes at most one failure in an episode. Fixing the first reported procedure fault does not establish that all other requirements would pass. These counts identify a productive investigation area; they do not imply 83 recoverable successes.
+
+Public references:
+https://api.oroagents.com/v1/public/top
+https://api.oroagents.com/v1/public/agent-versions/06af354f-5c57-794a-8000-8b0c8413c3ae/status
+https://api.oroagents.com/v1/public/agent-versions/06af2157-d650-7d40-8000-519949f07ca0/status
+https://oroagents.com/docs/miners/scoring
+
+Architecture reconstructed from the code
+
+bootstrap asks a model to construct Slot and Obligation objects, a budget/objective and a tool-role map. perform asks for one schema-compatible action, execute sends it with the complete binding and the next world step, and absorb asks another model to interpret the result. Search interpretation fills Candidate and Scope objects. Opening a page makes a candidate eligible for evaluate, which interprets hard requirements, stock, price and the objective measure. choose_basket searches combinations under the monetary budget and cross-item relations. The main loop then aligns the cart, refreshes selected offers, performs before-order duties and invokes terminal.
+
+Changes and replies can revise the requirement version. Candidate evaluation is primarily cached against that one version. Market and cart revisions exist, but they do not form a complete dependency graph. Candidate.evidence retains short quotation strings without a persistent source-path/version claim; Candidate.measure_unit is never used in ranking; category_key is learned without becoming a product-type requirement; approval_key is written without being read as a gate. These facts distinguish the implemented controller from the broader evidence-graph description in the header.
+
+Useful existing foundations
+
+1. Per-episode state separates requested slots, product observations, scopes, obligations and the cart. This is easier to inspect and revise than one undifferentiated growing conversation.
+2. execute copies all opaque binding fields and retries an uncertain request with the same step and action. It prevents a new world call after finished and stops if an action cannot be reconciled. The positive replay control confirms that behavior.
+3. Tool names and schemas come from the world. Core type, enum, required-field and numeric-bound validation works, including exclusion of Boolean quantities.
+4. Known over-budget and grounded unavailable candidates are excluded in the tested straightforward cases.
+5. Runtime monetary-unit interpretation and caching avoid a fixed product/unit lookup registry.
+6. The combination search can account for joint budget and relationship constraints across several slots. That is a useful foundation for alternatives that fail under a purely independent per-item choice.
+7. checkout_ready is a real normal-path gate. An unanswered before-order duty blocks it in the positive control. Pooh's forced finish path calls gate but does not honor its returned hold before act; this framework gives a clearer place to avoid that weakness.
+8. The framework uses one synchronous entrypoint, permissible imports and proxy calls. The local loader accepts its dataclasses and future annotations. Its smaller source is an engineering advantage for review; it is not evidence of better task accuracy or lower inference cost.
+
+Detailed findings, in priority order
+
+A. Dollar and time admission are missing
+
+Location: __init__ 265-267; infer 320-353; execute 365-397; run 1351.
+
+model_cost is updated after a response and is printed in diagnostics. It is never used to authorize a request. A cap of min(90, 2*max_steps+14) model requests is not a spending cap. Missing usage is effectively charged zero in this local counter, there is no reservation for uncertain transport, and no funds are protected for a required approval or ending. The 402 counterexample sends the backup request and more later requests after the first credit stop.
+
+A synthetic accounting response already above $5/90 per task does not stop further calls. This proves absence of control; the synthetic charge is not a prediction of normal model pricing. The equal-share ceiling for ninety tasks is about $0.05556 per task. A conservative $0.035 local allowance would nominally total $3.15, but this framework has no such allowance. Any chosen allowance must be tested together with affordable output caps and a complete ending path; adding a cap that rejects every useful request would repeat the earlier mistake.
+
+Inference timeout is 45 seconds, environment timeout is 70 seconds and an environment request may be attempted three times. There is no monotonic per-task deadline, dynamically shrinking request timeout or finalization time reserve. Ninety 45-second inference waits alone can exceed the default five-minute task timeout many times. A loop counter does not solve this. HTTP 429 has no backoff here.
+
+SANDBOX_MODEL, when present, overrides both fast and deep routing. This is supported model configuration, not phase routing, but an allowance must price the model actually sent. The three default model IDs were all on the live ORO allowlist at 14:04:49 UTC.
+
+B. Eligibility does not require the requested product type
+
+Location: evaluate 797-849; choose_basket 965-999.
+
+The prompt contains the requested role, but the response schema requires only hard-requirement results, stock, price and a measure. There is no validated type result. With no hard properties, all(statuses.get(r) == true for r in []) is true. In the counterexample a camping stove is accepted for the travel-bag role using entirely correct stock and price responses. A nonempty property list still does not establish item type: a property match can be shared by an ineligible subtype.
+
+This must become an explicit item-identity/type claim before ranking. It is especially important for broad search results and nearby product subtypes, an area where the preceding champion-family analysis already found weakness.
+
+C. Entity and source freshness are not enforced by the evidence boundary
+
+Location: absorb_detail 628-638; evaluate.evidence_value 814-818; evaluate 837 and 850-874.
+
+On a first multi-product page, candidate.pages can contain the isolated correct record, while candidate.detail retains the entire response. A valid path into another product then supplies a matching quotation for the selected product. This is conditional on the first-view branch, not every comparison response.
+
+With several views, detail becomes a list of values without the tool names and per-view timestamps. Old stock=true can be cited after a newer offer says stock=false; the old fact is stamped with the latest global detail_step. The counterexample passes checkout_ready using that stale fact. A graph needs each claim to identify its product, exact field, source tool, observation revision and precedence.
+
+D. Representation faults become stable unknowns with no repair route
+
+Location: path_value 90-106; evaluate 793-883; next_unverified 1234-1245.
+
+The model must reproduce exact free-text requirement strings, dot paths and quotations. A wrong representation, missing result or unavailable model becomes verdict=unknown with evaluated_revision set to the current request revision. evaluate then returns immediately, and next_unverified skips every candidate that already has detail. Broader search does not invalidate the old evaluation. No exact bad-field diagnostic or format-only correction is scheduled.
+
+The full controlled flow demonstrates the consequence: after one incorrect quotation, an actually suitable available candidate is searched again three times and the agent declines. It never reevaluates that candidate. This resembles the earlier failed review-boundary pattern, even though the new code is organized differently.
+
+Literal dotted attribute names cannot be addressed as leaf paths because every dot is treated as a separator. In the supplied observations, 28 of 60 unique record snapshots and eight of the ten practice episodes include at least one dotted attribute key. That does not predict eight failures: some records have aliases and the interpreter can cite a parent object. Parent-object citations, however, weaken exact field binding and are subject to further clipping. The correct interface is exact path-segment arrays or code-owned runtime evidence IDs.
+
+compact truncates raw JSON text, and evidence_value introduces another 2000-character limit. The model's displayed object and the validator's citeable field therefore need not agree. A formatter should not have to reread the world to repair serialization of an already observed fact.
+
+E. Reference acquisition is not a dependency-driven operation
+
+Location: absorb 563-565; evaluate 831-836; pending_process/do_process 1290-1309; run 1428-1452.
+
+Reference pages are accumulated only from procedure-labelled reads. There is no general route from an unresolved referenced requirement to acquiring the needed page. A before-order read is dispatched only after a desired basket is established. If that page is needed to establish eligibility, the ordering is circular: missing reference -> unknown candidate -> no desired basket -> reference read not scheduled.
+
+The full reference simulation follows that circle, repeats search and declines without ever reading the required reference. Merely adding a reference page also does not change evaluated_revision; a cached unknown is not reconsidered. The word within additionally triggers reference validation even for an ordinary numeric bound, while other reference phrasings can escape the small keyword test.
+
+Reference requests should be explicit runtime dependencies. A deadline of before order does not ordinarily mean the read may begin only after all eligibility decisions. Earliest-start constraints and latest-completion deadlines need separate representations.
+
+F. Requirement revisions are not atomic
+
+Location: apply_contract_delta 737-774; absorb_changes 705-735.
+
+Additions are processed before drops. A faithful delta for 'use gloss instead of matte for the surface' adds surface:gloss and then drops every surface-prefixed need, removing both values. The confirmed result is an empty hard list. This can combine with vacuous eligibility to produce an apparently verified order with a lost requirement.
+
+Drops do not validate their quotation against the source. An empty market-change text bypasses containment and can authorize an unsupported budget. budget_unit from the reply schema is ignored; quantity and free/refusal changes are incomplete or unimplemented. Some budget-grounding fallbacks accept an unrelated number in the text. New workflow duties cannot be added through the reply delta contract.
+
+Apply a source-grounded transaction with replacements, withdrawals and additions committed together. Preserve the new value, validate every item/property scope and expire only the dependent claims. Budget units and requested quantities need explicit typed fields and their own invalidation.
+
+G. Procedure proof can be both too weak and self-invalidating
+
+Location: absorb_reply 681-690; obligation_satisfied 1045-1048; perform 1173-1186; do_process 1293-1309.
+
+do_process permits a read obligation to choose a message tool. absorb_reply considers any nonapproval pending duty satisfied by a nonempty reply, so a message saying Hello completes a read obligation in the counterexample. The performed action kind is not tied to the requested duty kind.
+
+Conversely, an actually performed required read can invalidate its own proof. The proof stores basket_key using the old offer_step. Evaluating that same unchanged page advances offer_step, making the key different. The next loop repeats the duty. The full flow performs repeated correct reads, uses all 54 permitted model requests and declines after seventeen world steps.
+
+All before-order duties are treated as cart-dependent, including one-time reads. There is no explicit source-backed multiplicity, item identity, shared-message group or earliest-start condition. A message requesting clarification is also counted as an answered mandatory question. These are relevant to the champion's dominant published procedure-failure category; correcting them still needs paired scoring to quantify the gain.
+
+H. Before-selection requirements are not enforced at the cart commit boundary
+
+Location: run 1382-1400 and 1433-1436.
+
+When a mandatory before-selection action fails, the loop can continue to choose and align a cart. The controlled scheduling probe reaches align_cart while required permission is unanswered. checkout_ready later checks the duty, but performing it after selection may already be too late. The special mandatory-question path also bypasses the message ceiling checked by do_process.
+
+Enforce the relevant procedure at the action whose execution would cross its deadline. A later final-order check cannot repair an earlier sequencing violation.
+
+I. The exact cart is not actually certified
+
+Location: absorb_cart 640-660; cart_ready 1270-1275.
+
+An accepted quantity only needs to equal some numeric value in the observed record. If the actual quantity is two and price is one, a projected quantity of one passes. A model projection omitting an extra observed line also passes because only proposed lines are checked. Both cases can make checkout_ready true for the wrong world cart.
+
+Bind the quantity to the observed quantity field and verify complete container coverage. Handle failed acknowledgements explicitly: accepted:false, success:false or applied:false are not recognized by observation_error. A transport receipt is not proof that the cart changed.
+
+J. Ranking and search closure remain incomplete
+
+Location: candidates_for 885-893; choose_basket 961-1008; unresolved_better 1247-1265; checkout_ready 1277-1288.
+
+The joint optimizer is useful, but physical measure_unit is never used. The controlled most-objective example chooses 900 g over 2 kg. Candidate pruning also compares raw monetary values before unit conversion. Monetary normalization defaults missing units to factor one and can equate distinct symbol-only currencies after stripping all symbols.
+
+The six-hundred-combination cutoff, unknown relationship verdict and genuine infeasibility all return the same empty basket. Duplicate quotations for one relationship can satisfy a two-relation proof count. Shared listing IDs across requested roles are forbidden, and expected_cart would overwrite them instead of adding quantities.
+
+The optimizer's uncertainty must remain distinct from proven infeasibility. It must not fall straight into an unsupported decline. The optimality frontier is advisory in run; checkout_ready can be true while unresolved_better is true. At low remaining steps the loop can order without resolving that frontier.
+
+Search completeness is query-local. A finished narrow query is not a proof of the complete relevant catalog. Only eighty returned rows are processed, while a null next token can mark the scope complete even when row eighty-one was discarded. Completeness flags do not expire correctly when the catalog changes, and query keys/action suppression are sensitive to JSON field order and truncation.
+
+K. Preference discovery and resource reservation are too rigid
+
+Location: question_to_ask 1061-1070; discover_questions 1072-1103; reserve 1050-1059.
+
+Optional questions stop after two used messages even when eight are permitted and a useful unresolved question exists. Only approval messages are reserved; required ordinary messages can lose their remaining quota to optional questions. Approval reservation also does not distinguish mutually exclusive ending branches.
+
+asked marks a property settled after a nonerror response even when the shopper requests rephrasing. free information is ignored and semantic aliases of properties are not represented. question discovery is keyed to detail_step, so an unchanged refresh can repeat discovery after the controller will no longer ask an optional question.
+
+The public feedback category counts do not prove hidden needs are fully handled by Pooh, and the framework's two-question limit is not a justified replacement for its broader adaptive interviewer. Question selection needs measured value of information, explicit settlement/clarification states and branch-aware reserves. It should be optimized only after the correctness path is stable.
+
+L. Costly mechanics and observability need improvement
+
+Location: plan_action 1105-1144; absorb 544-579; infer 320-353; terminal 1329-1343.
+
+One simple purchase took seven world steps and seventeen model requests: twelve fast and five deep. The requested output caps totaled 26,400 tokens; this is a ceiling, not measured generation. It includes a deep planning call for checkout and an observation interpretation after the world already reported finished. The required-read cycle grew to fifty-four calls, including thirty-three deep calls.
+
+Known zero-argument actions, stable reader arguments and unchanged structural observations need not always require a new semantic decision. Skip post-terminal inference, preserve validated schema bindings and expire facts by material changes. Batch interpretation only when it preserves distinct item, requirement and source identities. Reducing successful-task calls and measuring cost per correct outcome are both necessary; a cheap wrong decline is not a useful competitive gain.
+
+Diagnostics record tool receipts and aggregate calls/cost, but not each inference purpose/model/status, finish reason, rejected field path or source dependency. A future paid test would be harder to diagnose than necessary. Add compact structured reasons and physical-attempt accounting without copying private grading information into the agent.
+
+M. Input/schema hardening and additional limitations
+
+valid_schema omits string length checks used throughout the supplied tool schemas. Type-check every interpreter contract before mutating state. The current bootstrap can turn a string hard field into character requirements or leave skipped slot indices inconsistent with list positions. Number parsing accepts nonfinite values and ambiguous commas. Stock parsing mistakes not in stock for availability. The constructor also runs outside agent_main's exception handler.
+
+Other static gaps are recorded in function-audit.txt: missing-role empty-string comparisons on opening data; procedure item defaulting to item one; per-unit versus per-line budget representation; unverified complete-search inference; lost source paths in candidate evidence; unsupported duty counts/groups; unknown versus infeasible relationship caching; and generic procedure tools excluded because they lack one of the fixed role names. These were assessed from source, not assigned invented live failure rates.
+
+The central link
+
+The framework needs a reliable, versioned claim-and-action lifecycle:
+
+observed source -> typed interpreted claim -> local source/identity/type/revision validation -> committed state -> missing-dependency resolution -> successful action receipt -> updated dependent claims -> terminal decision.
+
+This should be one coherent subsystem rather than another universal final completeness flag. It must represent actual requirements and dependencies, keep unknown distinct from false, attach the exact reason for a blocked decision and supply a schema-permitted, affordable continuation. A new guard without a way to resolve its condition can lower completion and accuracy again.
+
+The main relationships are:
+- Exact field addressing and entity ownership support eligibility, quantities, numeric prices/measures and reference binding.
+- Source-grounded atomic revisions preserve the right constraints and invalidate the right candidate and approval claims.
+- Dependency-aware scheduling reads references before they are needed, enforces early procedures at their deadlines and prevents unsupported declines after parser failures.
+- Material-change signatures prevent repeated correct reads from reopening identical work.
+- Financial and time admission bound every continuation so the corrected logic can finish a full run.
+
+This is the strongest supported accuracy priority. It is not evidence that one edit will eliminate all weaknesses. Interview breadth, optimizer normalization and provider/model quality retain their own independent effects.
+
+Staged refinement plan
+
+Stage 0 — Freeze evidence and define acceptance cases.
+Keep this exact hash as the baseline. Preserve the thirty-four counterexamples, nine positive controls, four full flows and function audit. State which behaviors are confirmed, which are static gaps and which need paid model measurement. Do not transfer Tosky_v3 test counts or another source's score to this framework.
+
+Stage 1 — Financial, credit and deadline admission.
+Update __init__, infer and the request/ending paths to reserve each physical request before transmission, settle actual or uncertain cost, stop on 402, and keep protected money and time for valid finalization. Use a phase-independent task policy; do not route by race window, validator or ambient time of day. Price the actual overridden model. Make the healthy flow affordable under the target allowance, then verify ninety isolated concurrent ledgers, transient faults, missing usage and an exhausted ordinary allowance with a remaining required procedure. Remove the post-terminal parse independently.
+
+Stage 2 — Evidence contract, one concern at a time.
+First add item-type and exact entity/field references, using runtime-generated IDs or exact path segments. Then add finite typed numeric/source checks and require every active requirement exactly once. Add bounded format-only repair with precise diagnostics; unavailable and unknown outcomes must not enter a definitive mismatch cache. Retain legitimate rejection of unavailable stock, insufficient quantities, mismatches and incompatible budgets. Re-run both the healthy control and the targeted failure after each substage.
+
+Stage 3 — Atomic revisions and dependency invalidation.
+Update apply_contract_delta, absorb_changes, Candidate claim metadata, basket_key and relation caching. Apply replacements atomically with source support. Support quantities, budget units and settled/withdrawn properties. Version records, references and constraints independently. Repeated unchanged reads must preserve valid claims; genuinely changed evidence must revoke dependent eligibility and approvals.
+
+Stage 4 — Close the reference and procedure action paths.
+Update pending_process, do_process, next_unverified, run and the cart/terminal commit gates. Represent earliest-start conditions separately from completion deadlines. Schedule missing reference evidence even before a desired basket exists. Require the performed action kind and successful receipt appropriate to each duty. Tie approvals to material cart state and retain one-time reads when the instruction permits. Every new hold must have a tested feasible continuation. Require both failed full flows to finish with the appropriate purchase without weakening negative controls.
+
+Stage 5 — Exact cart, objective and search correctness.
+Update absorb_cart and expected_cart to prove complete quantities/lines. Normalize monetary and physical objective units from runtime evidence, prove relationship coverage exactly, distinguish the optimizer cutoff from infeasibility, and model query coverage honestly. Resolve only decision-relevant cheaper candidates for cheapest; avoid adding an optimality obligation to any. Test extra lines, same-SKU quantities, mixed units, incomplete pages and newly changed offers.
+
+Stage 6 — Measured interview and inference efficiency.
+After the previous stages pass, separately test branch-aware message reservations, clarification recovery, settlement and question value. Avoid changing question policy, model selection and evidence semantics together. Cache validated deterministic bindings, reduce repeated schema/narrative transmission, and measure physical calls and useful outputs. Source size alone is not a performance measure.
+
+Stage 7 — Scored comparison, only under a separately authorized budget.
+Start with the same selected ten practice cases and comparable pack/world/provider settings for the unchanged baseline and candidate. Record correct terminal outcome, content correctness, paired gains/losses, reported billing, physical attempts and latency tails. Investigate every previously passing loss. Expand to all thirty practice tasks before considering a full ninety-task run. A test that reaches checkout with fabricated successful JSON cannot establish competitive accuracy. Public qualifier scores and race scores remain separate measurements.
+
+No stage was implemented in TOSKY.py during this analysis. No paid validation or submission was run.
+
+Competitive potential and decision
+
+The architecture has enough useful structure to justify continued development. Its explicit state, dynamic schemas and joint optimization can support better procedure compliance and clearer source ownership than the current champion. These are opportunities, not demonstrated score gains. Pooh retains developed interview breadth, explicit elapsed-time management, reference/search machinery and recovery paths that this framework does not yet match.
+
+The present file is unsuitable for a confident championship attempt. The best next step is a new version with independently verified admission controls followed by the evidence/state/dependency repairs above. Keep the framework's organization while replacing the weak commit and recovery contracts. Do not reproduce the champion's forced-end or retrospective-spend weaknesses just because its code currently holds the title.
+
+There is no defensible percentage probability or qualifying-score forecast for this file from static inspection and these selected simulations. A champion claim requires consistently higher difficulty-adjusted results under the actual margin, within the complete-run cost and time constraints.
+
+Submission contract and reproducibility
+
+Local syntax/security checks passed. The repository's current working-tree loader successfully loaded the dataclass-based source and ran its already-finished entrypoint without inference. No obvious prohibited direct-network import, write operation, benchmark-identifier table, fixed product/unit registry or phase-routing branch was found. SANDBOX_MODEL is a permitted model override. These local checks do not certify ORO's private integrity/similarity review or server admission.
+
+The public agent contract, scoring and current spending-cap documentation were reread:
+https://oroagents.com/docs/miners/agent-interface
+https://oroagents.com/docs/miners/code-requirements
+https://oroagents.com/docs/miners/inference-providers
+
+ORO documents a $5 scoped-key cap per race run. Calls already in flight may finish after the cap is reached. The agent therefore needs its own conservative admission and must preserve task completion under that policy.
+
+Reproduce the unpaid checks from the project root:
+python3 logs/research/tosky-framework-audit-2026-11-13/probe_framework.py
+python3 logs/research/tosky-framework-audit-2026-11-13/probe_flows.py
+python3 logs/research/tosky-framework-audit-2026-11-13/build_audit.py
+
+counterexamples.json contains every observed result; controlled-flows.json contains the full-flow summaries. source-audit.json/function-audit.txt cover every function. input-relevance.json records actual supplied schema/attribute relevance. benchmark-context.json separates the new framework from the public baselines. API snapshots include observation times. The manifest records exact hashes and analysis scope. Agent source and previous versions remain unchanged.

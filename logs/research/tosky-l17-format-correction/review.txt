@@ -1,0 +1,69 @@
+Tosky_l17: correction of prompt format
+
+Updated agents/Tosky_l17.py in place. No new agent version or champion file was created.
+SHA-256: 929ab3a86af2b0669db18e9d44f13c8d6742db3ff3f2a55d985731684a0bb834
+
+The previous implementation applied headings primarily to the planner. Most specialist
+instructions remained dense prose, and many dynamic inputs were serialized as one quoted
+string. The compressed representation also required numeric paths, fragment joining and
+JSON-text reconstruction. Local byte preservation did not establish that these were good
+model-facing representations.
+
+The correction follows Chapter 2, especially sections 2.4.2-2.4.4: Markdown hierarchy,
+semantic XML boundaries, ordered procedures, explicit decision rules and a clear response
+contract. All 12 specialist roles, the planner and the four deferred guidance modules now
+use readable multiline prompt literals. The specialist stages are brief interpretation,
+note interpretation, cart review, decline audit, reference-scope review, reference chains,
+procedure gate, replacement review, tool-result shape, terminal-mode arguments,
+clarification ranking and reply interpretation.
+
+Every specialist call now passes an explicit instruction/data pair. Requests, customer
+answers, records, schemas, cart state and procedure stage occupy separate named XML
+blocks such as shopper_request, shopper_reply, current_ledger and action_record. Plain
+customer text retains its real line breaks instead of becoming an escaped JSON prompt
+string. Markup-like data is escaped; XML-incompatible characters use a lossless JSON
+string. The generated API messages were captured with an offline proxy stub and saved
+in prompt-preview.txt. Static instructions stay stable across changing requests.
+
+The numeric-path compression protocol was replaced with complete evidence values and
+inline tables whose columns have real field names. References point directly to a whole
+literal value in that packet's evidence catalog. No path arrays, fragmented strings,
+fragment-joining metadata or JSON-string reconstruction are required of the model.
+Historical JSON/tool observations are presented as structured content with an explicit
+format label. Code verifies exact reconstruction of the original history, including
+message IDs and source text, before creating a checkpoint. Literal reserved markers,
+missing versus null fields, boolean/numeric distinctions and control characters are tested.
+
+Preservation checks compare every BRIEF field definition and all shared listing rules
+with the archived controller. Budget admission, model selection/retries, cache handling,
+allowed tools, message limits, environment calls, requirement application, dispatch and
+finish methods were also compared against the previous file: the 12 checked controller
+methods are AST-identical. ORO tool schemas, libraries, proxy endpoints and the $0.05/task
+allocation remain unchanged. Source is below 1 MB and local import/call checks pass.
+The platform's private admission/AST checker has not been invoked.
+
+Verification: 48 tests passed, including 400 generated JSON round trips and four complete
+fictional workflows. New checks cover all 12 prompt roles, XML validity, rendered API
+messages, unchanged field meanings, exact source boundaries, terminal-mode interpretation,
+readable evidence, literal-marker collisions and transcript restoration. No paid inference
+or validator test was run. The tests establish structural and controller contracts, not
+model comprehension or a race score.
+
+Replay: all 120 released feedback episodes reconstructed exactly. The readable XML
+observation blocks used 6,440,919 bytes versus 9,681,782 raw JSON bytes,
+a 33.47% reduction. They are 8.39% larger than the previous
+numeric-path codec (5,942,147 bytes). This is an explicit readability/size
+tradeoff. It is not evidence of lower actual token cost or higher accuracy. The same
+cold-cache reservations and total allocation still govern affordability; the extra text
+can affect which model calls are admitted. No new inference stages were added.
+
+Relevant source points:
+- Prompt templates and guidance near GUIDE / BRIEF / CHECK.
+- _task_data and _prompt_messages: named model inputs and separate system instructions.
+- _pack_context / _unpack_context: complete evidence and labeled tables.
+- _history_view / _restore_history_view: reversible model-readable checkpoints.
+
+The earlier report under tosky-l17-2026-11-17 describes the pre-correction source and its
+old codec. Its original measurements are historical and should not be attributed to this
+updated file. Current source hash, size, method comparisons and measurements are recorded
+in verification.json and packing-measurements.json beside this report.

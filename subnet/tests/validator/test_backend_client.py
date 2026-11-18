@@ -1,0 +1,769 @@
+"""Tests for backend_client using oro-sdk."""
+
+import contextlib
+from datetime import datetime
+from unittest.mock import MagicMock, patch
+from uuid import UUID
+
+import httpx
+import pytest
+from bittensor_wallet import Keypair, Wallet
+
+from oro_env_runtime import RUNTIME_CONTRACT
+from oro_sdk.models import ProblemProgressUpdate, ProblemStatus
+
+from validator.backend_client import BackendClient, BackendError
+
+
+@pytest.fixture
+def mock_wallet():
+    """Create a mock wallet with a real keypair for signing."""
+    keypair = Keypair.create_from_uri("//TestValidator")
+    wallet = MagicMock(spec=Wallet)
+    wallet.hotkey = keypair
+    return wallet
+
+
+def _create_response(status_code: int, parsed=None):
+    """Create a mock Response object."""
+    response = MagicMock()
+    response.status_code = status_code
+    response.parsed = parsed
+    response.content = b""
+    response.headers = {}
+    return response
+
+
+class TestBackendClientClaimWork:
+    def test_claim_work_success(self, mock_wallet):
+        from oro_sdk.models.claim_work_response import ClaimWorkResponse
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        sdk_response = ClaimWorkResponse(
+            eval_run_id=UUID("12345678-1234-1234-1234-123456789012"),
+            agent_version_id=UUID("87654321-4321-4321-4321-210987654321"),
+            suite_id=789,
+            lease_expires_at=datetime(2025, 1, 13, 12, 0, 0),
+            code_download_url="https://example.com/code.py",
+        )
+
+        mock_response = _create_response(200, sdk_response)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            return_value=mock_response,
+        ) as mock_call:
+            result = client.claim_work()
+
+        assert result is not None
+        assert result.eval_run_id == UUID("12345678-1234-1234-1234-123456789012")
+        assert result.code_download_url == "https://example.com/code.py"
+        assert mock_call.call_args.kwargs["body"].to_dict() == {
+            "runtime_contract": RUNTIME_CONTRACT
+        }
+
+    def test_claim_work_with_service_versions(self, mock_wallet):
+        from oro_sdk.models.claim_work_response import ClaimWorkResponse
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        sdk_response = ClaimWorkResponse(
+            eval_run_id=UUID("12345678-1234-1234-1234-123456789012"),
+            agent_version_id=UUID("87654321-4321-4321-4321-210987654321"),
+            suite_id=789,
+            lease_expires_at=datetime(2025, 1, 13, 12, 0, 0),
+            code_download_url="https://example.com/code.py",
+        )
+
+        mock_response = _create_response(200, sdk_response)
+
+        versions = {"validator": "sha256:abc123def4", "sandbox": "sha256:def456abc7"}
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            return_value=mock_response,
+        ) as mock_call:
+            result = client.claim_work(service_versions=versions)
+
+        assert result is not None
+        assert result.eval_run_id == UUID("12345678-1234-1234-1234-123456789012")
+
+        # Verify body was passed with service_versions
+        call_kwargs = mock_call.call_args
+        assert "body" in call_kwargs.kwargs
+        body = call_kwargs.kwargs["body"]
+        assert body.service_versions == versions
+
+    def test_claim_work_with_resource_metrics(self, mock_wallet):
+        from oro_sdk.models.claim_work_response import ClaimWorkResponse
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        sdk_response = ClaimWorkResponse(
+            eval_run_id=UUID("12345678-1234-1234-1234-123456789012"),
+            agent_version_id=UUID("87654321-4321-4321-4321-210987654321"),
+            suite_id=789,
+            lease_expires_at=datetime(2025, 1, 13, 12, 0, 0),
+            code_download_url="https://example.com/code.py",
+        )
+        metrics = {
+            "cpu_pct": 42.5,
+            "ram_pct": 31.0,
+            "disk_pct": 18.7,
+            "docker_container_count": 4,
+        }
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            return_value=_create_response(200, sdk_response),
+        ) as mock_call:
+            client.claim_work(resource_metrics=metrics)
+
+        body = mock_call.call_args.kwargs["body"]
+        for key, value in metrics.items():
+            assert getattr(body, key) == value
+
+    def test_claim_work_reads_world_binding_fields(self, mock_wallet):
+        """The SDK types the claim's world binding fields."""
+        from oro_sdk.models.claim_work_response import ClaimWorkResponse
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        sdk_response = ClaimWorkResponse.from_dict(
+            {
+                "eval_run_id": "12345678-1234-1234-1234-123456789012",
+                "agent_version_id": "87654321-4321-4321-4321-210987654321",
+                "suite_id": 789,
+                "lease_expires_at": "2025-01-13T12:00:00",
+                "code_download_url": "https://example.com/code.py",
+                "delivery_id": "race-1",
+                "episode_nonces": {"t1": "a" * 64},
+            }
+        )
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            return_value=_create_response(200, sdk_response),
+        ):
+            result = client.claim_work()
+
+        assert result.delivery_id == "race-1"
+        assert result.episode_nonces.additional_properties == {"t1": "a" * 64}
+
+    def test_claim_work_no_work_available(self, mock_wallet):
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        mock_response = _create_response(204, None)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            return_value=mock_response,
+        ):
+            result = client.claim_work()
+
+        assert result is None
+
+
+class TestBackendClientHeartbeat:
+    def test_heartbeat_success(self, mock_wallet):
+        from oro_sdk.models.heartbeat_response import HeartbeatResponse
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        sdk_response = HeartbeatResponse(
+            lease_expires_at=datetime(2025, 1, 13, 12, 30, 0),
+        )
+
+        mock_response = _create_response(200, sdk_response)
+
+        with patch(
+            "validator.backend_client.heartbeat.sync_detailed",
+            return_value=mock_response,
+        ) as mock_call:
+            result = client.heartbeat("12345678-1234-1234-1234-123456789012")
+
+        assert result.lease_expires_at is not None
+        assert mock_call.call_args.kwargs["body"].to_dict() == {
+            "runtime_contract": RUNTIME_CONTRACT
+        }
+
+    def test_heartbeat_lease_expired(self, mock_wallet):
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        # Create a mock error response with detail attribute
+        mock_error = MagicMock()
+        mock_error.detail = "Lease expired"
+        mock_response = _create_response(409, mock_error)
+
+        with patch(
+            "validator.backend_client.heartbeat.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.heartbeat("12345678-1234-1234-1234-123456789012")
+
+            assert exc_info.value.is_conflict
+            assert exc_info.value.status_code == 409
+
+
+class TestBackendClientProgress:
+    def test_report_progress_success(self, mock_wallet):
+        from oro_sdk.models.progress_update_response import ProgressUpdateResponse
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        sdk_response = ProgressUpdateResponse(accepted=True)
+        mock_response = _create_response(200, sdk_response)
+
+        problems = [
+            ProblemProgressUpdate(
+                problem_id=UUID("11111111-1111-1111-1111-111111111111"),
+                status=ProblemStatus.SUCCESS,
+            ),
+            ProblemProgressUpdate(
+                problem_id=UUID("22222222-2222-2222-2222-222222222222"),
+                status=ProblemStatus.RUNNING,
+            ),
+        ]
+
+        with patch(
+            "validator.backend_client.update_progress.sync_detailed",
+            return_value=mock_response,
+        ):
+            # Should not raise
+            client.report_progress("12345678-1234-1234-1234-123456789012", problems)
+
+
+class TestBackendClientComplete:
+    def test_complete_run_success(self, mock_wallet):
+        from oro_sdk.models.complete_run_response import CompleteRunResponse
+        from oro_sdk.models.work_item_status import WorkItemStatus
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        work_item = WorkItemStatus(
+            included_success_count=1,
+            required_successes=3,
+            is_closed=False,
+        )
+
+        sdk_response = CompleteRunResponse(
+            eval_run_id=UUID("12345678-1234-1234-1234-123456789012"),
+            status="SUCCESS",
+            work_item=work_item,
+            agent_version_became_eligible=True,
+            final_score=0.85,
+        )
+
+        mock_response = _create_response(200, sdk_response)
+
+        with patch(
+            "validator.backend_client.complete_run.sync_detailed",
+            return_value=mock_response,
+        ):
+            result = client.complete_run(
+                eval_run_id="12345678-1234-1234-1234-123456789012",
+                status="SUCCESS",
+                score=0.85,
+                score_components={"accuracy": 0.9},
+                results_s3_key="logs/run-123.tar.gz",
+            )
+
+        assert result.eval_run_id == UUID("12345678-1234-1234-1234-123456789012")
+        assert result.agent_version_became_eligible is True
+
+
+class TestBackendClientTopMiner:
+    def test_get_top_miner(self, mock_wallet):
+        from oro_sdk.models.top_agent_response import TopAgentResponse
+
+        response = TopAgentResponse(
+            suite_id=789,
+            computed_at=datetime(2025, 1, 13, 12, 0, 0),
+            top_miner_hotkey="5GrwvaEF...",
+        )
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        with patch(
+            "validator.backend_client.get_top_agent.sync_detailed",
+            return_value=_create_response(200, response),
+        ):
+            assert client.get_top_miner().top_miner_hotkey == "5GrwvaEF..."
+
+
+class TestBackendClientFetchWeightSalt:
+    def _client(self, mock_wallet):
+        return BackendClient("https://api.example.com", mock_wallet)
+
+    def _resp(self, *, eligible=True, standings):
+        from oro_sdk.models.weight_salt_response import WeightSaltResponse
+
+        parsed = WeightSaltResponse.from_dict(
+            {
+                "active": True,
+                "eligible": eligible,
+                "epoch_index": 1,
+                "epoch_standings": standings,
+            }
+        )
+        return _create_response(200, parsed)
+
+    def test_fetch_returns_standings_and_eligible(self, mock_wallet):
+        # The success path: a well-formed SDK response flows through to the
+        # WeightSalt with its epoch-pinned standings and the eligibility flag.
+        client = self._client(mock_wallet)
+        with patch(
+            "validator.backend_client.get_weight_salt.sync_detailed",
+            return_value=self._resp(
+                eligible=True,
+                standings={
+                    "top_hotkey": "5HK1",
+                    "t_burn": 0.75,
+                    "finishers": [],
+                },
+            ),
+        ):
+            salt = client.fetch_weight_salt()
+
+        assert salt.eligible is True
+        assert salt.epoch_standings is not None
+        assert salt.epoch_standings.top_hotkey == "5HK1"
+        assert salt.epoch_standings.t_burn == 0.75
+
+    def test_backend_error_returns_empty_not_raises(self, mock_wallet):
+        # Fetch failure must fail safe (never raise → the caller retains
+        # its last-good on-chain weights rather than skipping the tick).
+        client = self._client(mock_wallet)
+        with patch(
+            "validator.backend_client.get_weight_salt.sync_detailed",
+            side_effect=httpx.TimeoutException("timeout"),
+        ):
+            salt = client.fetch_weight_salt()
+
+        assert salt.epoch_standings is None
+
+
+class TestBackendClientErrorHandling:
+    @pytest.mark.parametrize("status", [429, 500, 502, 503, 504])
+    def test_transient_http_status_uses_sdk_classification(self, status):
+        from oro_sdk import is_transient_status
+
+        error = BackendError("temporary failure", status_code=status)
+        assert error.is_transient == is_transient_status(status)
+        assert error.is_transient
+
+    @pytest.mark.parametrize("status", [400, 401, 403, 404, 409, 422])
+    def test_permanent_http_status_is_not_retried(self, status):
+        assert not BackendError("rejected", status_code=status).is_transient
+
+    def test_rate_limited_completion_is_transient(self, mock_wallet):
+        from oro_sdk.models.terminal_status import TerminalStatus
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        with patch(
+            "validator.backend_client.complete_run.sync_detailed",
+            return_value=_create_response(429),
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.complete_run(UUID(int=1), TerminalStatus.FAILED, failure_reason="test")
+        assert exc_info.value.status_code == 429
+        assert exc_info.value.is_transient
+
+    def test_server_error_is_transient(self, mock_wallet):
+        """500 errors are transient and should be retried."""
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        mock_response = _create_response(500, None)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.claim_work()
+
+            assert exc_info.value.is_transient
+            assert exc_info.value.status_code == 500
+
+    def test_timeout_is_transient(self, mock_wallet):
+        """Timeout errors are transient and should be retried."""
+        import httpx
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            side_effect=httpx.TimeoutException("timeout"),
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.claim_work()
+
+            assert exc_info.value.is_transient
+            assert exc_info.value.status_code is None
+
+    def test_connection_error_is_transient(self, mock_wallet):
+        """Connection errors are transient and should be retried."""
+        import httpx
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            side_effect=httpx.ConnectError("connection refused"),
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.claim_work()
+
+            assert exc_info.value.is_transient
+            assert exc_info.value.status_code is None
+
+    @pytest.mark.parametrize(
+        "exc",
+        [
+            pytest.param(httpx.ReadError("connection reset by peer"), id="read-error"),
+            pytest.param(httpx.WriteError("broken pipe"), id="write-error"),
+            pytest.param(
+                httpx.RemoteProtocolError("Server disconnected without sending a response."),
+                id="server-disconnected",
+            ),
+        ],
+    )
+    def test_dropped_connection_is_transient(self, mock_wallet, exc):
+        """A connection that drops mid-request is transient like a refused one,
+        not a raw httpx error that callers catching BackendError never see."""
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            side_effect=exc,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.claim_work()
+
+            assert exc_info.value.is_transient
+            assert exc_info.value.status_code is None
+
+    @pytest.mark.parametrize(
+        "exc",
+        [
+            pytest.param(httpx.ReadError("connection reset by peer"), id="read-error"),
+            pytest.param(
+                httpx.RemoteProtocolError("Server disconnected without sending a response."),
+                id="server-disconnected",
+            ),
+        ],
+    )
+    def test_complete_run_dropped_connection_is_transient(self, mock_wallet, exc):
+        """complete_run is the call whose result is at stake: a dropped
+        connection must surface as a transient BackendError so the retry
+        queue keeps the completion instead of discarding it."""
+        from oro_sdk.models.terminal_status import TerminalStatus
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        with patch(
+            "validator.backend_client.complete_run.sync_detailed",
+            side_effect=exc,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.complete_run(
+                    UUID(int=1), TerminalStatus.FAILED, failure_reason="test"
+                )
+
+            assert exc_info.value.is_transient
+            assert exc_info.value.status_code is None
+
+    def test_sdk_parse_error_surfaces_actionable_message(self, mock_wallet):
+        """SDK response parsing failures (e.g. KeyError('loc')) raise a
+        descriptive BackendError instead of bubbling up an opaque KeyError.
+        """
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            side_effect=KeyError("loc"),
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.claim_work()
+
+            msg = str(exc_info.value)
+            assert "Response parsing failed" in msg
+            assert "KeyError" in msg
+            assert "loc" in msg
+
+    def test_auth_error_detection(self, mock_wallet):
+        """401/403 errors are detected as auth errors."""
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        mock_response = _create_response(401, None)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.claim_work()
+
+            assert exc_info.value.is_auth_error
+            assert not exc_info.value.is_transient
+
+    def test_not_found_detection(self, mock_wallet):
+        """404 errors are detected via is_not_found."""
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        # Create a mock error response with detail attribute
+        mock_error = MagicMock()
+        mock_error.detail = "Run not found"
+        mock_response = _create_response(404, mock_error)
+
+        with patch(
+            "validator.backend_client.heartbeat.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.heartbeat("12345678-1234-1234-1234-123456789012")
+
+            assert exc_info.value.is_not_found
+            assert not exc_info.value.is_transient
+
+    def test_error_code_from_sdk_error(self, mock_wallet):
+        """error_code property extracts from typed SDK error."""
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+
+        # Create a mock SDK error with error_code attribute
+        sdk_error = MagicMock()
+        sdk_error.detail = "Lease expired"
+        sdk_error.error_code = "LEASE_EXPIRED"
+
+        mock_response = _create_response(409, sdk_error)
+
+        with patch(
+            "validator.backend_client.heartbeat.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.heartbeat("12345678-1234-1234-1234-123456789012")
+
+            assert exc_info.value.error_code == "LEASE_EXPIRED"
+            assert exc_info.value.is_conflict
+
+
+class TestBackendErrorTypedErrors:
+    """Tests for SDK typed error detection."""
+
+    def test_is_lease_expired_with_typed_error(self, mock_wallet):
+        """is_lease_expired returns True for LeaseExpiredError."""
+        from validator.backend_client import LeaseExpiredError
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        sdk_error = LeaseExpiredError(detail="Lease has expired")
+        mock_response = _create_response(409, sdk_error)
+
+        with patch(
+            "validator.backend_client.heartbeat.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.heartbeat("12345678-1234-1234-1234-123456789012")
+
+            assert exc_info.value.is_lease_expired
+            assert exc_info.value.is_error(LeaseExpiredError)
+            assert not exc_info.value.is_at_capacity
+
+    def test_is_at_capacity_with_typed_error(self, mock_wallet):
+        """is_at_capacity returns True for AtCapacityError."""
+        from validator.backend_client import AtCapacityError
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        sdk_error = AtCapacityError(detail="Validator at capacity")
+        mock_response = _create_response(409, sdk_error)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.claim_work()
+
+            assert exc_info.value.is_at_capacity
+            assert exc_info.value.is_error(AtCapacityError)
+            assert not exc_info.value.is_lease_expired
+
+    def test_is_not_run_owner_with_typed_error(self, mock_wallet):
+        """is_not_run_owner returns True for NotRunOwnerError."""
+        from validator.backend_client import NotRunOwnerError
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        sdk_error = NotRunOwnerError(detail="Not run owner")
+        mock_response = _create_response(403, sdk_error)
+
+        with patch(
+            "validator.backend_client.heartbeat.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.heartbeat("12345678-1234-1234-1234-123456789012")
+
+            assert exc_info.value.is_not_run_owner
+            assert exc_info.value.is_error(NotRunOwnerError)
+
+    def test_is_run_already_complete_with_typed_error(self, mock_wallet):
+        """is_run_already_complete returns True for RunAlreadyCompleteError."""
+        from validator.backend_client import RunAlreadyCompleteError
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        sdk_error = RunAlreadyCompleteError(detail="Run already complete")
+        mock_response = _create_response(409, sdk_error)
+
+        with patch(
+            "validator.backend_client.complete_run.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.complete_run(
+                    eval_run_id="12345678-1234-1234-1234-123456789012",
+                    status="SUCCESS",
+                    score=0.85,
+                    score_components={},
+                )
+
+            assert exc_info.value.is_run_already_complete
+            assert exc_info.value.is_error(RunAlreadyCompleteError)
+
+    def test_is_eval_run_not_found_with_typed_error(self, mock_wallet):
+        """is_eval_run_not_found returns True for EvalRunNotFoundError."""
+        from validator.backend_client import EvalRunNotFoundError
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        sdk_error = EvalRunNotFoundError(detail="Eval run not found")
+        mock_response = _create_response(404, sdk_error)
+
+        with patch(
+            "validator.backend_client.heartbeat.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.heartbeat("12345678-1234-1234-1234-123456789012")
+
+            assert exc_info.value.is_eval_run_not_found
+            assert exc_info.value.is_error(EvalRunNotFoundError)
+            assert exc_info.value.is_not_found  # Also true via status code
+
+    def test_is_error_returns_false_for_wrong_type(self, mock_wallet):
+        """is_error returns False when sdk_error is different type."""
+        from validator.backend_client import AtCapacityError, LeaseExpiredError
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        sdk_error = AtCapacityError(detail="At capacity")
+        mock_response = _create_response(409, sdk_error)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.claim_work()
+
+            assert exc_info.value.is_error(AtCapacityError)
+            assert not exc_info.value.is_error(LeaseExpiredError)
+
+    def test_is_error_returns_false_when_no_sdk_error(self, mock_wallet):
+        """is_error returns False when sdk_error is None."""
+        from validator.backend_client import LeaseExpiredError
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        mock_response = _create_response(500, None)
+
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            return_value=mock_response,
+        ):
+            with pytest.raises(BackendError) as exc_info:
+                client.claim_work()
+
+            assert not exc_info.value.is_error(LeaseExpiredError)
+            assert not exc_info.value.is_lease_expired
+
+
+class TestBackendClientCircuitBreaker:
+    """Self-healing circuit breaker for the BittensorAuthClient pool (ORO-955)."""
+
+    @staticmethod
+    def _drain(client: BackendClient, n: int, exc: Exception) -> None:
+        """Run n failing claim_work calls, each raising the given exception."""
+        with patch(
+            "validator.backend_client.claim_work.sync_detailed",
+            side_effect=exc,
+        ):
+            for _ in range(n):
+                with pytest.raises(BackendError):
+                    client.claim_work()
+
+    def test_below_threshold_keeps_same_client(self, mock_wallet):
+        client = BackendClient("https://api.example.com", mock_wallet)
+        original = client._auth_client
+        self._drain(client, client._CIRCUIT_THRESHOLD - 1, httpx.TimeoutException("t"))
+
+        assert client._consecutive_failures == client._CIRCUIT_THRESHOLD - 1
+        assert client._auth_client is original
+
+    @pytest.mark.parametrize(
+        "exc",
+        [
+            pytest.param(httpx.TimeoutException("t"), id="timeout"),
+            pytest.param(httpx.ConnectError("refused"), id="connect-error"),
+        ],
+    )
+    def test_threshold_recreates_client(self, mock_wallet, exc):
+        client = BackendClient("https://api.example.com", mock_wallet)
+        original = client._auth_client
+        self._drain(client, client._CIRCUIT_THRESHOLD, exc)
+
+        assert client._auth_client is not original
+        assert client._consecutive_failures == 0
+
+    @pytest.mark.parametrize(
+        "recovery_response",
+        [
+            pytest.param(_create_response(200, None), id="200-success"),
+            pytest.param(_create_response(500, None), id="500-server-error"),
+        ],
+    )
+    def test_round_trip_resets_counter(self, mock_wallet, recovery_response):
+        """Any HTTP response (200 or 5xx) round-trips and clears the counter."""
+        from oro_sdk.models.claim_work_response import ClaimWorkResponse
+
+        if recovery_response.status_code == 200:
+            recovery_response.parsed = ClaimWorkResponse(
+                eval_run_id=UUID("12345678-1234-1234-1234-123456789012"),
+                agent_version_id=UUID("11111111-1111-1111-1111-111111111111"),
+                suite_id=1,
+                lease_expires_at=datetime(2025, 1, 1, 0, 0, 0),
+                code_download_url="https://example.com/code.py",
+            )
+
+        client = BackendClient("https://api.example.com", mock_wallet)
+        self._drain(client, 2, httpx.TimeoutException("t"))
+        assert client._consecutive_failures == 2
+
+        with (
+            patch(
+                "validator.backend_client.claim_work.sync_detailed",
+                return_value=recovery_response,
+            ),
+            contextlib.suppress(BackendError),
+        ):
+            client.claim_work()
+        assert client._consecutive_failures == 0
+
+    def test_recreate_throttled_within_cooldown(self, mock_wallet):
+        """Once recreated, the client doesn't recreate again for the cooldown window."""
+        client = BackendClient("https://api.example.com", mock_wallet)
+        self._drain(client, client._CIRCUIT_THRESHOLD, httpx.TimeoutException("t"))
+        first_client, first_at = client._auth_client, client._last_recreate_at
+
+        # More timeouts immediately after — should NOT recreate again.
+        self._drain(client, client._CIRCUIT_THRESHOLD, httpx.TimeoutException("t"))
+
+        assert client._auth_client is first_client
+        assert client._last_recreate_at == first_at

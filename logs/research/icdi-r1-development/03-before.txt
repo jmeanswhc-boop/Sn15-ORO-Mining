@@ -1,0 +1,75 @@
+FFFFFFF.
+======================================================================
+FAIL: test_forced_finish_honors_a_gate_hold (agents.tests.test_icdi_r1.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 171, in test_forced_finish_honors_a_gate_hold
+    self.assertEqual(calls, [])
+AssertionError: Lists differ: ['order'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'order'
+
+- ['order']
++ []
+
+======================================================================
+FAIL: test_malformed_review_cannot_approve (agents.tests.test_icdi_r1.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 159, in test_malformed_review_cannot_approve
+    self.assertTrue(e.check_cart())
+AssertionError: '' is not true
+
+======================================================================
+FAIL: test_missing_procedure_proof_is_not_permission (agents.tests.test_icdi_r1.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 146, in test_missing_procedure_proof_is_not_permission
+    self.assertFalse(e.gate('order')[0])
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_negative_review_remains_negative_on_repeat (agents.tests.test_icdi_r1.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 153, in test_negative_review_remains_negative_on_repeat
+    self.assertTrue(e.check_cart())
+AssertionError: '' is not true
+
+======================================================================
+FAIL: test_recovery_cannot_bypass_required_procedure (agents.tests.test_icdi_r1.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 177, in test_recovery_cannot_bypass_required_procedure
+    self.assertIsNone(e.act('order', {}))
+  File "/home/vboxuser/Documents/oro/agents/ICDI_r1.py", line 632, in act
+    result = _env.post_verbose("/environment/call", payload)
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 21, in post_verbose
+    raise AssertionError('Unscripted transport is forbidden')
+AssertionError: Unscripted transport is forbidden
+
+======================================================================
+FAIL: test_confusion_is_repaired_before_an_unrelated_question (agents.tests.test_icdi_r1.InterviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 211, in test_confusion_is_repaired_before_an_unrelated_question
+    self.assertEqual(questions[1], 'Which shape do you want?')
+AssertionError: 'What size would you like for the sample product?' != 'Which shape do you want?'
+- What size would you like for the sample product?
++ Which shape do you want?
+
+
+======================================================================
+FAIL: test_initial_ambiguity_is_sourced_and_not_a_firm_preference (agents.tests.test_icdi_r1.InterviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 240, in test_initial_ambiguity_is_sourced_and_not_a_firm_preference
+    self.assertTrue(e.unclear)
+AssertionError: [] is not true
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.413s
+
+FAILED (failures=7)

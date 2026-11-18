@@ -1,0 +1,485 @@
+{
+  "schema_version": "oro.episode_feedback.v1",
+  "episode_result_id": "f4948366-6fb9-4cd5-ae1f-450289ef9b62",
+  "task_id": "TF5-ranking-300033",
+  "query": "Want an in-stock monitor at or under 15652.00 PHP. Compare only these candidate variants: 2716375145224902998::4424094860-3, 1329952163816593973::5116077554-default, 3534325641551664690::4796697112-1, 8449480327182590302::3370875173-1. Choose the highest refresh rate. Among ties, choose the largest screen. Among remaining ties, choose the lowest price. Please compare the tradeoffs and do not choose an option that is strictly worse than another available monitor on refresh rate, screen size, and price.\n\nTask rules:\nYou are a shopping agent. The user names a product category and has a stated tradeoff priority: choose the highest advertised maximum refresh rate, including an explicitly advertised overclock mode; among ties, choose the largest screen; among remaining ties, choose the lowest price. Inspect product facts and variant options for refresh rate, screen size, price, and stock; do not choose an item that is strictly worse than another available option on every tradeoff axis. View or compare the best initial candidate's facts before adding it to the cart; the first cart choice must be the best-ranked available option, not a placeholder. Use an explicit selected-variant specification before a product-wide value. Do not assume a multi-model listing's maximum specification belongs to a different selected model. Prices or stock can change while you shop, so if the market changes after your first cart action, re-rank the live options before ordering, and inspect the replacement's current price and stock after the change. Compare a focused shortlist rather than inspecting every option. Once you have verified your best-ranked valid option's current price and stock, place the order - do not wait for permission or further confirmation.\nThe catalog category_path is available in view and compare. Check that classification against the required category; a phone-like title alone does not establish that a listing is in Smartphones. Also reject accessories and non-device listings when a device is requested.\nRead shopper messages returned after cart actions before placing an order. The shopper may clarify requirements or tighten the budget; once stated, those updates apply to later choices. Answer any direct clarification request.\nUnless the shopper asks for a reason, structured justification is optional. If you supply it, use only field/value claims supported by view or compare of the final product and its current price/stock. Specification claims need raw product facts, not title guesses. Do not include summary or evidence free text.",
+  "family": "ranking",
+  "phase": "RACE",
+  "outcome": "completed",
+  "passed": true,
+  "paid_reward": 1.0,
+  "step_count": 12,
+  "tool_call_count": 12,
+  "search_call_count": 0,
+  "termination_code": "placed_order",
+  "interaction": [
+    {
+      "step_index": 0,
+      "turn": 1,
+      "calls": [
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-1-1",
+          "tool_name": "compare",
+          "args": {
+            "product_ids": [
+              "2716375145224902998",
+              "1329952163816593973",
+              "3534325641551664690",
+              "8449480327182590302"
+            ]
+          },
+          "observation": {
+            "compared": [
+              {
+                "brand": "AOC",
+                "category_path": [
+                  "Computers & Components",
+                  "Monitors"
+                ],
+                "facts": {
+                  "condition": "new",
+                  "display": "1920 x 1080",
+                  "size": "24.5 inches"
+                },
+                "product_id": "2716375145224902998",
+                "title": "AOC 24G4/27G4/24G40E/C27G4Z/CQ32G4E 24-32\" QHD/FHD Fast VA/IPS 300Hz 1ms HDR Monitor ZZM Trading",
+                "variants": [
+                  {
+                    "currency": "PHP",
+                    "in_stock": true,
+                    "options": "b: 27g4 (27 inch)",
+                    "price": 6500.0,
+                    "sku": "4424094860-3"
+                  }
+                ]
+              },
+              {
+                "brand": "Gamdias",
+                "category_path": [
+                  "Computers & Components",
+                  "Monitors"
+                ],
+                "facts": {
+                  "condition": "new",
+                  "display": "1920 x 1080",
+                  "size": "27 inches"
+                },
+                "product_id": "1329952163816593973",
+                "title": "27 Inches GAMDIAS ATLAS HD27H II 300Hz Gaming Curved Monitor | 1920×1080 | 0.5ms(MPRT) + 300HZ | VA Panel | FreeSync | Flicker Free | HDR10 | GAME PLUS | 16:9 Aspect Ratio | sRGB 99% Color Gamut | Low Blue Light Control | DP + HDMI | CCT PC ESSENTIALS",
+                "variants": [
+                  {
+                    "currency": "PHP",
+                    "in_stock": true,
+                    "options": null,
+                    "price": 9492.12,
+                    "sku": "5116077554-default"
+                  }
+                ]
+              },
+              {
+                "brand": "Titan Army",
+                "category_path": [
+                  "Computers & Components",
+                  "Monitors"
+                ],
+                "facts": {
+                  "display": "2560 x 1440",
+                  "size": "24.5 inches"
+                },
+                "product_id": "3534325641551664690",
+                "title": "TITAN ARMY P245MS 24.5 inches 1MS 2560X1440 QHD 240HZ Gaming Monitor",
+                "variants": [
+                  {
+                    "currency": "PHP",
+                    "in_stock": true,
+                    "options": "klc ds200",
+                    "price": 799.0,
+                    "sku": "4796697112-1"
+                  }
+                ]
+              },
+              {
+                "brand": "FUNHOUSE",
+                "category_path": [
+                  "Computers & Components",
+                  "Monitors"
+                ],
+                "facts": {
+                  "condition": "new",
+                  "display": "1920 x 1080",
+                  "model": "24e4 / 24e3",
+                  "navigation": "hdmi1.4\\\\n- 1.4 x 2",
+                  "size": "24"
+                },
+                "product_id": "8449480327182590302",
+                "title": "Funhouse | Koorui G2711P G2411P (24E3 V2) (powered by HKC) 24\" Gaming Monitor IPS FHD 200Hz 99% sRGB | KOORUI 24E4 (powered by HKC) VA panel 1ms MPRT refresh rate 100% sRGB FHD 24\"",
+                "variants": [
+                  {
+                    "currency": "PHP",
+                    "in_stock": true,
+                    "options": "g2411p",
+                    "price": 699.0,
+                    "sku": "3370875173-1"
+                  }
+                ]
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 1,
+      "turn": 2,
+      "calls": [
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-2-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "2716375145224902998"
+          },
+          "observation": {
+            "brand": "AOC",
+            "category_path": [
+              "Computers & Components",
+              "Monitors"
+            ],
+            "facts": {
+              "condition": "new",
+              "display": "1920 x 1080",
+              "size": "24.5 inches"
+            },
+            "product_id": "2716375145224902998",
+            "title": "AOC 24G4/27G4/24G40E/C27G4Z/CQ32G4E 24-32\" QHD/FHD Fast VA/IPS 300Hz 1ms HDR Monitor ZZM Trading",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "b: 27g4 (27 inch)",
+                "price": 6500.0,
+                "sku": "4424094860-3"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-2-2",
+          "tool_name": "view",
+          "args": {
+            "product_id": "1329952163816593973"
+          },
+          "observation": {
+            "brand": "Gamdias",
+            "category_path": [
+              "Computers & Components",
+              "Monitors"
+            ],
+            "facts": {
+              "condition": "new",
+              "display": "1920 x 1080",
+              "size": "27 inches"
+            },
+            "product_id": "1329952163816593973",
+            "title": "27 Inches GAMDIAS ATLAS HD27H II 300Hz Gaming Curved Monitor | 1920×1080 | 0.5ms(MPRT) + 300HZ | VA Panel | FreeSync | Flicker Free | HDR10 | GAME PLUS | 16:9 Aspect Ratio | sRGB 99% Color Gamut | Low Blue Light Control | DP + HDMI | CCT PC ESSENTIALS",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": null,
+                "price": 9492.12,
+                "sku": "5116077554-default"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-2-3",
+          "tool_name": "view",
+          "args": {
+            "product_id": "3534325641551664690"
+          },
+          "observation": {
+            "brand": "Titan Army",
+            "category_path": [
+              "Computers & Components",
+              "Monitors"
+            ],
+            "facts": {
+              "display": "2560 x 1440",
+              "size": "24.5 inches"
+            },
+            "product_id": "3534325641551664690",
+            "title": "TITAN ARMY P245MS 24.5 inches 1MS 2560X1440 QHD 240HZ Gaming Monitor",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "klc ds200",
+                "price": 799.0,
+                "sku": "4796697112-1"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-2-4",
+          "tool_name": "view",
+          "args": {
+            "product_id": "8449480327182590302"
+          },
+          "observation": {
+            "brand": "FUNHOUSE",
+            "category_path": [
+              "Computers & Components",
+              "Monitors"
+            ],
+            "facts": {
+              "condition": "new",
+              "display": "1920 x 1080",
+              "model": "24e4 / 24e3",
+              "navigation": "hdmi1.4\\\\n- 1.4 x 2",
+              "size": "24"
+            },
+            "product_id": "8449480327182590302",
+            "title": "Funhouse | Koorui G2711P G2411P (24E3 V2) (powered by HKC) 24\" Gaming Monitor IPS FHD 200Hz 99% sRGB | KOORUI 24E4 (powered by HKC) VA panel 1ms MPRT refresh rate 100% sRGB FHD 24\"",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "g2411p",
+                "price": 699.0,
+                "sku": "3370875173-1"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 2,
+      "turn": 3,
+      "calls": [
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-3-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "2716375145224902998",
+            "sku": "4424094860-3"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 6500.0,
+            "product_id": "2716375145224902998",
+            "sku": "4424094860-3"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 3,
+      "turn": 4,
+      "calls": [
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-4-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "2716375145224902998",
+            "sku": "4424094860-3"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": false,
+              "price": 6500.0,
+              "product_id": "2716375145224902998",
+              "sku": "4424094860-3"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 6500.0,
+                "in_stock": false,
+                "price_at_add": 6500.0,
+                "product_id": "2716375145224902998",
+                "sku": "4424094860-3"
+              }
+            ],
+            "market_event": {
+              "contract_version": "oro_event_v3",
+              "currency": "PHP",
+              "in_stock_after": false,
+              "in_stock_before": true,
+              "kind": "stockout",
+              "new_price": null,
+              "old_price": 6500.0,
+              "target": {
+                "product_id": "2716375145224902998",
+                "sku": "4424094860-3"
+              }
+            }
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 4,
+      "turn": 5,
+      "calls": [
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-5-1",
+          "tool_name": "remove_from_cart",
+          "args": {
+            "product_id": "2716375145224902998",
+            "sku": "4424094860-3"
+          },
+          "observation": {
+            "cart": []
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": "wait, is that still available?",
+      "message": null
+    },
+    {
+      "step_index": 5,
+      "turn": 6,
+      "calls": [
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-6-1",
+          "tool_name": "message",
+          "args": {
+            "content": "That item went out of stock when I added it to cart. I'm now selecting another in-stock option that still matches your firm budget and category requirements."
+          },
+          "observation": {
+            "sent": true
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 6,
+      "turn": 7,
+      "calls": [
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-7-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "1329952163816593973",
+            "sku": "5116077554-default"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 9492.12,
+            "product_id": "1329952163816593973",
+            "sku": "5116077554-default"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 7,
+      "turn": 8,
+      "calls": [
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-8-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "1329952163816593973",
+            "sku": "5116077554-default"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": true,
+              "price": 9492.12,
+              "product_id": "1329952163816593973",
+              "sku": "5116077554-default"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 9492.12,
+                "in_stock": true,
+                "price_at_add": 9492.12,
+                "product_id": "1329952163816593973",
+                "sku": "5116077554-default"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 8,
+      "turn": 9,
+      "calls": [
+        {
+          "call_id": "1057d2d0a0f44e86a2ea8fac64486646-turn-9-1",
+          "tool_name": "place_test_order",
+          "args": {
+            "product_id": "1329952163816593973",
+            "sku": "5116077554-default"
+          },
+          "observation": {
+            "order": {
+              "currency": "PHP",
+              "in_stock_at_order": true,
+              "price_at_order": 9492.12,
+              "target": {
+                "product_id": "1329952163816593973",
+                "sku": "5116077554-default"
+              }
+            },
+            "status": "placed"
+          },
+          "done": true,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    }
+  ],
+  "observable_issues": [],
+  "diagnostics_state": "available",
+  "failure_category": null,
+  "end_reason": null
+}

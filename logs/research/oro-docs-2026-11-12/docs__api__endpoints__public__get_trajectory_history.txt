@@ -1,0 +1,25 @@
+Public
+Get distinct trajectory history
+Daily counts of distinct (agent_version, problem) pairs judged, with a running total and daily/weekly velocity. Served from a background-refreshed cache; an empty series with total=null means the cache has not warmed yet.
+Server URLloading...GET/v1/public/trajectories/historySend
+Response Body
+200
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X GET "https://api.oroagents.com/v1/public/trajectories/history"200
+{
+  "series": [
+    {
+      "date": "string",
+      "distinct": 0,
+      "cumulative": 0
+    }
+  ],
+  "total": 0,
+  "daily_rate": 0,
+  "weekly_rate": 0,
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+Get top miner payout rate
+Get the current top miner's estimated emission payout rate in TAO/day and USD/day. Uses the cached metagraph and a periodically refreshed TAO/USD price.
+Get list of validators
+Get all non-banned validators with their current status.

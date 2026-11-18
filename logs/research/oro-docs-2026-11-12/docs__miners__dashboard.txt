@@ -1,0 +1,156 @@
+
+Dashboard & Wallet Setup
+Connect your Bittensor wallet to the ORO miner dashboard.
+The miner dashboard lets you submit agents, track evaluations, and view scores, all from the browser. You need a Bittensor wallet extension to connect.
+
+Supported wallet extensions
+
+Install one of the following browser extensions:
+
+ | Extension | Link
+ | Polkadot.js | polkadot.js.org/extension
+ | Talisman | talisman.xyz
+ | Taostats | taostats.io
+ | Crucible | cruciblelabs.com
+
+After installing, import or create your Bittensor wallet in the extension.
+
+Connect your hotkey (not coldkey)
+
+The dashboard requires your hotkey: the key registered as a miner on the ORO subnet. Do not connect your coldkey.
+
+Why hotkey? The hotkey identifies your miner on-chain and is used to authenticate API requests. Connecting a coldkey will fail authentication because the backend expects a registered miner hotkey.
+
+How to tell them apart:
+
+
+Your hotkey is the key you registered on the subnet with btcli subnet register
+
+Your coldkey is the parent key that holds your TAO balance
+
+In most wallet extensions, both appear as accounts. Check the account name or derivation path
+
+
+Connecting to the dashboard
+
+
+Open the miner dashboard
+
+Click Connect on the Polkadot Wallet card
+
+Your browser extension will ask you to authorize ORO. Click Allow
+
+Select your hotkey account from the list
+
+The extension will ask you to sign a message. This creates your session
+
+
+Once connected, you can submit agents and track their evaluation progress.
+
+Submitting an agent from the dashboard
+
+
+Click Submit Agent on the dashboard
+
+Enter an agent name (alphanumeric, hyphens, underscores, periods, spaces; max 100 characters)
+
+Select your Python agent file (.py, max 1 MB)
+
+Click Submit
+
+
+The dashboard shows your submission status immediately. After submission, your agent enters the evaluation queue and you can track progress, scores, and released task results directly from the dashboard.
+
+The same cooldown and validation rules apply whether you submit from the dashboard or the CLI.
+
+Choosing which version races
+
+Each row in the agents table has a pin icon. Pinning a version tells the race picker to use that version as your race candidate at the next qualifying close. The row that will actually race is highlighted with a green left bar: the pin you set, or, if you haven't pinned anything, the auto-pick (your highest-scoring eligible version on this hotkey above the qualifying threshold).
+
+A pin sticks across submissions. New uploads do not silently bump the pinned version, so you can iterate on a v3/v4 while keeping a known-good v1 as your race candidate.
+
+ | Pin state | What it means
+ | Solid green pin | This is your active race candidate (pinned by you, or the auto-pick).
+ | Outlined green pin | Eligible to be pinned. Click to make this version race instead.
+ | Faded green pin | Not pinnable. Hover for the reason: discarded, eliminated, below the qualifying threshold, or not yet eligible.
+
+While a pin or unpin is saving, every pin icon and the banner action stay disabled. If your race candidate already changed elsewhere (for example from the CLI or another tab) or its agent no longer exists, Use auto-pick leaves the server's pin as it is and the dashboard refreshes to show the current selection.
+
+Why a pin can stop taking effect
+
+If your pinned version becomes ineligible mid-window (for example, it gets discarded, eliminated, or scored below the new threshold), the dashboard shows a warning banner naming the reason. The picker quietly falls back to your best other eligible version so you still race; clear or repin once you've fixed the situation.
+
+Selections lock during a race
+
+While a race is running (QUALIFYING_CLOSED and RACE_RUNNING), you cannot pin, unpin, or change selections. The pin icons disable, the banner shows "Locked while race is running", and any pin API call returns 409 RACE_LOCKED. Selections re-open when the race completes and the next QUALIFYING_OPEN window starts.
+
+Pinning from the CLI
+
+The dashboard pin button has CLI equivalents in oro-sdk. Useful when you're iterating from a script or a remote box without a browser.
+
+Pin a specific version:
+
+oro pin --agent-version-id <uuid>
+
+Release the pin so auto-pick chooses your highest-scoring eligible version:
+
+oro unpin
+
+Both commands take the standard wallet flags:
+
+oro pin --agent-version-id <uuid> --wallet-name my-miner --wallet-hotkey my-hotkey
+
+A successful pin prints Locked <uuid> into the next race. Auto-pick is now disabled. and exits 0. oro unpin prints Lock cleared. The next race will use your highest-scoring eligible version.
+
+The same eligibility and race-lock rules from the dashboard apply: pinning a discarded, eliminated, or below-threshold version is rejected, and any pin/unpin during QUALIFYING_CLOSED or RACE_RUNNING returns 409 RACE_LOCKED. Wait for the next QUALIFYING_OPEN window.
+
+If you don't see a green-bar row at all, none of your versions currently meet the qualifying threshold. Submit a stronger version to re-enter the race.
+
+Common issues
+
+"No Polkadot wallet extension found"
+
+You need a supported browser extension installed. See the table above and install one.
+
+"Authentication failed"
+
+This usually means your hotkey is not registered as a miner on the ORO subnet. To register:
+
+# Check available subnets
+btcli subnet list
+
+# Register your hotkey on the ORO subnet
+btcli subnet register --netuid <ORO_NETUID> --wallet.name default --wallet.hotkey default
+
+Registration requires staking TAO. See the miner overview for full setup details.
+
+"Can't see your wallet?"
+
+If the dashboard doesn't show your accounts after clicking Connect:
+
+
+Check the extension is unlocked. Open the extension popup and make sure it's not locked.
+
+Authorize ORO. The extension may have blocked the authorization request. Open the extension and check pending authorization requests.
+
+Enable ORO in Connected Sites. Some extensions (like Taostats) require you to manually allow the site for each account. Open your extension's Settings > Connected Sites, find oroagents.com, and toggle on the accounts you want to use. If ORO doesn't appear in the list, click Connect All or add the site manually.
+
+Import your hotkey. If you created your wallet via btcli, you need to import the hotkey into the browser extension using the mnemonic or JSON backup.
+
+Try a different extension. If one extension isn't working, try another from the supported list.
+
+
+Using btcli wallets in browser extensions
+
+If you created your wallet with btcli, export and import it into a browser extension:
+
+# Find your hotkey file
+ls ~/.bittensor/wallets/default/hotkeys/
+
+# The hotkey file contains the JSON backup; import this into your browser extension
+
+Refer to your wallet extension's documentation for importing accounts from JSON.
+Overview
+What miners do on the ORO subnet: submit agents, get evaluated, and earn emissions.
+Agent Interface
+The agent_main contract, per-world tools, environment calls, and inference path.

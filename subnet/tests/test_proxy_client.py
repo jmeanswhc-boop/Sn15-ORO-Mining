@@ -1,0 +1,536 @@
+"""Tests for proxy_client Authorization header injection and inference stats."""
+
+import json
+import os
+import tempfile
+from unittest.mock import patch, MagicMock
+
+import pytest
+
+from src.agent.proxy_client import InferenceStats, ProxyClient, RequestLog
+
+
+class TestProxyClientAuth:
+    """Tests for Authorization header on inference requests."""
+
+    def _mock_response(self, status_code=200, json_data=None):
+        resp = MagicMock()
+        resp.status_code = status_code
+        resp.json.return_value = json_data or {"content": "ok"}
+        return resp
+
+    @patch("src.agent.proxy_client.requests")
+    def test_inference_post_includes_auth_header(self, mock_requests):
+        mock_requests.post.return_value = self._mock_response()
+        client = ProxyClient(proxy_url="http://proxy:80", api_key="test-token")
+
+        client.post("/inference/chat/completions", json_data={"model": "test"})
+
+        _, kwargs = mock_requests.post.call_args
+        assert kwargs["headers"]["Authorization"] == "Bearer test-token"
+
+    @patch("src.agent.proxy_client.requests")
+    def test_non_inference_post_omits_auth_header(self, mock_requests):
+        mock_requests.post.return_value = self._mock_response()
+        client = ProxyClient(proxy_url="http://proxy:80", api_key="test-token")
+
+        client.post("/search/find_product", json_data={"q": "laptop"})
+
+        _, kwargs = mock_requests.post.call_args
+        assert "Authorization" not in kwargs.get("headers", {})
+
+    @patch("src.agent.proxy_client.requests")
+    def test_no_api_key_omits_auth_header(self, mock_requests):
+        mock_requests.post.return_value = self._mock_response()
+        client = ProxyClient(proxy_url="http://proxy:80", api_key=None)
+
+        client.post("/inference/chat/completions", json_data={"model": "test"})
+
+        _, kwargs = mock_requests.post.call_args
+        assert "Authorization" not in kwargs.get("headers", {})
+
+    def test_api_key_from_env(self):
+        with patch.dict("os.environ", {"INFERENCE_ACCESS_TOKEN": "env-token"}):
+            client = ProxyClient(proxy_url="http://proxy:80")
+            assert client.api_key == "env-token"
+
+    def test_explicit_api_key_overrides_env(self):
+        with patch.dict("os.environ", {"INFERENCE_ACCESS_TOKEN": "env-token"}):
+            client = ProxyClient(proxy_url="http://proxy:80", api_key="explicit")
+            assert client.api_key == "explicit"
+
+
+class TestInferenceStats:
+    """Tests for incremental inference stats writing."""
+
+    def test_writes_cumulative_after_each_call(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            with patch.dict("os.environ", {"PROBLEM_DATA": '{"problem_id": "p-1"}'}):
+                stats = InferenceStats(stats_file=path)
+                stats.record_success(
+                    {
+                        "cost": 0.25,
+                        "prompt_tokens": 10,
+                        "prompt_tokens_details": {"cached_tokens": 6},
+                        "completion_tokens": 4,
+                    }
+                )
+                stats.record_failure()
+                stats.record_success({"prompt_tokens_details": {"cached_tokens": True}})
+
+            with open(path) as f:
+                lines = [json.loads(line) for line in f if line.strip()]
+
+            assert len(lines) == 3
+            assert lines[0]["inference_total"] == 1
+            assert lines[1]["inference_total"] == 2
+            # One client keeps one instance id across its lines.
+            assert len({line.pop("instance_id") for line in lines}) == 1
+            assert {line.pop("execution_id") for line in lines} == {None}
+            assert lines[2] == {
+                "problem_id": "p-1",
+                "inference_success": 2,
+                "inference_failed": 1,
+                "inference_total": 3,
+                "inference_cost_usd": 0.25,
+                "inference_cost_missing": 1,
+                "inference_byok_cost_usd": 0.0,
+                "inference_byok_requests": 0,
+                "prompt_tokens": 10,
+                "cached_tokens": 6,
+                "completion_tokens": 4,
+                "requested_models": {
+                    "Unknown model": {
+                        "requests": 3,
+                        "failed_requests": 1,
+                        "prompt_tokens": 10,
+                        "cached_tokens": 6,
+                        "completion_tokens": 4,
+                        "cost_usd": 0.25,
+                        "cost_missing": 1,
+                        "byok_cost_usd": 0.0,
+                        "byok_requests": 0,
+                    }
+                },
+                "served_models": {
+                    "Unknown model": {
+                        "requests": 2,
+                        "failed_requests": 0,
+                        "prompt_tokens": 10,
+                        "cached_tokens": 6,
+                        "completion_tokens": 4,
+                        "cost_usd": 0.25,
+                        "cost_missing": 1,
+                        "byok_cost_usd": 0.0,
+                        "byok_requests": 0,
+                    }
+                },
+            }
+        finally:
+            os.unlink(path)
+
+    def test_no_file_does_not_crash(self):
+        stats = InferenceStats(stats_file=None)
+        stats.record_success()
+        stats.record_failure()
+
+    def test_tracks_requested_and_served_models_separately(self, tmp_path):
+        path = tmp_path / "stats.jsonl"
+        stats = InferenceStats(stats_file=str(path), problem_id="p-1")
+
+        stats.record_success(
+            {"cost": 0.2, "prompt_tokens": 3, "completion_tokens": 5},
+            requested_model="requested/a",
+            result_model="served/a",
+        )
+        stats.record_failure(requested_model="requested/b")
+
+        entry = json.loads(path.read_text().splitlines()[-1])
+        assert entry["served_models"]["served/a"] == {
+            "requests": 1,
+            "failed_requests": 0,
+            "prompt_tokens": 3,
+            "cached_tokens": 0,
+            "completion_tokens": 5,
+            "cost_usd": 0.2,
+            "cost_missing": 0,
+            "byok_cost_usd": 0.0,
+            "byok_requests": 0,
+        }
+        assert entry["requested_models"]["requested/a"]["requests"] == 1
+        assert entry["requested_models"]["requested/b"]["failed_requests"] == 1
+
+    @pytest.mark.parametrize(
+        "malformed_cost_details",
+        ["bad", {"upstream_inference_cost": "0.5"}, {"upstream_inference_cost": True}, {"upstream_inference_cost": -1}],
+    )
+    def test_byok_upstream_cost_is_tracked_beside_credit_cost(self, tmp_path, malformed_cost_details):
+        """Only ``is_byok: true`` marks a BYOK call; OpenRouter fills ``upstream_inference_cost`` on credit calls too."""
+        path = tmp_path / "stats.jsonl"
+        stats = InferenceStats(stats_file=str(path), problem_id="p-1")
+
+        stats.record_success(
+            {"is_byok": True, "cost": 0.001, "cost_details": {"upstream_inference_cost": 0.25}},
+            requested_model="byok/a",
+            result_model="byok/a",
+        )
+        stats.record_success(
+            {"is_byok": False, "cost": 0.3, "cost_details": {"upstream_inference_cost": 0.3}},
+            requested_model="credit/b",
+            result_model="credit/b",
+        )
+        stats.record_success(
+            {"cost": 0.1, "cost_details": {"upstream_inference_cost": 0.1}},
+            requested_model="credit/b",
+            result_model="credit/b",
+        )
+        stats.record_success(
+            {"is_byok": True, "cost": 0.05, "cost_details": malformed_cost_details},
+            requested_model="byok/malformed",
+            result_model="byok/malformed",
+        )
+
+        entry = json.loads(path.read_text().splitlines()[-1])
+        assert round(entry["inference_cost_usd"], 6) == 0.451
+        assert entry["inference_cost_missing"] == 0
+        assert entry["inference_byok_cost_usd"] == 0.25
+        assert entry["inference_byok_requests"] == 2
+        assert entry["served_models"]["byok/a"] == {
+            "requests": 1,
+            "failed_requests": 0,
+            "prompt_tokens": 0,
+            "cached_tokens": 0,
+            "completion_tokens": 0,
+            "cost_usd": 0.001,
+            "cost_missing": 0,
+            "byok_cost_usd": 0.25,
+            "byok_requests": 1,
+        }
+        credit = entry["requested_models"]["credit/b"]
+        assert (credit["requests"], credit["byok_cost_usd"], credit["byok_requests"]) == (2, 0.0, 0)
+        malformed = entry["requested_models"]["byok/malformed"]
+        assert (malformed["byok_cost_usd"], malformed["byok_requests"]) == (0.0, 1)
+
+    @pytest.mark.parametrize(
+        ("is_byok", "upstream", "expected_requests"),
+        [(True, 0, 1), ("true", 0, 0), (1, 0, 0), (None, 0, 0), ("true", 0.5, 0), (False, 0.5, 0)],
+    )
+    def test_call_counts_as_byok_only_on_strict_is_byok(
+        self, tmp_path, is_byok, upstream, expected_requests
+    ):
+        path = tmp_path / "stats.jsonl"
+        stats = InferenceStats(stats_file=str(path), problem_id="p-1")
+
+        stats.record_success(
+            {"is_byok": is_byok, "cost": upstream, "cost_details": {"upstream_inference_cost": upstream}},
+            requested_model="byok/free",
+            result_model="byok/free",
+        )
+
+        entry = json.loads(path.read_text().splitlines()[-1])
+        assert entry["inference_byok_cost_usd"] == 0.0
+        assert entry["inference_byok_requests"] == expected_requests
+        served = entry["served_models"]["byok/free"]
+        assert (served["byok_cost_usd"], served["byok_requests"]) == (0.0, expected_requests)
+
+    @patch("src.agent.proxy_client.requests")
+    def test_failed_post_logs_final_status_and_provider_body(
+        self, mock_requests, tmp_path
+    ):
+        response = MagicMock()
+        response.status_code = 400
+        response.__bool__.return_value = False
+        response.json.return_value = {"error": {"message": "provider rejected request"}}
+        mock_requests.post.return_value = response
+        path = tmp_path / "requests.jsonl"
+        with patch.dict("os.environ", {"REQUEST_LOG_FILE": str(path)}):
+            client = ProxyClient(proxy_url="http://proxy:80")
+        client.max_retries = 1
+
+        assert client.post("/inference/chat", {"model": "requested/a"}) is None
+
+        summary = json.loads(path.read_text().splitlines()[-1])
+        assert summary["status_code"] == 400
+        assert summary["response"] == {
+            "kind": "upstream",
+            "status": 400,
+            "body": {"error": {"message": "provider rejected request"}},
+        }
+
+    def test_problem_id_from_env(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            with patch.dict(
+                "os.environ", {"PROBLEM_DATA": '{"problem_id": "uuid-123"}'}
+            ):
+                stats = InferenceStats(stats_file=path)
+                stats.record_success()
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+            assert entry["problem_id"] == "uuid-123"
+        finally:
+            os.unlink(path)
+
+    def test_missing_problem_data_uses_unknown(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            env = os.environ.copy()
+            env.pop("PROBLEM_DATA", None)
+            with patch.dict("os.environ", env, clear=True):
+                stats = InferenceStats(stats_file=path)
+                stats.record_failure()
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+            assert entry["problem_id"] == "unknown"
+        finally:
+            os.unlink(path)
+
+    def test_explicit_problem_overrides_process_environment(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            with patch.dict("os.environ", {"PROBLEM_DATA": '{"problem_id": "wrong"}'}):
+                stats = InferenceStats(
+                    stats_file=path,
+                    problem_id="session-1",
+                )
+                stats.record_success({"cost": 0.1})
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+            assert entry["problem_id"] == "session-1"
+        finally:
+            os.unlink(path)
+
+
+class TestRequestLog:
+    """Tests for proxy call request logging."""
+
+    def test_records_get_call(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            log = RequestLog(log_file=path)
+            log.record(
+                method="GET",
+                path="/search/find_product",
+                params={"q": "laptop", "page": 1},
+                status_code=200,
+                response_body=[{"product_id": "123", "title": "Laptop"}],
+                duration_ms=150.5,
+            )
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+
+            assert entry["method"] == "GET"
+            assert entry["path"] == "/search/find_product"
+            assert entry["params"] == {"q": "laptop", "page": 1}
+            assert entry["status_code"] == 200
+            assert entry["duration_ms"] == 150.5
+            assert entry["response"] == [{"product_id": "123", "title": "Laptop"}]
+            assert "timestamp" in entry
+        finally:
+            os.unlink(path)
+
+    def test_records_post_call(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            log = RequestLog(log_file=path)
+            log.record(
+                method="POST",
+                path="/search/view_product_information",
+                json_data={"product_id": "456"},
+                status_code=200,
+                duration_ms=80.0,
+            )
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+
+            assert entry["method"] == "POST"
+            assert entry["json_data"] == {"product_id": "456"}
+        finally:
+            os.unlink(path)
+
+    def test_inference_body_preserved(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            log = RequestLog(log_file=path)
+            messages = [{"role": "user", "content": "very long prompt..."}]
+            log.record(
+                method="POST",
+                path="/inference/chat/completions",
+                json_data={
+                    "model": "gpt-4",
+                    "messages": messages,
+                    "temperature": 0.7,
+                },
+                status_code=200,
+                duration_ms=2000.0,
+            )
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+
+            assert entry["json_data"]["messages"] == messages
+            assert entry["json_data"]["model"] == "gpt-4"
+            assert entry["json_data"]["temperature"] == 0.7
+        finally:
+            os.unlink(path)
+
+    def test_large_response_preserved(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            log = RequestLog(log_file=path)
+            large_body = {"data": "x" * 3000}
+            log.record(
+                method="GET",
+                path="/search/find_product",
+                status_code=200,
+                response_body=large_body,
+                duration_ms=100.0,
+            )
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+
+            assert entry["response"] == large_body
+            assert "response_truncated" not in entry
+            assert "response_length" not in entry
+        finally:
+            os.unlink(path)
+
+    def test_find_product_extracts_result_ids_alongside_full_response(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            log = RequestLog(log_file=path)
+            large_results = [
+                {"product_id": f"pid-{i}", "title": "x" * 300, "price": 100.0}
+                for i in range(10)
+            ]
+            log.record(
+                method="GET",
+                path="/search/find_product",
+                params={"q": "laptop"},
+                status_code=200,
+                response_body=large_results,
+                duration_ms=100.0,
+            )
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+
+            assert entry["response"] == large_results
+            assert entry["result_product_ids"] == [f"pid-{i}" for i in range(10)]
+            assert "response_truncated" not in entry
+        finally:
+            os.unlink(path)
+
+    def test_view_product_full_response_no_result_ids(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            log = RequestLog(log_file=path)
+            large_results = [
+                {"product_id": f"pid-{i}", "title": "x" * 300}
+                for i in range(10)
+            ]
+            log.record(
+                method="GET",
+                path="/search/view_product_information",
+                params={"product_ids": "pid-0"},
+                status_code=200,
+                response_body=large_results,
+                duration_ms=50.0,
+            )
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+
+            assert entry["response"] == large_results
+            assert "result_product_ids" not in entry
+        finally:
+            os.unlink(path)
+
+    def test_inference_response_preserves_usage_for_judge(self):
+        """Regression: judge reads response.usage.completion_tokens; truncation
+        used to strip the entire response body, breaking token tracking."""
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            log = RequestLog(log_file=path)
+            full_inference_response = {
+                "choices": [
+                    {
+                        "message": {"role": "assistant", "content": "y" * 5000},
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 800,
+                    "completion_tokens": 1200,
+                    "total_tokens": 2000,
+                },
+            }
+            log.record(
+                method="POST",
+                path="/inference/chat/completions",
+                status_code=200,
+                response_body=full_inference_response,
+                duration_ms=2500.0,
+            )
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+
+            assert entry["response"]["usage"]["completion_tokens"] == 1200
+            assert entry["response"]["choices"][0]["finish_reason"] == "stop"
+        finally:
+            os.unlink(path)
+
+    def test_no_file_does_not_crash(self):
+        log = RequestLog(log_file=None)
+        log.record(method="GET", path="/search/find_product", status_code=200)
+
+    def test_none_params_omitted(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            log = RequestLog(log_file=path)
+            log.record(method="GET", path="/health", status_code=200, duration_ms=5.0)
+
+            with open(path) as f:
+                entry = json.loads(f.readline())
+
+            assert "params" not in entry
+            assert "json_data" not in entry
+        finally:
+            os.unlink(path)
+
+    def test_multiple_calls_append(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            path = f.name
+        try:
+            log = RequestLog(log_file=path)
+            log.record(method="GET", path="/a", status_code=200, duration_ms=1.0)
+            log.record(method="GET", path="/b", status_code=200, duration_ms=2.0)
+            log.record(method="POST", path="/c", status_code=200, duration_ms=3.0)
+
+            with open(path) as f:
+                lines = [json.loads(line) for line in f if line.strip()]
+
+            assert len(lines) == 3
+            assert [e["path"] for e in lines] == ["/a", "/b", "/c"]
+        finally:
+            os.unlink(path)

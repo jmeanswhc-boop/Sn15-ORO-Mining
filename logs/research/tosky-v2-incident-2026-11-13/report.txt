@@ -1,0 +1,148 @@
+TOSKY V2 QUALIFYING INCIDENT: CONFIRMED COMPLETION COLLAPSE
+2026-11-13. Diagnosis only; agent files and submissions left unchanged.
+
+MAIN FINDING
+
+The submitted Tosky version 2 has a severe completion regression. It scored 0/30 and 2/30, compared with 25/30 and 25/30 for the previous Tosky/v4. All 58 failing executions ended agent_stopped with did_not_finish. None reached an accepted order or decline. Only two order calls and zero decline calls reached the world across all sixty executions.
+
+The immediate failure is therefore the inability to finish an episode. Fifty-four stopped executions already had a nonempty observed basket. Thirty-one stopped with exactly the same product IDs and quantities as a previous v4 passing execution of the same task. Product equality alone does not prove identical disclosed needs or full correctness, but this is strong evidence against lack of product discovery being the main explanation for the collapse.
+
+The principal code-level problem is the new mandatory evidence-review/finalization design. It imposes hard proof conditions that cannot represent some legitimate shopping states, then conflates an unavailable or malformed review with a negative verdict. Its bounded repair paths can spend additional calls rereading valid records without resolving the actual proof-contract failure. When repair fails or repeats a state, the planner exits. Seven deterministic defects in this path were reproduced offline against the unchanged candidate.
+
+Public feedback does not expose the agent's derived requirements, model review JSON, local reservation ledger or exception trace. Both full-log artifact requests returned ARTIFACT_NOT_FOUND. Consequently the exact internal rejection responsible for each of the 58 stops is not established. The seven reproduced defects are confirmed code defects, and the dominant observed symptom is confirmed noncompletion; they must not be presented as a proven seven-way attribution of every live failure.
+
+RESULTS AND COMPARABILITY
+
+Metric                                      Tosky/v4                 Tosky v2
+Correct, two qualifying executions          50/60                    2/60
+Per-run correct                            25/30, 25/30             0/30, 2/30
+Published final qualifying score            83.33%                   3.34%
+Accepted terminal outcomes                  60/60                    2/60
+Stopped without a final outcome             0                        58
+Mean reported full-30-task cost              $0.51550174              $0.510806535
+Mean sandbox duration                       96.2 seconds             167.95 seconds
+Inference requests across both runs         833                      1,909
+Inference errors across both runs           0                        3
+Reported cost per correct execution         $0.02062007              $0.510806535
+
+The average bill barely changed, while correctness fell by 96%, inference requests increased by about 129%, and mean run duration increased by about 75%. Reported cost per correct execution became approximately 24.8 times worse. Similar aggregate spending therefore does not establish operational efficiency.
+
+All 60 new feedback records were downloaded and joined to the two released result indexes by episode identity, task identity and paid reward. The old sixty qualifying feedback records already exist in the previous study and were reused without modification. Both versions use suite 160, the same catalog epoch w-2385fe7c5e6d, runtime 4.0.0 and contract oro.world.contract.8. Their published proxy, sandbox, validator and search-server build identifiers match. The validators differ, so this is not a randomized, same-validator ablation; the 58 agent-controlled stops remain a clear regression independent of that limitation.
+
+Twenty-three tasks that v4 passed on both attempts were failed on both v2 attempts. Every stopped execution ended before the published 38-step limit. There is no public episode end marked provider-budget exhaustion, task timeout or infrastructure failure. One new run had zero inference errors and still failed 28 tasks. The recorded evidence does not support blaming OpenRouter balance exhaustion or an AST/security rejection for this outcome. Local byte-envelope admission, local attempt limits, parser failures and exceptions remain possible internal contributors until private agent diagnostics are available.
+
+The version record is ELIGIBLE because its two evaluation runs successfully completed as runs. That status does not mean the shopping episodes were correct or that it became the active qualifier. The captured status still has v4 active and v2 inactive. Version 2 has not replaced the 83.33% version in the next published roster.
+
+SOURCE IDENTITY
+
+The submitted public version is 06af6d97-a794-7a4c-8000-98022e3cf871 under the user's designated hotkey. The local agents/Tosky_v2.py has SHA-256 526f7badf9dd20dd671ee4b089bb5a9c400af305bccae6980c87048128872173, exactly matching the previous development verification. All eight preserved earlier agent hashes also match. The submitted source is still embargoed, so equality of the uploaded bytes to the local file cannot be independently certified through the public source download.
+
+OBSERVABLE CASES
+
+1. Halal cola, task t-108fbf1075.
+
+Both v2 executions obtain an explicit single-pack preference, put p-2a560c6c65f8 in the basket and read its facts. The record includes the dietary-needs field containing halal and pack_type=single. One execution carts it at step 11 and ends after step 31 with no checkout; the other carts it at step 10 and ends after step 29. They keep searching variants and rereading the same candidate. Earlier v4 executions pass this task. This is a concrete example of the finish path failing after relevant evidence has already been found. The public data do not show which review predicate blocked it.
+
+2. Sweater, task t-e622afe641.
+
+The failed and successful v2 executions ask the same three questions about color, size and neckline/sleeve type and receive the same replies. Both read the same polyester, boat-neck record p-5a1a59c0c2d9 at step 16. The successful execution orders it at step 20. The failed execution carts it, repeatedly rereads or compares it, makes further boat-neck searches and stops at step 26. Thus even the newly targeted sweater case remains unstable. Passing one attempt is not evidence that the parser/review interaction has been fixed.
+
+3. Dining preference discovery, task t-20fcb00ff0.
+
+Both v2 executions spend their three questions on seating capacity, material and style/table height. All three replies are indifferent. Neither discovers the table-base preference that the archived successful PRIMO/Four Leaf controls exposed. Both cart an initial product and stop at step 13. This is a separate failure of the new question-ranking strategy to achieve the intended improvement. Fixing finalization alone cannot be counted as solving this task.
+
+4. Sugar-free cola, task t-6fd2a792df.
+
+Both executions obtain an explicit pack-type requirement. One continues to hold a record with pack size=1 and no pack_type even after opening a separate record with explicit pack_type=single. The other holds a single-pack candidate and still does not finish. The original property-identity problem has therefore not been consistently eliminated, and the hard review has converted these runs into unfinished zeroes rather than demonstrated correct recoveries. One unused interview opportunity is also spent on a long product-summary message that receives indifference.
+
+SEVEN CONFIRMED PROOF-CONTRACT DEFECTS
+
+Reproduce with:
+python3 logs/research/tosky-v2-incident-2026-11-13/reproduce_failures.py
+
+The script prohibits real HTTP, executes no inference and writes only diagnostic output. It characterizes defects in the unchanged candidate; its seven reproduced counterexamples are not seven recovered shopping tasks.
+
+1. Source intake and final proof disagree about global availability.
+
+Location: apply_source_audit, line 11734; validate_requirement_proof, line 12433.
+
+The new source audit accepts a real stock requirement as availability: in stock. A valid observed root field such as in_stock=true is then rejected as listing evidence because listing values must be strings. The source audit can install a genuine requirement that the final checker cannot prove using the actual boolean API representation. More reads of that same record cannot repair the type mismatch. Global stock, quantity and budget obligations need their own representation rather than being silently duplicated into a textual attribute ledger.
+
+2. Correct property equivalence can never satisfy key_scope_ok.
+
+Location: key_scope_ok, line 12016.
+
+The predicate accepts exact normalized word sets or strictly nested word sets with an explicit binding. A correctly cited fabric=cotton field cannot prove material: cotton even when the review explicitly identifies the same property and scope. The semantic-binding field cannot bridge synonyms because the token-set restriction rejects it first. The desired protection against frame/lens or pack-type/pack-size confusion was implemented as an overly restrictive naming rule. Runtime, scope-aware property bindings are needed; a fixed synonym table would violate the intended generality and platform restrictions.
+
+3. Literal substring matching turns semantic equivalence into a hard mismatch.
+
+Location: scalar_check, line 12384.
+
+An actual grey value is rejected for a gray requirement. More generally, a correct equivalent spelling or paraphrase can be rejected even after the model has interpreted the cited field correctly. The predicate returns definitive False rather than unknown, so the final checker overrules the correct interpretation. Exact numeric contradictions can be checked independently; uncertain semantic equivalence needs a different path.
+
+4. Unknown review results are cached as negative verdicts.
+
+Location: cart_check, line 12534; terminal_recovery_hold, line 12691; think, line 12714.
+
+An absent, malformed or otherwise unusable review is stored as positive=false and verdicts[key]=false. After the review context stabilizes, ordinary retries reuse that negative state instead of consulting an available reviewer. Fresh adjudication exists but is globally bounded and shares the same contract. A failed contract or unavailable review is therefore capable of becoming a durable checkout veto. The diagnostic reproduces three ordinary attempts with two unavailable reviews; the next scripted valid review is never consulted. This is a state-representation error: verified mismatch, missing evidence and unavailable review must remain distinct.
+
+5. The review packet and citation validator disagree about clipped text.
+
+Location: cart_check, line 12534, and citation_value/citations_valid immediately before key_scope_ok.
+
+The prompt supplies clipped listing fields, while citation validation demands exact equality with the full original field. The actual visible clipped field is rejected. A reviewer cannot reliably quote an unseen suffix, and a generic reread does not change what this separate review prompt supplies. Bounded, grounded fragments with clear scope, or an explicitly selected full field, are required. Marking a record as clipped does not by itself solve the contract inconsistency.
+
+6. The independent cheaper-product veto omits product-type eligibility.
+
+Location: validate_cart_proof, line 12464.
+
+For one-item cheapest requests, a cheaper opened record in the same category with matching live attributes can veto checkout. The purchased record requires type_ok=true, but the independent alternative check does not establish the requested subtype for the cheaper record. A different product kind in a broad category can therefore block a valid purchase even when the reviewer correctly identifies that alternative as ineligible. Every proposed better candidate must meet the same complete eligibility contract as the chosen one.
+
+7. The decline path cannot represent a proven empty affordable candidate set.
+
+Location: decline_check, line 12620.
+
+If decline_candidates is empty, the method returns a hold before obtaining any review. This branch is identical for insufficient keyword search and a genuinely exhaustive catalog with no eligible or affordable record. The implementation has no successful decline route for that latter state. Evidence for a mismatch on an existing candidate and evidence that the eligible set is empty require different representations. This is particularly relevant because the correct result for some public tasks is a decline.
+
+WHY THE PREVIOUS VERIFICATION MISSED THE REGRESSION
+
+The original 269 checks still pass against the unchanged files, while the seven counterexamples reproduce. Passing the old test suite therefore does not contradict this incident.
+
+Of those 269 checks, 147 concern the unchanged baseline. Seventy-six are new candidate tests and forty-six are retargeted compatibility checks, including some legacy source controls. The complete new flows use hand-authored valid review JSON for simple equipment examples. They prove that the transport and an intended successful route can work under those stipulated outputs. They do not establish that realistic model outputs across the thirty public tasks satisfy the new proof contract, or that a correct candidate remains reachable after a review-format error.
+
+The tests emphasized refusing unsupported actions. They did not adequately test false rejection, the representability of real API evidence, or a complete recovery that preserves a valid decision under realistic output variation. The update also combined source interpretation, interview ranking, reference resolution and terminal-policy changes. Offline stage checkpoints verified local mechanisms, but they were not accuracy ablations isolating those behavioral changes.
+
+That was a development and release-validation failure in the update. The preceding report correctly stated that no new accuracy was measured, but the available verification was insufficient to support confidence in this version as a replacement. Additional validators, more retries or a higher spending limit would not repair these contract defects.
+
+RECOVERY PLAN
+
+1. Preserve the submitted v2 bytes and this incident evidence. Treat this candidate as failed. Keep the unchanged active v4 as the operational reference. Do not pay for another unchanged-v2 run or disable its financial controls as a first response.
+
+2. Start a separate recovery candidate from v4, rather than accumulating more overrides on top of the entire v2 controller. Preserve its working checkout, physical accounting, 402 stop, task budgets, cart receipts and procedure gates. Reintroduce only one independently justified behavioral correction at a time.
+
+3. Correct the evidence contract before restoring a mandatory review layer. Separate global obligations from product attributes; represent verified met, verified mismatch, missing evidence and unavailable interpretation distinctly. Make every rejection identify its exact requirement, field and reason. Give the repairer an action that can change that condition instead of a generic request to reread.
+
+4. Add positive counterexamples and complete-recovery fixtures for all seven defects. Ground runtime aliases and value equivalence in the current sources and observations; add no suite-specific or fixed attribute/unit registry. Match better-candidate eligibility symmetrically. Represent empty-set search coverage separately from candidate mismatch evidence. Verify that every new hold has a feasible continuation inside the remaining calls, steps and financial allowance.
+
+5. Reuse the same sixty public receipts and old passing controls as preservation evidence, including the 31 equal-basket stops and the sweater's identical-disclosure pair. Evaluate the interview change separately: the dining and sugar-free traces show that it did not consistently discover or apply the missing need. Do not call a changed failure category or a newly blocked order a recovered score.
+
+6. Before another scored run, review complete, representative paths rather than only valid proof JSON on synthetic equipment. Any later paid canary or qualifying run needs its own explicit budget and must report correct completion, gains and losses, per-correct cost, physical requests and latency. No such run was performed during this diagnosis, and no agent file was changed.
+
+ARTIFACTS
+
+analysis.json: all sixty joins, before/after metrics, task losses and 31 equal-basket controls.
+task-comparison.json: task-level comparison captured during initial diagnosis.
+offline-counterexamples.json: seven reproduced defects and their scope limitations.
+reproduce_failures.py: reproducible, network-blocked diagnostic probes.
+analyze_incident.py: reproducible public-receipt aggregation.
+monitor.json, leaderboard.json, status.json: captured live public status and active-version observations.
+run-one.json, run-two.json: full released result indexes.
+feedback/: all sixty released feedback envelopes.
+artifact-availability.json: explicit ARTIFACT_NOT_FOUND responses for both full-log requests.
+existing-tests.txt: repeat of the earlier suite against the unchanged source.
+manifest.json: incident artifact hashes.
+
+Primary public status:
+https://api.oroagents.com/v1/public/agent-versions/06af6d97-a794-7a4c-8000-98022e3cf871/status
+https://api.oroagents.com/v1/public/evaluation-runs/06af6d99-0324-7d2b-8000-e41d02099482
+https://api.oroagents.com/v1/public/evaluation-runs/06af6d98-6fdf-7725-8000-bd117cb4664c

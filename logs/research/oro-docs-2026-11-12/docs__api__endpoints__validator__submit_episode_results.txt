@@ -1,0 +1,74 @@
+Validator
+Submit environment episode results
+Submit up to 500 episode results for evaluations owned by the caller. HTTP 200 is a batch acknowledgement: inspect each item's status for acceptance (201), an already-recorded task (409), or rejection (404/422).
+Server URLloading...POST/v1/validator/episode-resultsSendAuthorizationBody
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Request Body
+application/json
+TypeScript Definitions
+Use the request body type in TypeScript.Copy
+Response Body
+200
+application/json
+401
+application/json
+403
+application/json
+422
+application/json
+429
+application/json
+500
+application/json
+503
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/validator/episode-results" \  -H "Content-Type: application/json" \  -d '{    "results": [      {        "eval_run_id": "8022d801-acb6-4836-b536-3cd4138b6ae0",        "env_pack_sha256": "stringstringstringstringstringstringstringstringstringstringstri",        "task_id": "string",        "family": "string",        "outcome": "completed"      }    ]  }'200401403422429500503
+{
+  "results": [
+    {
+      "eval_run_id": "8022d801-acb6-4836-b536-3cd4138b6ae0",
+      "task_id": "string",
+      "status": 201,
+      "episode_result_id": "8c0b7a81-0277-43f9-b6ca-76400a38283c",
+      "error": "string"
+    }
+  ],
+  "counts": {
+    "property1": 0,
+    "property2": 0
+  }
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+Get upload URL
+Get a presigned URL for uploading per-problem evaluation logs.
+Update progress
+Report per-problem progress during evaluation.

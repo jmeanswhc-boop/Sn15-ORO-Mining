@@ -1,0 +1,772 @@
+"""Run a signed practice delivery locally through the validator's world path."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import math
+import os
+import random
+import re
+import subprocess
+import sys
+import time
+from collections import Counter
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+from uuid import uuid4
+
+from subnet import local_report
+from subnet.inference import resolve_inference_credentials
+from subnet.sandbox import build_sandbox_command, host_path
+from src.agent.sandbox_executor import MAX_SANDBOX_OUTPUT_BYTES, append_attempt, read_regular_file
+from subnet.validator import env_pack_loader, session_registry
+from subnet.validator.generated_evaluation import aggregate_results, write_problem_file
+from subnet.validator.session_service import SessionRuntime, SessionServer
+
+LOCAL_SUMMARY_SCHEMA = "oro.local_generated_summary.v2"
+EPISODE_SCHEMA = "oro.world_episode.v1"
+SANDBOX_RESULT_GRACE_SECONDS = 60.0
+# The local proxy shares this process's network namespace (see docker-compose).
+LOCAL_PROXY_URL = "http://127.0.0.1:80"
+
+
+def _default_search_url() -> str:
+    return (
+        os.environ.get("E2E_SEARCH_URL")
+        or os.environ.get("SEARCH_SERVER_URL")
+        or "http://localhost:5632"
+    )
+
+
+@dataclass(frozen=True)
+class LocalGeneratedConfig:
+    agent_path: Path
+    pack_path: Path
+    output_root: Path
+    inference_access_token: str
+    inference_provider: str
+    inference_base_url: str
+    model: str
+    problem_count: int | None = None
+    seed: int | None = None
+    max_workers: int = 7
+    timeout: float = 1800.0
+    session_host: str = "0.0.0.0"
+    session_port: int = 9101
+    search_url: str = field(default_factory=_default_search_url)
+
+
+@dataclass(frozen=True)
+class LocalGeneratedResult:
+    run_id: str
+    aggregate_score: float
+    results: list[dict[str, Any]]
+    artifact_dir: Path
+    summary_path: Path
+    summary: dict[str, Any]
+    report_path: Path | None = None
+
+    @property
+    def score(self) -> float:
+        """Compatibility alias for callers that display a generic score."""
+
+        return self.aggregate_score
+
+
+class LocalGeneratedValidatorError(RuntimeError):
+    """A local run failed outside normal agent task outcomes."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        classification: str,
+        artifact_dir: Path,
+        summary_path: Path,
+        report_path: Path | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.classification = classification
+        self.artifact_dir = artifact_dir
+        self.summary_path = summary_path
+        self.report_path = report_path
+
+
+def select_tasks(
+    pack: Any, *, problem_count: int | None = None, seed: int | None = None
+) -> list[str]:
+    """Refuse anything but a practice delivery, then choose the tasks to run.
+
+    Without ``problem_count`` every task runs; with it, that many are sampled.
+    """
+
+    # Local runs are practice only, never in a process holding race configuration.
+    if any(name.startswith("ORO_RACE_") and value for name, value in os.environ.items()):
+        raise ValueError("local generated validator refuses to run with race configuration set")
+    kind = (pack.manifest.get("delivery") or {}).get("kind")
+    if kind != "practice":
+        raise ValueError(f"local runs take a practice delivery, not {kind!r}")
+    task_ids = sorted(pack.tasks)
+    if problem_count is None:
+        return task_ids
+    if not 1 <= problem_count <= len(task_ids):
+        raise ValueError(f"--problems must be between 1 and {len(task_ids)}")
+    chosen = random.Random(seed).sample(range(len(task_ids)), problem_count)
+    return [task_ids[index] for index in sorted(chosen)]
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        while chunk := source.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _read_sandbox_rows(path: Path) -> list[dict[str, Any]]:
+    try:
+        content = read_regular_file(path, MAX_SANDBOX_OUTPUT_BYTES, single_link=True)
+        rows = [
+            json.loads(line)
+            for line in content.decode("utf-8").splitlines()
+            if line.strip()
+        ]
+        if not all(isinstance(row, dict) for row in rows):
+            raise ValueError("sandbox output rows must be objects")
+        return rows
+    except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"could not read sandbox output: {type(exc).__name__}"
+        ) from exc
+
+
+def _episode_outcome(record: dict[str, Any]) -> str:
+    if record["verdict"] is None:
+        return "environment_error"  # quarantined, never graded
+    return "world_error" if "world_error" in record["verdict"]["flags"] else "completed"
+
+
+def _summary_tasks(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    tasks = []
+    for record in records:
+        verdict = record["verdict"] or {"score": 0.0, "category": None, "flags": []}
+        outcome = _episode_outcome(record)
+        tasks.append(
+            {
+                "task_id": record["task_id"],
+                "score": float(verdict["score"]),
+                "category": verdict["category"],
+                "flags": list(verdict["flags"]),
+                "outcome": outcome,
+                "error_classification": "environment" if outcome != "completed" else None,
+                "error_detail": record.get("error"),
+            }
+        )
+    return tasks
+
+
+def _write_summary(
+    path: Path,
+    *,
+    run_id: str,
+    loaded: Any,
+    task_ids: list[str],
+    records: list[dict[str, Any]],
+    aggregate_score: float | None,
+    status: str,
+    problem_count: int | None = None,
+    seed: int | None = None,
+    agent_file: str | None = None,
+    agent_sha256: str | None = None,
+    error: LocalGeneratedValidatorError | None = None,
+) -> dict[str, Any]:
+    pack = loaded.pack if loaded is not None else None
+    summary = {
+        "schema_version": LOCAL_SUMMARY_SCHEMA,
+        "run_id": run_id,
+        "status": status,
+        "pack_sha256": loaded.archive_sha256 if loaded is not None else None,
+        "world_id": pack.manifest.get("world_id") if pack is not None else None,
+        "task_count": len(records),
+        "task_roster": task_ids,
+        "pack_task_count": len(pack.tasks) if pack is not None else len(records),
+        # Derived from the request, not from the seed: a seed alone never samples.
+        "selection_mode": "random_sample" if problem_count is not None else "all_tasks",
+        "selection_seed": seed if problem_count is not None else None,
+        "agent_file": agent_file,
+        "agent_sha256": agent_sha256,
+        "aggregate_score": aggregate_score,
+        "tasks": _summary_tasks(records),
+        "error": (
+            None
+            if error is None
+            else {"classification": error.classification, "message": str(error)}
+        ),
+    }
+    path.write_text(
+        json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    return summary
+
+
+def _episode_rows(
+    records: list[dict[str, Any]],
+    *,
+    run_id: str,
+    loaded: Any,
+    agent_identity: str | None,
+    wall_seconds: float,
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "schema_version": EPISODE_SCHEMA,
+            "episode": {
+                **record,
+                "step_count": record["steps"],
+                "request_text": loaded.pack.tasks.get(record["task_id"], {}).get("request_text"),
+                "terminal_reason": record["ledger"]["episode"][-1].get("reason"),
+                "outcome": _episode_outcome(record),
+                "evaluation_run_id": run_id,
+                "agent_version_id": agent_identity,
+                "pack_sha256": loaded.archive_sha256,
+                "world_id": loaded.pack.manifest.get("world_id"),
+                "wall_seconds": wall_seconds,
+            },
+        }
+        for record in records
+    ]
+
+
+def _raise_run_error(
+    message: str,
+    *,
+    classification: str,
+    artifact_dir: Path,
+    summary_path: Path,
+) -> None:
+    raise LocalGeneratedValidatorError(
+        message,
+        classification=classification,
+        artifact_dir=artifact_dir,
+        summary_path=summary_path,
+    )
+
+
+_PHASE_CLASSIFICATION = {
+    "pack_load": "configuration",
+    "pack_validation": "configuration",
+    "finalization": "verifier",
+}
+
+
+def _classified_error(
+    error: Exception,
+    *,
+    phase: str,
+    artifact_dir: Path,
+    summary_path: Path,
+) -> LocalGeneratedValidatorError:
+    if isinstance(error, LocalGeneratedValidatorError):
+        return error
+    return LocalGeneratedValidatorError(
+        str(error) or type(error).__name__,
+        classification=_PHASE_CLASSIFICATION.get(phase, "infrastructure"),
+        artifact_dir=artifact_dir,
+        summary_path=summary_path,
+    )
+
+
+def _cleanup(
+    *,
+    container_name: str,
+    remove_container: bool,
+    server: SessionServer | None,
+    runtime: SessionRuntime,
+    registry: Any,
+    registry_installed: bool,
+) -> Exception | None:
+    """Release local run resources synchronously and return the first error."""
+
+    cleanup_errors: list[Exception] = []
+    if remove_container:
+        try:
+            subprocess.run(
+                ["docker", "rm", "--force", container_name],
+                timeout=30,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            cleanup_errors.append(exc)
+    if server is not None:
+        try:
+            server.stop()
+        except Exception as exc:  # noqa: BLE001
+            cleanup_errors.append(exc)
+    if registry is not None:
+        try:
+            if registry_installed:
+                runtime.clear(registry)
+            else:
+                registry.close()
+        except Exception as exc:  # noqa: BLE001
+            cleanup_errors.append(exc)
+    return cleanup_errors[0] if cleanup_errors else None
+
+
+def run_local_generated_validator(
+    config: LocalGeneratedConfig,
+) -> LocalGeneratedResult:
+    """Run one practice delivery through the validator's world components."""
+    if config.max_workers <= 0:
+        raise ValueError("max_workers must be positive")
+    if config.timeout <= 0:
+        raise ValueError("timeout must be positive")
+
+    run_id = f"local-{uuid4().hex}"
+    artifact_dir = config.output_root / run_id
+    artifact_dir.mkdir(parents=True, exist_ok=False)
+    artifact_dir.chmod(0o755)
+    summary_path = artifact_dir / "summary.json"
+    summary_path.touch(exist_ok=False)
+    sandbox_dir = artifact_dir / "sandbox"
+    sandbox_dir.mkdir()
+    sandbox_dir.chmod(0o777)
+    sandbox_output = sandbox_dir / "sandbox_output.jsonl"
+    container_name = f"oro-generated-{run_id}"
+
+    loaded: Any = None
+    registry: Any = None
+    registry_installed = False
+    remove_container = False
+    records: list[dict[str, Any]] = []
+    episodes: list[dict[str, Any]] = []
+    task_ids: list[str] = []
+    aggregate_score: float | None = None
+    completed_result: LocalGeneratedResult | None = None
+    caught_error: Exception | None = None
+    run_error: LocalGeneratedValidatorError | None = None
+    phase = "initialization"
+    runtime = SessionRuntime()
+    server: SessionServer | None = None
+    started = time.monotonic()
+    # Read once, before the sandbox starts, so the summary cannot disagree with
+    # the episode rows if the file is edited or removed mid-run.
+    agent_identity: str | None = None
+    try:
+        _write_summary(
+            summary_path,
+            run_id=run_id,
+            loaded=None,
+            task_ids=task_ids,
+            records=[],
+            aggregate_score=None,
+            status="running",
+        )
+
+        phase = "server_setup"
+        runtime.set_inference_grant(
+            run_id, config.inference_access_token, time.time() + config.timeout + 300
+        )
+        server = SessionServer(
+            runtime,
+            host=config.session_host,
+            port=config.session_port,
+        )
+
+        phase = "pack_load"
+        loaded = env_pack_loader.load_delivery(
+            config.pack_path,
+            expected_delivery_id=None,
+            cache_root=config.output_root / ".deliveries",
+        )
+
+        phase = "pack_validation"
+        task_ids = select_tasks(
+            loaded.pack, problem_count=config.problem_count, seed=config.seed
+        )
+
+        # The registry uploads every pack index to the search server first.
+        phase = "session_setup"
+        registry = session_registry.SessionRegistry(
+            loaded.pack,
+            # A practice run has no claim, so each episode gets a fresh nonce.
+            episode_nonces={task_id: uuid4().hex for task_id in task_ids},
+            search_client=session_registry.SearchServerClient(config.search_url),
+            inference_access_token=config.inference_access_token,
+            proxy_url=LOCAL_PROXY_URL,
+        )
+        agent_identity = _sha256(config.agent_path)
+        sessions = [registry.start(task_id) for task_id in task_ids]
+        phase = "artifact_write"
+        (artifact_dir / "environment_sessions.json").write_text(
+            json.dumps(
+                {"schema_version": "oro.session_bootstrap.v1", "sessions": sessions},
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        write_problem_file(artifact_dir / "problems.jsonl", sessions)
+
+        phase = "server_startup"
+        runtime.install(registry)
+        registry_installed = True
+        server.start(timeout=5.0)
+
+        phase = "sandbox"
+
+        def sandbox_command(logs_dir: Path, output_dir: Path) -> list[str]:
+            return build_sandbox_command(
+                agent_host_path=host_path(str(config.agent_path.resolve())),
+                logs_host_path=host_path(str(logs_dir.resolve())),
+                output_host_path=host_path(str(output_dir.resolve())),
+                problem_file_arg="/app/logs/problems.jsonl",
+                output_path="/app/output/sandbox_output.jsonl",
+                max_workers=config.max_workers,
+                timeout=config.timeout,
+                inference_access_token=config.inference_access_token,
+                inherit_inference_access_token=True,
+                inference_provider=config.inference_provider,
+                inference_base_url=config.inference_base_url,
+                inference_model=config.model,
+                inherit_inference_model=True,
+                container_name=container_name,
+            )
+
+        command = sandbox_command(artifact_dir, sandbox_dir)
+        sandbox_environment = dict(os.environ)
+        sandbox_environment.update(
+            {
+                "INFERENCE_ACCESS_TOKEN": config.inference_access_token,
+                "SANDBOX_MODEL": config.model,
+            }
+        )
+        sandbox_failure = None
+        sandbox_exception: Exception | None = None
+        try:
+            try:
+                completed = subprocess.run(
+                    command,
+                    env=sandbox_environment,
+                    timeout=config.timeout + SANDBOX_RESULT_GRACE_SECONDS,
+                    check=False,
+                )
+                if completed.returncode != 0:
+                    sandbox_failure = f"sandbox exited with code {completed.returncode}"
+            except subprocess.TimeoutExpired:
+                remove_container = True
+                removal = subprocess.run(
+                    ["docker", "rm", "--force", container_name],
+                    timeout=30,
+                    check=False,
+                )
+                remove_container = removal.returncode != 0
+                sandbox_failure = (
+                    f"local generated run timed out after {config.timeout:g} seconds"
+                )
+        except Exception as exc:  # noqa: BLE001
+            sandbox_exception = exc
+        except BaseException:
+            remove_container = True
+            raise
+        finally:
+            phase = "finalization"
+            registry.finish_all()
+            if sandbox_failure is None and sandbox_exception is None:
+
+                reruns = 0
+
+                def rerun(rerun_sessions: list[dict[str, Any]]) -> None:
+                    # Fresh input and output dirs: nothing the first attempt wrote is visible.
+                    nonlocal reruns
+                    reruns += 1
+                    rerun_dir = artifact_dir / f"rerun-{reruns}"
+                    rerun_output = rerun_dir / "sandbox"
+                    rerun_output.mkdir(parents=True)
+                    rerun_output.chmod(0o777)
+                    write_problem_file(rerun_dir / "problems.jsonl", rerun_sessions)
+                    try:
+                        subprocess.run(
+                            sandbox_command(rerun_dir, rerun_output),
+                            env=sandbox_environment,
+                            timeout=config.timeout + SANDBOX_RESULT_GRACE_SECONDS,
+                            check=False,
+                        )
+                    except subprocess.TimeoutExpired:  # unfinished episodes are stopped
+                        subprocess.run(["docker", "rm", "--force", container_name], timeout=30, check=False)
+                    append_attempt(sandbox_output, rerun_output / "sandbox_output.jsonl", MAX_SANDBOX_OUTPUT_BYTES)
+
+                registry.rerun_environment_faults(rerun)
+            records = registry.terminal_results(final=True)
+            episodes = _episode_rows(
+                records,
+                run_id=run_id,
+                loaded=loaded,
+                agent_identity=agent_identity,
+                wall_seconds=time.monotonic() - started,
+            )
+            (artifact_dir / "episode_results.jsonl").write_text(
+                "".join(json.dumps(row, sort_keys=True) + "\n" for row in episodes),
+                encoding="utf-8",
+            )
+
+        if sandbox_exception is not None:
+            phase = "sandbox"
+            raise sandbox_exception
+
+        phase = "aggregation"
+        try:
+            if Counter(record["task_id"] for record in records) != Counter(task_ids):
+                raise ValueError("local run requires one graded episode per task")
+            aggregate_score = aggregate_results(records, task_ids)
+        except ValueError as exc:
+            _raise_run_error(
+                sandbox_failure or str(exc),
+                classification="infrastructure" if sandbox_failure else "environment",
+                artifact_dir=artifact_dir,
+                summary_path=summary_path,
+            )
+
+        if not sandbox_output.is_file() or (
+            sandbox_failure and sandbox_output.stat().st_size == 0
+        ):
+            _raise_run_error(
+                sandbox_failure or "sandbox did not produce output",
+                classification="infrastructure",
+                artifact_dir=artifact_dir,
+                summary_path=summary_path,
+            )
+
+        phase = "sandbox_output"
+        _read_sandbox_rows(sandbox_output)
+
+        if sandbox_failure:
+            _raise_run_error(
+                sandbox_failure,
+                classification="infrastructure",
+                artifact_dir=artifact_dir,
+                summary_path=summary_path,
+            )
+
+        assert aggregate_score is not None
+        phase = "summary"
+        summary = _write_summary(
+            summary_path,
+            run_id=run_id,
+            loaded=loaded,
+            task_ids=task_ids,
+            records=records,
+            aggregate_score=aggregate_score,
+            status="completed",
+            problem_count=config.problem_count,
+            seed=config.seed,
+            agent_file=config.agent_path.name,
+            agent_sha256=agent_identity,
+        )
+        report_path = local_report.write_trajectory_report(
+            artifact_dir.resolve() / "trajectories.html", episodes, run_id=run_id
+        )
+        completed_result = LocalGeneratedResult(
+            run_id=run_id,
+            aggregate_score=aggregate_score,
+            results=records,
+            artifact_dir=artifact_dir.resolve(),
+            summary_path=summary_path.resolve(),
+            summary=summary,
+            report_path=report_path,
+        )
+    except Exception as exc:  # noqa: BLE001
+        caught_error = exc
+        run_error = _classified_error(
+            exc,
+            phase=phase,
+            artifact_dir=artifact_dir,
+            summary_path=summary_path,
+        )
+    finally:
+        runtime.clear_inference_grant()
+        cleanup_error = _cleanup(
+            container_name=container_name,
+            remove_container=remove_container,
+            server=server,
+            runtime=runtime,
+            registry=registry,
+            registry_installed=registry_installed,
+        )
+    if run_error is None and cleanup_error is not None:
+        caught_error = cleanup_error
+        run_error = _classified_error(
+            cleanup_error,
+            phase="cleanup",
+            artifact_dir=artifact_dir,
+            summary_path=summary_path,
+        )
+
+    if run_error is not None:
+        try:
+            _write_summary(
+                summary_path,
+                run_id=run_id,
+                loaded=loaded,
+                task_ids=task_ids,
+                records=records,
+                aggregate_score=aggregate_score,
+                status="failed",
+                problem_count=config.problem_count,
+                seed=config.seed,
+                agent_file=config.agent_path.name,
+                agent_sha256=agent_identity,
+                error=run_error,
+            )
+        except Exception:  # noqa: BLE001, S110
+            pass
+        # A failed run is where trajectories matter most, so emit the viewer for
+        # whatever episodes were graded before the failure.
+        if episodes:
+            try:
+                run_error.report_path = local_report.write_trajectory_report(
+                    artifact_dir.resolve() / "trajectories.html", episodes, run_id=run_id
+                )
+            except Exception:  # noqa: BLE001, S110
+                pass
+        if caught_error is run_error:
+            raise run_error
+        raise run_error from caught_error
+
+    if completed_result is None:
+        raise AssertionError("local generated run completed without a result")
+    return completed_result
+
+
+__all__ = [
+    "LOCAL_SUMMARY_SCHEMA",
+    "LocalGeneratedConfig",
+    "LocalGeneratedResult",
+    "LocalGeneratedValidatorError",
+    "run_local_generated_validator",
+    "select_tasks",
+]
+
+
+# What a checkout holds at the LFS-tracked pack path when the object was never
+# fetched: no `git lfs install`, a GitHub zip download, or `git archive`.
+_GIT_LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1"
+
+
+def _is_git_lfs_pointer(path: Path) -> bool:
+    with path.open("rb") as handle:
+        return handle.read(len(_GIT_LFS_POINTER_PREFIX)) == _GIT_LFS_POINTER_PREFIX
+
+
+def parse_config(arguments: list[str] | None = None) -> LocalGeneratedConfig:
+    parser = argparse.ArgumentParser(
+        description="Run a signed practice delivery locally."
+    )
+    parser.add_argument("--agent-file", default="src/agent/environment_agent.py")
+    parser.add_argument(
+        "--problems",
+        type=int,
+        default=None,
+        help=(
+            "How many problems to run, sampled at random. Defaults to every task "
+            "in the delivery."
+        ),
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Reuse a previous run's selection seed to repeat its problems.",
+    )
+    args = parser.parse_args(arguments)
+    if args.problems is not None and args.problems <= 0:
+        raise ValueError("--problems must be positive")
+    if args.seed is not None and args.problems is None:
+        raise ValueError("--seed only applies to a --problems sample")
+    # A fresh sample each run avoids tuning against one lucky subset; the seed is
+    # reported so any run can be repeated exactly.
+    seed = args.seed
+    if args.problems is not None and seed is None:
+        seed = random.randrange(2**31)
+    agent = Path(args.agent_file).expanduser()
+    workspace_agent = Path("/workspace") / agent
+    if not agent.is_absolute() and workspace_agent.is_file():
+        agent = workspace_agent
+    if not agent.is_file():
+        raise ValueError(f"agent file does not exist: {args.agent_file}")
+
+    if not os.environ.get("LOCAL_ENV_PACK_PATH"):
+        raise ValueError("set LOCAL_ENV_PACK_PATH to a signed practice delivery")
+    pack_path = Path(os.environ["LOCAL_ENV_PACK_PATH"])
+    if pack_path.is_file() and _is_git_lfs_pointer(pack_path):
+        raise ValueError(
+            f"{pack_path} is a Git LFS pointer, not the pack; "
+            "in a git clone run `git lfs install && git lfs pull` "
+            "(GitHub zip downloads never include LFS objects, clone instead)"
+        )
+
+    key, provider, base_url = resolve_inference_credentials()
+    if not key or not provider or not base_url:
+        raise ValueError("set OPENROUTER_API_KEY or CHUTES_API_KEY in .env")
+    model = os.environ.get("SANDBOX_MODEL") or "deepseek-ai/DeepSeek-V3.2-TEE"
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/+-]*", model):
+        raise ValueError("SANDBOX_MODEL contains unsupported characters")
+    max_workers = int(os.environ.get("LOCAL_MAX_WORKERS") or "7")
+    timeout = float(os.environ.get("LOCAL_TIMEOUT") or "1800")
+    if max_workers <= 0:
+        raise ValueError("LOCAL_MAX_WORKERS must be positive")
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError("LOCAL_TIMEOUT must be finite and positive")
+    return LocalGeneratedConfig(
+        agent_path=agent.resolve(),
+        pack_path=pack_path,
+        output_root=Path(
+            os.environ.get("LOCAL_OUTPUT_ROOT") or "logs/environment-runs"
+        ),
+        inference_access_token=key,
+        inference_provider=provider,
+        inference_base_url=base_url,
+        model=model,
+        problem_count=args.problems,
+        seed=seed,
+        max_workers=max_workers,
+        timeout=timeout,
+        session_host="127.0.0.1",
+    )
+
+
+def main(arguments: list[str] | None = None) -> int:
+    try:
+        config = parse_config(arguments)
+    except (OSError, ValueError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 2
+    try:
+        result = run_local_generated_validator(config)
+    except LocalGeneratedValidatorError as error:
+        lines = [
+            f"Error [{error.classification}]: {error}",
+            f"Summary: {error.summary_path}",
+        ]
+        if error.report_path is not None:
+            lines.append(f"Trajectories: {error.report_path}")
+        print("\n".join(lines), file=sys.stderr)
+        return 1
+    print(
+        local_report.render_console_report(
+            result.summary,
+            artifact_dir=result.artifact_dir,
+            report_path=result.report_path,
+            provider=config.inference_provider,
+            agent_model=config.model,
+            color=local_report.stdout_supports_color(),
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

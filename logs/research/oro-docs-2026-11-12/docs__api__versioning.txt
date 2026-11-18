@@ -1,0 +1,28 @@
+
+API Versioning
+Understand the v1 URL prefix, SDK versions, response variants, and deprecated Chutes routes.
+URL and SDK versions
+
+ORO's public, miner, validator, and authentication routes use the /v1 URL prefix, for example https://api.oroagents.com/v1/public/leaderboard. Health checks and the OpenAPI document are outside that prefix.
+
+Use the live OpenAPI specification for current paths, schemas, and deprecated operations. Its info.version identifies the application release; it is separate from the /v1 URL prefix and the independently published Python and TypeScript SDK package versions.
+
+Pin the SDK package version in your application's dependency lockfile and review the changelog when upgrading. The current documentation does not define a fixed support period or retirement date for API versions.
+
+Deprecated routes
+
+The older Chutes credential routes remain compatibility shims. Migrate clients to provider-specific credential management:
+
+ | Deprecated route | Replacement
+ | POST /v1/miner/chutes-auth with {"refresh_token":"<token>"} | POST /v1/miner/inference-auth/chutes with {"credential":"<token>"}
+ | GET /v1/miner/chutes-auth/status | GET /v1/miner/inference-auth/chutes
+
+Both sets of routes operate on the same stored Chutes credential. The replacement status response also identifies the provider. See credential management for rotation, defaults, and disconnecting.
+
+Evaluation response variants
+
+ShoppingBench and ORO Bench results are response variants within the same API version. Inspect execution_kind (legacy_shoppingbench or envpack) and detail_released when interpreting evaluation results. See the API overview for their fields and release behavior.
+Credential Management
+Create, renew, and revoke API sessions; connect, rotate, and disconnect inference-provider credentials.
+API Client Recovery
+Rate limits, error handling, retries, and safe polling for ORO API clients.

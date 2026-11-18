@@ -1,0 +1,134 @@
+Cost estimate for unchanged agents/TOSKY.py
+
+Source SHA-256: 31b083e8ac95bc6863a4a01f9768a61879914fed4eb9116ea0f27b394d825a18
+No paid requests, grading runs, submissions or agent edits were performed.
+
+There is no observed live TOSKY token distribution or measured run bill. The
+figures below are conditional cost estimates, not a statistical forecast. The
+call counts are observed in controlled executions of the actual controller;
+input/output token averages are explicit assumptions. Repeating a flow 30 or 90
+times is workload arithmetic, not a claim that all tasks follow that flow.
+
+The earlier $3.60/90 allocation was a proposed operating target, not a measured
+cost or an implemented budget. The previous full-output-cap estimates were also
+not predicted bills: max_tokens is an allowance, not the amount necessarily used.
+
+Public OpenRouter endpoint catalogs were checked through the web tool during
+this review and match the earlier November 13 snapshots. USD per million tokens:
+model                           input               output
+anthropic/claude-haiku-5.5       0.10-0.11           0.50-0.55
+anthropic/claude-sonnet-5.5      2.00-2.20          10.00-11.00
+deepseek/deepseek-v3.2           0.2088-0.30         0.3096-0.96
+
+Sources:
+https://openrouter.ai/api/v1/models/anthropic/claude-haiku-5.5/endpoints
+https://openrouter.ai/api/v1/models/anthropic/claude-sonnet-5.5/endpoints
+https://openrouter.ai/api/v1/models/deepseek/deepseek-v3.2/endpoints
+https://oroagents.com/docs/miners/inference-providers
+
+Haiku has a higher catalog tier at 100,000 prompt tokens per request. The
+calculations here use base-tier rates, no cache discount, no SANDBOX_MODEL
+override, no backup/uncertain charge, and exclude funding fees and infrastructure.
+Provider-native paid browsing tools are not requested by TOSKY.
+
+At the lower base prices the cost formula is:
+  Sonnet calls * (2 * mean input tokens + 10 * mean output tokens) / 1,000,000
++ Haiku calls * (0.1 * mean input tokens + 0.5 * mean output tokens) / 1,000,000
+The quoted upper route-price case is 1.1 times that amount. Token averages are
+per model over the task; individual calls need not have equal lengths.
+
+The reference assumptions are 2,000 input tokens per call, 400 output tokens per
+Sonnet call on average, and 150 output tokens per Haiku call on average. Those
+give $0.008-$0.0088 for a Sonnet call and $0.000275-$0.0003025 for Haiku. These
+averages were chosen for sensitivity analysis and were not measured from an LLM.
+
+New controlled flows include exactly two shopper questions after opening a
+candidate. They use a public-compatible three-message/38-step allowance but a
+synthetic one-item world, scripted correct interpretations and no live grader.
+Both finish with the intended order. The indifferent flow adds no requirements;
+the preference flow adds two requirements and triggers two more evaluations.
+
+Flow                         steps  Sonnet  Haiku  total model calls
+Short, no shopper messages       7       5     12                 17
+Two indifferent replies         9       7     18                 25
+Two new preference replies      9       9     20                 29
+Repeated required-read cycle    26      60     30                 90
+
+The first and last rows reproduce the prior review's source-identical controlled
+profiles. The middle rows were executed in this review. Calls were intercepted
+before network access, and requests.sessions.Session.request was also blocked.
+
+Estimated cost using the reference token assumptions:
+Flow                         per task USD        30 tasks USD       90 tasks USD
+Short, no messages            .04330-.04763       1.2990-1.4289      3.8970-4.2867
+Two indifferent replies      .06095-.067045      1.8285-2.01135     5.4855-6.03405
+Two preference replies       .07750-.08525       2.3250-2.5575      6.9750-7.6725
+Repeated-read cycle          .48825-.537075      not representative of normal task mix
+
+Amounts above a scoped key's cap describe the inference demand to finish the
+workload without that cap. ORO blocks new requests when the run key reaches its
+cap; work still in flight may finish. A $7 workload is therefore a failure risk
+for a $5 run, not a claim that ORO normally charges $7 for that capped run.
+
+Why questions matter: a question needs action planning, a deep observation
+interpretation and fast revision parsing. New requirements invalidate candidate
+judgments. Discovery can also rerun when the relevant state changes. In the
+preference profile 9/29 calls are Sonnet, but they represent approximately 92.9%
+of reference-scenario cost. Reducing all cheap calls would leave $0.072-$0.0792
+per task from Sonnet alone, still above the $5/90 average allowance.
+
+There is substantial token-length sensitivity. For the two-preference flow:
+Assumption         mean input  mean Sonnet/Haiku output  30 tasks USD    90 tasks USD
+Compact                1000               250/100         1.305-1.4355    3.915-4.3065
+Reference              2000               400/150         2.325-2.5575    6.975-7.6725
+Larger                 4000               800/300         4.650-5.115    13.950-15.345
+
+None of these bands is a probability interval. Real product records, supplied
+schemas, request changes, candidates and model verbosity determine actual usage.
+Scripted fixture reply lengths are not treated as live model token predictions.
+
+The limits permit $0.0666667/task in a 30-task qualifier and $0.0555556/task in a
+90-task race. Holding the two-preference profile's 400/150 output averages fixed,
+the mean input must stay below about 903 tokens at lower route prices, or 650
+at higher route prices, merely to fit the $5 run with no headroom. At 2,000 input
+tokens, the same flow would need approximately 28-35% less spending to reach $5,
+and 43-48% less spending to reach an illustrative $4 operating target.
+
+The existing repeated-read cycle is a separate tail risk. With the reference
+assumptions, 90 short no-question episodes require $3.897-$4.2867. Replacing two
+with the cycle raises demand to $4.7869-$5.26559; replacing three raises it to
+$5.23185-$5.755035. The cycle frequency in real tasks is unknown. This arithmetic
+shows why a small number of expensive episodes can consume the remaining margin.
+
+The code does not enforce an inference-dollar budget. self.budget represents the
+shopper's purchase budget; reserve() reserves world actions. model_cost records
+reported cost afterwards. Up to min(90, initial_max_steps*2+14) physical model
+attempts are permitted per task, giving 90 for the public 38-step allowance.
+There is no prospective USD reservation, conservative missing-charge handling or
+credit-exhaustion latch. A terminal receipt can still be sent for interpretation.
+The selected model may be retried through DeepSeek after an unusable result;
+payment for a failed or malformed original attempt is not necessarily refunded.
+
+SANDBOX_MODEL changes both normal and deep model routes. The default-model
+estimates do not apply to such an override. For example, routing the short
+5-deep/12-fast flow entirely to Sonnet, while retaining the same assumed input
+and output lengths by purpose, raises it to $0.106-$0.1166/task, or $9.54-$10.494
+for 90 repetitions. A cheaper model swap would require separate quality evidence.
+
+The full-cap output-only exposure remains distinct: the short profile permits
+$0.0987-$0.10857 of output, and the cycle $0.7125-$0.78375. Input is excluded,
+so these are neither expected bills nor absolute all-inclusive upper bounds.
+
+The defensible conclusion is that the current source has no established safe
+full-run cost. Under reference assumptions even successful, non-looping question
+handling can exceed the race budget. Compact token use could fit; realistic
+frequency-weighted costs remain unknown until actual usage is measured. Fixing
+repeated work and adding admission before each physical request are stronger
+controls than assuming every task follows the short no-question path.
+
+All amounts refer to one run. Separate validators and separate races use separate
+run keys; the account total is the sum across runs. A single $5 race cap does not
+limit the entire account, all validators or a multi-race series to $5.
+
+Reproduction: python3 logs/research/tosky-cost-estimate-2026-11-13/estimate.py
+Structured calculations and individual synthetic call records: cost-estimate.json

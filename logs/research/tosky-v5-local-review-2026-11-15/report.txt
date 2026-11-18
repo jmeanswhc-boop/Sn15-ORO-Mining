@@ -1,0 +1,444 @@
+Tosky_v5: review of local-6dfac68554764b9e8f2f025d9f0a1777
+Analysis date: 2026-11-15
+
+The result does not support treating v5 as an improvement. On the matched
+30-task practice set it loses one net success, costs 14.27% more and takes
+17.01% longer per task than v4. This is not explained by a different agent file,
+an exhausted OpenRouter balance, missing billing, a platform rejection or a
+per-task timeout. The tested source hash matches agents/Tosky_v5.py exactly.
+
+The most important finding is a decision-consistency problem. Request parsing,
+property matching, category ownership, cart validation, semantic review and
+last-resort completion do not maintain one consistent interpretation of the
+request and observed state. V5 added checks around these handoffs without
+proving that the handoffs agree. One new property rule demonstrably rejects
+previously acceptable evidence. Other fixes terminate before the downstream
+component that can undo them. More review calls cannot reliably repair this
+when those reviews are instructed to trust the same incorrect rule.
+
+This conclusion does not mean every loss is attributable to v5, or that one
+small edit will solve all ten failures. Some defects are inherited; some exact
+grading predicates remain unexposed. The assessment below preserves those
+distinctions.
+
+1. Evidence and comparison boundaries
+
+Read and reconciled the supplied summaries, all episode outcomes, inference
+usage, agent diagnostics, public tool observations, and model final responses
+for these runs:
+
+Version / run suffix             Correct    Cost USD    Calls   Mean task sec
+v3 / cb574c03                    23/30      0.643582      602       85.18
+v4 / c99b5b2f                    21/30      0.619710      522       67.99
+v5 / 6dfac685                    20/30      0.708119      596       79.55
+v4 sample / 4efab7fa             14/20      0.423396      354       72.43
+
+The full runs share the same 30 task identifiers, exact requests, world and
+pack hash. Random sampling seeds differ, but the full runs contain the same
+roster. Model answers, action sequences and observations along those sequences
+can differ. These are paired outcome comparisons, not controlled causal
+ablations of each change.
+
+Against the 20-task v4 sample, v5 also scores 14/20 on those same tasks, with
+two gains and two losses, costing $0.474270 rather than $0.423396. This is
+additional evidence against a demonstrated efficiency improvement.
+
+V5 versus full v4: 17 shared passes, six shared failures, three gains and four
+losses. The one-task net loss is not a statistical estimate of the expected
+effect across future races. The directly reproduced semantic and handoff
+defects are actionable regardless of that sampling uncertainty.
+
+The earlier v3 scored 23/30 on this practice roster, but restoring v3 wholesale
+is not proven to improve future races. It also had two unfinished cases, and
+four v5 passes were v3 failures while seven v3 passes became v5 failures.
+
+ORO's current documentation says the local practice world is separate from
+network qualifying and hidden race worlds. These local comparisons therefore
+do not establish a current network qualifying score or a measured margin over
+PIRATE. No matching local PIRATE validation was found in the archived local
+summaries checked for this review.
+
+Source: https://oroagents.com/docs/miners/local-testing
+
+2. All ten failures and their causal status
+
+Task                Case                  v4->v5   V5 category
+t-069a67a0c4         Canned UHT milk          1->0   did not finish
+t-70ef000b3f         Youth-fashion hoodie    0->0   request not met
+t-82a9890683         Watch                   0->0   needs not found
+t-86888552db         Long-sleeved top        0->0   request not met
+t-9ab5c575f5         Baggy pants or jeans    0->0   did not finish
+t-a6d85e34f3         Trenchcoat              0->0   needs not found
+t-b516252b9f         Knit winter clothing    1->0   request not met
+t-b9e9292a88         Acne-care cleanser      1->0   request not met
+t-b9f98ac0cc         Tunik                   0->0   request not met
+t-d4e2bc9e66         Sweet-style skirt       1->0   request not met
+
+The two unfinished tasks stopped with steps still available: milk at 36/38 and
+pants at 35/38. Their task times were approximately 111 and 137 seconds,
+respectively; neither reached the five-minute limit. Six failures are request
+mismatches and two are missed preferences. There is no reported procedure or
+best-option failure in this v5 run. This does not prove those capabilities are
+universally solved, because each task exposes at most one failure category.
+
+ORO gives binary task credit, and the feedback does not identify the complete
+private grading predicate. A completed checkout and an internal CHECK approval
+are not equivalent to a correct order.
+
+Source: https://oroagents.com/docs/miners/scoring
+
+3. Proven new regression: lexical scope mistaken for semantic authority
+
+Code: agents/Tosky_v5.py property_ranks (line 5171), key_verdict (5242),
+shows_need, bound_verdict, and the CHECK/SWAP property-scope instructions.
+
+The new ranking gives a category-qualified key priority over a generic key.
+It does not establish that both keys describe the same semantic dimension.
+
+For the sweet-style skirt, the observed records contain:
+- p-1f4aa8507466: price 246; style=sweet; skirt style=pleated skirts.
+- p-338c87630a54: price 188; general styles=sweet;
+  skirt.style=pleated skirts.
+
+Sweet describes an aesthetic; pleated describes construction. These facts can
+coexist. V5 instead treats pleated as disproving sweet. With the same v5
+observations and same requirement, the offline method probe returns True under
+v4 and False under v5 for both products. No model sampling is involved in that
+counterfactual.
+
+In the live run the initial 188-cent skirt is rejected, the agent switches to
+the 246-cent skirt, reviews disagree, and that listing sells out at checkout.
+SWAP proposes the cheaper skirt again, but the code removes it as broken. The
+agent ultimately declines. V4 bought the 246-cent skirt successfully.
+
+This is a confirmed newly introduced false veto, not proof that merely changing
+the veto would deterministically reproduce a successful complete episode.
+The new rule also appears in failed hoodie CHECK responses: pullover/cardigan
+is treated as contradicting youth fashion. That task already failed before
+v5, so it is not an additional newly lost score.
+
+Countermeasure: bind a requirement to evidence only after establishing the
+property's meaning and applicable component. Preserve both raw keys when they
+describe different dimensions. Ambiguity must remain unresolved and receive a
+focused review; lexical specificity alone must not produce a negative proof.
+Reverting to generic-key-always-wins would also be incorrect: the recorded
+wrap-skirt and square-clock conflicts demonstrate why category scope can help.
+
+Required tests must include both families of evidence. The previous generic
+widget finish test assumed, rather than tested, semantic equivalence between
+finish and widget finish. It did not cover aesthetic versus garment cut.
+
+4. Incomplete fix: OR survives parsing but not final category validation
+
+Code: fuller_label (4596), line_faults (4612), owner_of, run_calls.
+
+The pants request is represented as one item named pants or jeans. The public
+record p-028af8354258 is in Jeans, costs 173 and has baggy fit. The agent reads
+it early and adds it at step 13. owner_of('Jeans') correctly returns item 1.
+
+However, fuller_label strips the relationship word and seeks a catalog label
+containing both pants and jeans. At step 15, line_faults refuses the Jeans
+listing because Pants & Jeans exists. The offline probe reproduces the
+contradiction: ownership accepts Jeans; the cart validator rejects it.
+
+This method is unchanged from v4. The v5 repair did not follow its own amended
+request through the final validator. The live audit accepted no amendment here;
+the initial parser already preserved the alternative. The failure is therefore
+not an audit extraction failure.
+
+The agent then repeats searches. Steps 17, 18, 21, 24, 28 and 29 change keywords
+in fields mode but return the same seven product IDs in the same order. Page-2
+and page-3 searches are also repeated with different keywords and identical
+results. The public tool description distinguishes typed keyword search from
+fields filtering. Different argument strings did not mean new evidence.
+
+At step 31 an automatic fallback adds the original Jeans listing again, showing
+that another decision path accepts it. The main planner changes to a 355-cent
+listing in the combined category. The first actual checkout is at step 35,
+when that product sells out. Recovery then fails under the budget admission
+conditions described below.
+
+Countermeasure: express alternatives explicitly and use the same eligibility
+contract in ownership, cart checks, recovery and fallback. Test a complete
+allowed-alternative path through checkout, plus explicit-category and unrelated
+category negative controls. The prior test ended after owner_of assertions.
+Search deduplication should compare effective query modes and observed results,
+not merely serialized argument strings.
+
+5. Interview update: more property mentions, no added discoveries
+
+Code: question_eligible (3446), fit_ask (3501), settle (3536), PLAN and HEAR.
+
+V5 emits 53 question_coverage records for grouped questions. All 53 have an
+empty new-needs list. Three new preferences are extracted across the run, the
+same count and tasks as full v4; all three v5 discoveries follow single-property
+questions. Answer-interpretation calls increase from 48 to 85, while their cost
+increases from $0.008547 to $0.018501.
+
+Hoodie: material is mentioned inside a style/material/pattern question, but the
+answer is indifferent. The earlier v3 single-material question disclosed nylon.
+Watch: case shape and gender are mentioned in a grouped question, but no new
+preference is obtained. Earlier single-property questions disclosed rectangle
+and female. Trenchcoat: gender is not reached within the three-question plan;
+the previously documented coverage gap remains.
+
+There is no public basis to claim that the shopper always parses only the first
+property. The observed conclusion is narrower: mentioning several properties
+did not recover the preferences in these traces. No explicit list rejection
+occurred, so v5's list-rejection fallback was not activated. settle nevertheless
+advances all mentioned properties as used.
+
+Countermeasure: count preference discovery and explicit per-property answers,
+not lexical mentions, as successful elicitation. An ambiguous indifferent reply
+to a list is not evidence that every listed property was answered. Restore an
+atomic-question baseline for isolated evaluation, and improve priority only
+with observed evidence rather than narrative anecdotes. With three messages,
+complete discovery of arbitrary undisclosed properties cannot be guaranteed.
+
+The previous synthetic world reveals a preference whenever its marker string
+appears anywhere in the question. That fixture cannot validate grouped-question
+semantics; it builds the desired behavior into its answer function. Public
+question replays supplied no live shopper responses. These are material gaps
+in my earlier validation, even though the build report disclosed its limits.
+
+6. Budget and completion: affordable task, inadmissible next request
+
+Code: quote_inference (1212), call_model (1232), trim (6725), turns (6786),
+finish (6667), terminal availability checks.
+
+V5 spent $0.708119 across 30 tasks. The most expensive task cost $0.039152,
+below the configured $0.050 per-episode envelope. No charge is missing and no
+HTTP/provider failure or hard-credit exhaustion is recorded. Budget admission
+denials nevertheless rise from ten to nineteen.
+
+Milk ends at $0.038082, leaving $0.011918 of its configured envelope. Pants ends
+at $0.038794, leaving $0.011206. Their final planner request bodies are about
+80 KB and 90 KB. The conservative admission estimate counts bytes plus schema
+and message overhead; these histories no longer fit the remaining allowance.
+The 150,000-character history trimming threshold has not triggered. The
+configured $0.004 completion reserve protects outstanding procedures, not every
+ordinary stockout or terminal recovery.
+
+Two billed responses return HTTP success but no usable final answer:
+- Milk CHECK: output allowance shrunk to 463 tokens; all 463 are recorded as
+  reasoning tokens; finish_reason=length; empty final content; cost $0.008098.
+- Pants SWAP: full 3,500-token allowance consumed as reasoning tokens;
+  finish_reason=length; empty final content; cost $0.002294.
+
+The second case is not caused by a shrunken output allowance. Both are unusable
+responses that transport-success statistics alone do not count as failures.
+
+An offline quotation using a compact request with the same tools, current
+ledger and a small observed-record context fits within the original envelope:
+approximately $0.003579 reserved for milk and $0.003534 for pants. This proves
+only pricing feasibility. It does not prove that the illustrative compact
+context preserves every necessary fact or that a model would solve the task.
+
+Milk also exposes an inherited terminal-state defect. After removing the cart
+line at step 34, current tracked cart quantities are empty but an old cart view
+remains. finish permits checkout because the cart was touched and the view is
+stale, even though it is not holding anything. It issues two empty purchases,
+each receiving BARE, then exits without finishing. A transport-blocked probe
+reproduces both calls in v4 and v5. The old code defect was not newly introduced
+but was not covered by the previous successful fallback fixtures.
+
+Pants repeatedly tries to order the unavailable line; the availability guard
+correctly blocks it. The missing operation is a viable bounded recovery or
+terminal transition, not removal of that safeguard.
+
+Countermeasure: couple history compaction to remaining request affordability;
+reserve ordinary completion/recovery capacity; treat empty/truncated responses
+as a distinct operational result; and prohibit repeating a terminal action
+against unchanged known-invalid state. Preserve raw critical evidence, changed
+requirements, procedure completion and current stock in any compact context.
+A valid terminal decline is not automatically a correct score if a fitting
+product still exists, so completion and correctness must be checked separately.
+
+Raising the spending ceiling first would conceal the failure and spend more
+on conflicting evidence. The configured allocation is $1.50/30 or $4.50/90
+invocations under its rate and invocation assumptions. Tripling this practice
+run's observed cost gives $2.124358; that is arithmetic, not a hidden-race
+forecast or a guarantee under price changes or additional invocations.
+
+7. Search coverage and failures that remain unproven
+
+Knit clothing: the first 485-cent candidate sells out. V4 subsequently uses a
+typed search with knitwear/sweater/cardigan terms, discovers p-e01104f600a0,
+reads its knit-material evidence and buys it successfully. V5 never observes
+that product. It repeats some field-filter results and ultimately declines.
+This is a coverage failure in this trajectory. It is not evidence that the
+new candidate-retention code discarded a product the agent had already seen,
+and there is no isolated causal proof tying the changed search route to one
+particular v5 patch. Candidate discovery and candidate retention need separate
+tests. A no-fit conclusion must be supported by meaningful search progress,
+not the number of search calls made.
+
+Cleanser: after its first candidate sells out, v5 buys p-175e2ca9ab1e for 139,
+whose visible skin-benefit evidence says acne care. Both internal reviews
+approve, but the grade is request not met. The same final product already
+failed in the earlier v4 sample. Full v4 passed with a different 224-cent
+anti-pimple product. This is recurrent unresolved selection/evidence behavior,
+not proof of a newly introduced v5 predicate defect. Do not blacklist an ID or
+invent an unsupported synonym rule from these outcomes.
+
+Long-sleeved top: full v4 and v5 select the same 605-cent p-077e3cbd7819,
+with visible long-sleeve evidence and internal approval, and both fail. The
+exact failed condition is not exposed. This must remain an unresolved case.
+
+Tunik: the new audit adds type:tunik, but the earlier scripted replay supplied
+the more specific type of top:tunik. The final product p-07b7b0c6522f costs 708
+and has top.style=tunik and muslim.top.style=tunik; the visible record does not
+establish the same type-of-top predicate. Both actual CHECK responses approve.
+Adding a requirement string did not ensure the evidence was bound to its
+meaning. This is a supported semantic gap, not access to the exact private
+grading reason. The previous build report already marked this unresolved.
+
+Milk additionally shows sensitivity to equivalent property naming: on the
+previously successful candidate, container:cans is unresolved without a local
+failure explanation; packaging:cans is unresolved with a missing-key
+explanation that unfit treats as a fault. Both v4 and v5 reject ready-to-drink
+on the other candidate because its milk type says hi-cal low fat. That
+different-dimension mistake is inherited; it is not unique to the new ranking.
+
+8. Review-state inconsistency, independent of model quality
+
+check_cart (4711) adds a state to checked before it calls the reviewer and
+stores the resulting Boolean separately. A repeat call for that unchanged
+state returns an empty string even if the stored verdict is False. The main
+checkout path in run_calls uses the returned string as its hold signal. The
+counterfactual cache-contract probe reproduces this behavior in both v4 and v5.
+
+The live hoodie trace contains negative reviews followed by checkout without
+a later positive review. Since those particular reviews use the faulty style
+rule, simply enforcing their verdict would not establish the correct answer.
+Both the meaning of the review and its state transitions must be repaired.
+
+Countermeasure: represent pending, rejected, accepted and superseded reviews
+explicitly. Repetition alone must not convert rejected to cleared. New evidence
+may invalidate a verdict, but retry count is not new evidence. Avoid replacing
+this with an unconditional veto that would lock in bad semantic judgments.
+
+9. Where the added money went
+
+Component                  v4 cost    v5 cost    v4 calls -> v5 calls
+Request extraction         0.030338   0.031294       30 -> 30
+New request audit          0.000000   0.011543        0 -> 30
+Main tool planner          0.177064   0.195122      281 -> 288
+Catalog shaping            0.005219   0.005525       30 -> 30
+Interview planning         0.329148   0.345000       30 -> 30
+Answer interpretation      0.008547   0.018501       48 -> 85
+Cart review                0.033416   0.064407       49 -> 53
+Notes                      0.006763   0.006380       27 -> 24
+Other                      0.029216   0.030348       27 -> 26
+
+The new audit and extra answer interpretation account for 67 of 74 added calls.
+Cart-review cost nearly doubles and contributes about 35% of the total cost
+increase. Interview planning alone consumes about 48.7% of v5's cost. These
+are measured destinations of cost, not an ablation proving each patch's cost.
+Provider token counts, output lengths and caching also affect measured bills.
+
+Cost per correct task rises from $0.029510 to $0.035406, approximately 20%.
+The agent is paying more to explore and adjudicate decisions without reliably
+obtaining better evidence. Buying stronger reviews of the same wrong contract
+is not an established remedy.
+
+10. Gains worth preserving, without over-attribution
+
+- Wedding mules (t-559c052a99): 0->1. The initial brief already contains wedding;
+  the new audit adds nothing. A single pattern question discovers animal print,
+  and the agent follows a reduced budget. The gain cannot be assigned to the
+  request audit merely because the audit exists.
+- Logo winter clothing (t-9fc67ee841): 0->1. The audit actually adds the omitted
+  logo-pattern requirement. This is a concrete successful handoff worth keeping.
+- Cheapest square clock (t-abf1c45838): 0->1. After a stockout and a 67-cent
+  candidate, review identifies the known 62-cent square clock and the final
+  order passes. This supports the recovery/evidence approach, without proving
+  the retention patch alone caused the entire gain.
+- The procedure-bearing monitor case remains successful. Its gate count is
+  lower than the v4 traces, but paths differ, so this is not a cost ablation.
+
+11. What the repeated poor results signify about the development method
+
+The source-level edits were reviewed in stages, but no measured per-stage
+accuracy results existed. A deterministic helper improvement is not an
+end-to-end task improvement, and six scripted flows passing on both versions
+cannot establish preservation across the real task families.
+
+Specific shortcomings in my previous work were:
+- Treating a category-specific key as semantically authoritative without
+  counterexamples from earlier passing observations.
+- Validating category ownership but not its later cart and terminal checks.
+- Treating grouped-question reachability as a plausible benefit without real
+  elicitation evidence; the synthetic response rule favored that assumption.
+- Testing successful terminal fixtures but missing empty-cart, stale-view and
+  length-limited-response recovery.
+- Retaining explicitly unresolved top, cleanser, coat and tunik problems while
+  assembling several other changes into one paid-test candidate.
+
+The prior report did say offline checks were not scores, and did not claim that
+those unresolved tasks were solved. Those caveats were accurate, but the test
+coverage and release criterion still fell short of the requested reliability.
+That is a concrete failure of the update process, not a reason to dismiss the
+user's validation as model randomness.
+
+12. Recommended next sequence; no implementation in this review
+
+First, establish an unchanged v4/v5 evidence baseline with the same observed
+request, candidates and state. Add falsifying cases from both successes and
+failures. A passing implementation-shaped fixture is insufficient.
+
+Second, repair only requirement-to-evidence binding and its shared handoffs:
+the aesthetic/cut distinction, category alternatives through line_faults, and
+meaning-preserving property labels. Keep raw source quotes and property keys.
+Acceptance: sweet-style products are not falsely excluded; wrap-skirt and
+square-clock scoped evidence still works; unrelated kinds and explicit
+exclusions remain blocked; ambiguous type/style remains unresolved rather
+than silently approved. These tests establish semantic contracts, not scores.
+
+Third, separately repair review persistence and terminal state. Acceptance:
+repeating an unchanged failed review does not clear it; new contradictory
+evidence can invalidate it; no empty-cart checkout loop; known stockouts remain
+blocked; mandatory procedures stay intact. Require legal progression under
+each recorded failed state, not merely that the agent returns.
+
+Fourth, separately test ordinary completion reserves and affordability-driven
+context reduction with the actual recorded history sizes and truncated-response
+shapes. Acceptance: no cap increase, no missing charge accounting, enough room
+for a valid compact recovery request, and preservation of evidence needed for
+the decision. This can be checked offline; response quality cannot.
+
+Fifth, compare atomic-question elicitation with the grouped variant as its own
+experiment. Count disclosed requirements and full task outcomes, not labels
+mentioned. Keep message/procedure reservations and honor explicitly requested
+question styles. Do not combine this with model-routing or search-policy changes.
+
+Sixth, improve search progress only after request/category semantics agree:
+use the advertised keyword mode, detect repeated result sets and separate
+exhausted coverage from unsuccessful queries. Preserve complete candidate
+evidence for cheapest and replacement decisions.
+
+Any later paid comparison needs explicit authorization. It should isolate the
+changed mechanism and then check the full matched roster, retaining gains,
+losses, cost and task time. A repeated or paired live comparison is needed
+before calling a candidate more accurate. A single practice run cannot
+guarantee a hidden-race score, and no honest review can promise zero regressions.
+
+The highest-priority shared repair is the request/evidence decision contract;
+completion reliability is a separate mandatory repair. Neither a blanket
+rollback nor a larger collection of untested patches is justified by this data.
+
+13. Reproducibility and preserved artifacts
+
+analysis.json: reconciled run metrics, all per-task results and paired changes.
+tasks/: public observations and selected final model responses, by run/task.
+probes.json: fixed-observation property comparisons, OR handoff, empty-cart
+completion, and compact-request affordability checks.
+supplement.json: question outcomes, repeated search results, empty length-
+limited responses, review-cache contract, unchanged-method and source hashes.
+analyze.py, probe.py, supplement.py: reproducible offline diagnostic scripts.
+
+The agent loader blocks transport. No paid inference, live environment replay,
+submission, source-agent edit, test edit or commit was performed. Source hashes
+for Tosky_v3, Tosky_v4, Tosky_v5, TOSKY.py, PIRATE and the recorded v4 test file
+match the retained originals. No private grading rules or answers were used
+to determine a fix or embedded into any agent.

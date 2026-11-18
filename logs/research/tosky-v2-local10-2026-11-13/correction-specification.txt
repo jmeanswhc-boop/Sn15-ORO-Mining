@@ -1,0 +1,101 @@
+REVIEW-BOUNDARY RECOVERY: SPECIFICATION AND ACCEPTANCE CRITERIA
+Derived from the unchanged Tosky_v2 source and local-48ea2d82b735402084cd09cc2fcc2f39.
+This specifies a new candidate; it does not claim an implementation or a new score.
+
+1. BASE AND DIFF BOUNDARY
+
+Base: full agents/ICDI_chidori_v4.py, SHA-256 bbf30300c5039956ddd18faa5c22fd27b126458339f8ae67860c87425777e898.
+Preserve it, Tosky_v2.py and every previous version byte-for-byte. Use a new version file when implementation begins.
+
+First candidate scope: the additional corrective review's request/response boundary, its cache state and its handoff to the existing finalization path. Relevant hooks are cart_check, cart_review_context, adjudicate_review, terminal_recovery_hold and repair_reason/recover. Retain the working v4 implementation as the underlying path. The v2 failure locations to replace rather than reproduce are apply_source_audit at 11734, citation_value/citations_valid around 11990, validate_cart_proof at 12464, cart_check at 12534 and terminal_recovery_hold at 12691.
+
+Do not port the whole ToskyControls class. Do not combine new interviewing, question ranking, reference resolution, global source interpretation, model routing or higher allocations into the recovery candidate. The first result is restoration of a reliable review boundary, not a claimed accuracy breakthrough.
+
+2. PRODUCER/CONSUMER CONTRACT
+
+Generate opaque requirement identifiers from the current runtime ledger and a revision number. Generate evidence identifiers from currently observed fields. Both are local runtime references, not task/product lookup tables. Each evidence reference retains the actual product identity, field scope, field key, JSON value and observation revision in code-owned state.
+
+Illustrative schema, using invented local identifiers:
+{
+  "revision": 4,
+  "item_results": [{
+    "item": 1,
+    "id": "observed product identity",
+    "requirement_results": [{"rid": "r1", "state": "met", "evidence_ids": ["e3"]}]
+  }],
+  "missing": [],
+  "better": []
+}
+
+The model selects requirement/evidence IDs and a finite result state. It does not copy full field values, repeat the requirement text as a key, invent new requirement rows or restate numeric/boolean observations. Validate all IDs against the exact current snapshot and the assigned item. A withdrawn requirement, changed record, different product or earlier revision invalidates dependent references.
+
+Global constraints remain typed fields from the v4 task state: budget and scope, quantities, availability policy, message ceiling, step ceiling and explicit procedure duties. They are not inserted as strings into product requirements by the corrective review. The model cannot turn indifference, an aesthetic hint or an irrelevant catalog property into a new live need. Preserve the existing v4 product-coverage audit separately; do not gate all product corrections on the v2 all-purpose completeness certificate.
+
+No correctness decision depends on a global complete/source_complete confidence flag. Derive usable status from coverage of actual active requirement IDs, grounded evidence, the selected objective and separately checked obligations. A response that omits an active ID is unknown/invalid; a response that adds an ID is invalid. Neither condition proves that the product fails.
+
+Do not rely on an unverified provider-specific response-format feature. Enforce the contract locally, with a bounded format-only correction route.
+
+3. ERROR CLASSIFICATION AND ROUTING
+
+REVIEW_FORMAT_ERROR:
+Examples: assignments[0].evidence is prose; an evidence field has a wrong JSON type; a requirement reference is absent, extra or stale. Return the exact field path, received type/value category and expected shape. Preserve the current basket and source facts. Route to a format-only decision using the already observed state. Do not search, reread, remove a product or cache a negative cart verdict because of this error.
+
+MISSING_OBSERVATION:
+Name the exact active requirement and record/field whose absence affects the selected decision. A supplied schema must permit the proposed read/search action. For pick=any, an unknown alternative does not create a missing observation when the selected item already meets the actual requirements. Do not require warranty, shipping, aesthetics or ranking unless the task has made it binding.
+
+VERIFIED_MISMATCH:
+Requires a real active requirement, matching entity/scope and grounded conflicting evidence. Route the specific product/constraint fault to the shopping planner. Preserve legitimate rejection of wrong stock, quantity, price, product type, unresolved references and unmet procedures. A free-form negative opinion without a grounded active requirement does not become a verified mismatch.
+
+REVIEW_UNAVAILABLE:
+Transport failure, missing result or exhausted local correction opportunity. Preserve unknown. It cannot erase an existing valid negative review, manufacture a positive match, or become a new permanent negative review. Existing v4 safeguards and finalization remain in force; do not add a universal new veto from this overlay.
+
+LOCAL_REQUEST_TOO_LARGE:
+Record available funds, protected funds and the refused packet's size. Switch to a bounded current-decision packet if it is admissible. Keep the financial cap, physical-attempt accounting and 402 stop. A local oversized request is not proof of global account exhaustion or an infeasible shopping task.
+
+4. CACHE AND PROGRESS
+
+Cache verified results by source revision, active requirement IDs, selected item/quantity and the relevant observation revisions. Invalid or unavailable responses do not enter the boolean negative-verdict map. A real change invalidates dependent results; an unchanged transient formatting error does not invalidate observed product facts.
+
+Count progress as new relevant evidence, a changed binding, a corrected protocol result or a real cart/procedure transition. A step-number increment alone is insufficient: reading the same unchanged record again must not indefinitely renew the repair loop. Each repair must name the condition it is expected to change.
+
+5. OBSERVATION AND OBJECTIVE SEMANTICS
+
+Separate full-detail evidence from a fresh offer/price observation. The three captured required-view failures must retain their actual datasheet evidence after the offer role is learned. Change the new cart-level consumer, not the shared reference-page predicate. Keep explicit source-required page/offer procedures strict.
+
+Replace blanket listing_text_may_be_clipped=true with actual field coverage metadata. A fully supplied field is complete; an empty returned description is known empty. A truly omitted/clipped field is not citeable as unseen full text. Reframe a cached required field or a sufficiently contextual grounded span when needed; do not issue a world reread solely because the review packet omitted already cached text.
+
+For pick=any, evaluate eligibility of the chosen candidate without an added cheapest-item objective. For cheapest/best, assess only decision-relevant alternatives with the same full eligibility standard. A cheaper record is not better merely because it shares a category. An irrelevant or more expensive unread record is not a universal completeness blocker.
+
+6. FINANCIAL LIMITS
+
+Keep AGENT_USD_LIMIT=0.035 and the existing procedure reserve of 0.010 within that allowance. Ninety allocations total 3.15 before shared costs/estimation error. Do not increase model prices, output caps or call counts to conceal the protocol failure.
+
+A single correction decision gets at most two physical transmissions total, including its initial response, format retry and any parameter-compatibility retry. Each goes through the existing ledger. The proposed compact format packet uses a maximum output of 768 tokens. The observed milk and monitor denial states admit it at reservations of 0.001222344 and 0.001206875, respectively. Two such reservations also fit the monitor's 0.0025744 unprotected balance. These are local estimator quotes, not measured new charges or a routed-billing guarantee.
+
+7. RECORDED-CASE ACCEPTANCE TESTS
+
+A. Replay all 564 requests from the immutable ten-case run with no HTTP. Require exact request bodies, complete record consumption and identical recorded final steps/spend/calls on the original source. This characterization is already implemented. It proves the failure reproduction, not a correction.
+
+B. Feed all six captured prose-evidence responses to the new boundary. Require REVIEW_FORMAT_ERROR with a field path and a format-only handoff. Assert that no world action or basket mutation occurs while repairing representation, and no new negative cart verdict is stored.
+
+C. Use the three captured stringified stock/price examples. Evidence IDs must resolve to original boolean/numeric values. For a legacy-format adapter, permit only an exact reversible type representation of an observed value. Do not accept a changed value, a false stock claim or a field from another product. Add negative controls for those cases.
+
+D. Use all three captured required-view failures. Ordinary cart evidence must continue to recognize the completed datasheet; a separately required fresh offer remains a distinct obligation. Add a reference/procedure case proving that this does not bypass an explicitly required page action.
+
+E. Use actual source-audit responses containing message/action maxima. No source ceiling can become an owed minimum number of messages or steps. Preserve the original monitor's real requested advice duty, as well as its protected procedure budget. The two situations must not be conflated.
+
+F. Use actual pick=any milk/mule packets with an unread alternative. If the selected candidate's real active requirements are met, alternative incompleteness alone must not reject it. A synthetic cheapest request with a proven eligible cheaper item must still require improvement.
+
+G. Reuse the sweet-skirt empty-ledger source case and the rewritten watch/sleeveless need strings. The current requirement-ID coverage must remain exact without requiring a model to duplicate old free-text keys. Indifferent topics do not become missing requirements. An actual omitted binding requirement must still be raised by the existing product-coverage path.
+
+H. Exercise all seven independent source counterexamples from the earlier incident before porting any new matcher logic. They are known risks, even though no current ten-case cart proof reached those checks. Avoid promoting a first-blocker repair into a claim that later checks are correct.
+
+I. Exercise 402, missing cost, uncertain transport, physical retry bounds and both recorded local admission states. No format repair may spend the procedure reserve outside its authorized procedure path, reopen credit or exceed the existing episode allowance.
+
+These tests must use raw captured responses and adverse shapes, alongside valid and invalid content cases. Supplying only hand-written successful JSON would repeat the earlier validation failure.
+
+8. MEASURED RELEASE GATES
+
+After implementation and unpaid checks, compare the unchanged v4 and new candidate on the exact selected ten tasks, with the same world/pack and recorded selection seed. Require accepted terminal outcomes in all ten, investigate every passing-case loss and report content accuracy separately from completion. The earlier 9/10 and 8/10 results are controls, not a measurement of v4 or a guaranteed target.
+
+Then evaluate all thirty practice tasks with fixed code hashes and comparable settings. Report paired gains/losses, completion, actual cost, per-correct cost, requests and latency. Do not submit based solely on the ten-case sample or the number of passing unit tests. Paid runs require their own stated scope and budget; none is run by this specification.

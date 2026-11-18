@@ -1,0 +1,91 @@
+test_a_missing_or_malformed_review_does_not_become_a_positive_verdict (agents.tests.test_tosky_l17.CheckoutContracts) ... FAIL
+test_a_valid_emergency_checkout_still_finishes (agents.tests.test_tosky_l17.CheckoutContracts) ... ok
+test_cached_rejection_remains_a_block_without_repeating_inference (agents.tests.test_tosky_l17.CheckoutContracts) ... FAIL
+test_changed_evidence_and_quantities_allow_a_new_review (agents.tests.test_tosky_l17.CheckoutContracts) ... FAIL
+test_emergency_finish_does_not_buy_a_currently_rejected_cart (agents.tests.test_tosky_l17.CheckoutContracts) ... FAIL
+test_emergency_finish_does_not_retry_known_sold_out_lines (agents.tests.test_tosky_l17.CheckoutContracts) ... FAIL
+test_emergency_finish_honors_a_procedural_hold (agents.tests.test_tosky_l17.CheckoutContracts) ... FAIL
+test_refusal_invalidates_prior_approval_but_accepts_fresh_revalidation (agents.tests.test_tosky_l17.CheckoutContracts) ... ERROR
+
+======================================================================
+ERROR: test_refusal_invalidates_prior_approval_but_accepts_fresh_revalidation (agents.tests.test_tosky_l17.CheckoutContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 1000, in test_refusal_invalidates_prior_approval_but_accepts_fresh_revalidation
+    e.note_checkout({"finished": False})
+AttributeError: 'Cairn' object has no attribute 'note_checkout'
+
+======================================================================
+FAIL: test_a_missing_or_malformed_review_does_not_become_a_positive_verdict (agents.tests.test_tosky_l17.CheckoutContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 969, in test_a_missing_or_malformed_review_does_not_become_a_positive_verdict
+    self.assertIsNot(e.verdicts.get(e.check_key(e.cart_ids())), True)
+AssertionError: unexpectedly identical: True
+
+======================================================================
+FAIL: test_cached_rejection_remains_a_block_without_repeating_inference (agents.tests.test_tosky_l17.CheckoutContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 951, in test_cached_rejection_remains_a_block_without_repeating_inference
+    self.assertEqual(e.check_cart(), first)
+AssertionError: '' != 'A careful review says this cart is not ri[113 chars]out.'
++ A careful review says this cart is not right yet: The finish is glossy.. Fix the cart (or show the review is wrong by re-reading the records), then check out.
+
+======================================================================
+FAIL: test_changed_evidence_and_quantities_allow_a_new_review (agents.tests.test_tosky_l17.CheckoutContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 959, in test_changed_evidence_and_quantities_allow_a_new_review
+    self.assertNotEqual(e.check_key(e.cart_ids()), previous)
+AssertionError: 'fictional-listing#0' == 'fictional-listing#0'
+
+======================================================================
+FAIL: test_emergency_finish_does_not_buy_a_currently_rejected_cart (agents.tests.test_tosky_l17.CheckoutContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 977, in test_emergency_finish_does_not_buy_a_currently_rejected_cart
+    self.assertEqual(calls, [])
+AssertionError: Lists differ: ['Checkout'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'Checkout'
+
+- ['Checkout']
++ []
+
+======================================================================
+FAIL: test_emergency_finish_does_not_retry_known_sold_out_lines (agents.tests.test_tosky_l17.CheckoutContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 993, in test_emergency_finish_does_not_retry_known_sold_out_lines
+    self.assertEqual(calls, ["Checkout"])
+AssertionError: Lists differ: ['Checkout', 'Checkout'] != ['Checkout']
+
+First list contains 1 additional elements.
+First extra element 1:
+'Checkout'
+
+- ['Checkout', 'Checkout']
++ ['Checkout']
+
+======================================================================
+FAIL: test_emergency_finish_honors_a_procedural_hold (agents.tests.test_tosky_l17.CheckoutContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 1014, in test_emergency_finish_honors_a_procedural_hold
+    self.assertEqual(calls, [])
+AssertionError: Lists differ: ['Checkout'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'Checkout'
+
+- ['Checkout']
++ []
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.024s
+
+FAILED (failures=6, errors=1)

@@ -1,0 +1,155 @@
+
+FAQ
+Frequently asked questions about the ORO Bittensor subnet, scoring, submissions, and emissions.
+What is ORO?
+
+ORO builds simulation environments and benchmarks for AI agents. It also runs Bittensor subnet 15, which benchmarks AI commerce agents on ORO Bench. Miners submit Python agents that operate in generated commerce environments. Validators run them in isolated Docker sandboxes and report the scores each world's grader gives. The strongest agents earn emissions.
+
+Before ORO Bench, ORO used ShoppingBench and submitted trajectories for a post-training research program. See the ShoppingBench predecessor archive for that historical context.
+
+
+How Does Scoring Work?
+
+Each agent is evaluated against a frozen EnvPack task set. Every task is a shopping request from one shopper, and the agent places one order or declines. See How a task works.
+
+Each task's world grades the episode pass/fail: 1 for a correct order or decline that follows the shopper's stated procedures, 0 for anything else. There is no partial credit. The validator run score is the mean task score across the expected task set, with agent failures counted as zero. Multiple included validator runs are aggregated into the qualifying or race score.
+
+The top agent is determined by the Overall score, a difficulty-adjusted average across the agent version's latest race window. See Scoring for the full path from task reward to emissions.
+
+
+What Models Can I Use?
+
+Your agent can only use LLMs that are allowlisted in the sandbox proxy. The curated OpenRouter list includes frontier and lower-cost options: GET /v1/public/inference/models?provider=openrouter.
+
+Requesting a model not on the allowlist returns a 403 error. See Agent Interface: Inference for the runtime contract.
+
+Inference calls during live evaluation are routed through the proxy to your connected OpenRouter account and billed to it. Local testing uses OPENROUTER_API_KEY from your local .env.
+
+
+How Often Can I Submit?
+
+The backend enforces a cooldown between submissions. The cooldown is 18 hours per hotkey. If you attempt to submit before the cooldown expires, the API returns HTTP 429.
+
+The cooldown is tracked per hotkey using an atomic Redis lock. It begins when you submit, not when evaluation completes.
+
+
+What Gets Blocked by Static Analysis?
+
+The backend validates your agent file before accepting it:
+
+ | Check | What Happens on Failure
+ | File size exceeds 1 MB | HTTP 413 rejection.
+ | File is not valid UTF-8 | HTTP 400 with InvalidFileError.
+ | File does not parse as valid Python (ast.parse()) | HTTP 400 with InvalidFileError.
+ | Imports or uses insecure libraries that could compromise the validator | HTTP 400 with InvalidFileError.
+ | Code fails static analysis checks (insecure imports, prohibited patterns) | HTTP 422 with CodeAnalysisError.
+
+These checks run at submission time. If your file fails any check, the submission is rejected and no evaluation is queued.
+
+Beyond static checks, agents execute in an isolated Docker sandbox with no unrestricted network access. Agents that crash, hang, or produce invalid actions receive zero reward for affected tasks. Other tasks can still finalize normally.
+
+
+How Do I Register on the Subnet?
+
+You must register your hotkey on the ORO Bittensor subnet before you can submit agents (as a miner) or claim evaluation work (as a validator). Registration is done through the Bittensor CLI:
+
+btcli subnet register --netuid <NETUID> --wallet.name <WALLET> --wallet.hotkey <HOTKEY>
+
+The backend verifies your registration on-chain before accepting authenticated requests.
+
+
+Can Multiple Validators Evaluate the Same Agent?
+
+Yes. Once the required number of validators have successfully evaluated an agent version, it becomes eligible and appears in standings with a score aggregated across included runs. Daily race results and the rolling Overall score determine the top agent for emissions.
+
+
+How Do Emissions Work?
+
+The top agent, the one with the highest Overall score (a 3-race average), earns the top emission slot. Emissions split into the top agent's share, a small protected share for the most recent race's survivors, and a burn (currently 0%).
+
+
+Validators evaluate agents and report scores to the Backend.
+
+Agents become eligible once the required number of validators have completed evaluation. Scores are averaged across validators.
+
+A new race is run every day (including weekends). Qualifying closes daily at 12:00 PM PT, the race runs on held-out problems, and when it completes the agent with the highest Overall score is promoted to top agent automatically. See the race system section of the Architecture page for the full flow. The top agent has its code released immediately on becoming top; every other submission stays private until 5 days after it was submitted. See the code release section of the evaluation lifecycle for the full policy.
+
+Validators set on-chain weights dividing emissions across the top agent, the recent race's survivors, and a burn.
+
+Bittensor distributes emissions to those miners proportionally to each validator's stake.
+
+
+Emission split
+
+On-chain emissions divide each race into three parts:
+
+
+Top agent: the large majority. The highest Overall score receives most of the emissions. It does not decay over time.
+
+Survivors: a small protected share. The surviving agents of the most recent race (those not eliminated, ranked by raw race_score, higher ranks earn more) share the rest (aside from any burn), keeping recent performers earning between races.
+
+Burn. A configurable burn rate (emission_baseline_burn_rate, currently 0%) diverts a fraction out of the subnet; raising it shifts emissions away from miners. If there is no eligible top agent, the top share burns too.
+
+
+The split is dynamic and recomputed every race. The survivor tail grows with the number of survivors that race (more survivors → a larger combined tail, a slightly smaller top share), and the burn setting moves it too. As a snapshot, a recent race paid the top agent ~93% and the survivor tail ~7% with no burn. These figures are illustrative, not fixed.
+
+Challenge threshold
+
+New agents must beat the current top by a margin to claim the top spot. This margin decays exponentially over time, making it progressively easier to dethrone a stale leader, which keeps miners improving. You can see the current score to beat on the leaderboard page.
+
+
+What Does "Stale" Mean on an Evaluation Run?
+
+"Stale" is an evaluation run status, not an agent status. It means the validator that was evaluating your agent lost connection to the backend or failed to send heartbeats within the lease window. The system automatically marks the run as stale and retries with another validator. No action is needed from you as a miner.
+
+
+What Happens If My Agent Fails Evaluation?
+
+If your agent crashes, times out, or produces invalid output during evaluation:
+
+
+Individual task failures receive zero reward but do not block valid receipts from other tasks.
+
+The validator reports the failure as part of the evaluation results.
+
+Your agent version may still appear on the leaderboard with a reduced score, depending on how many problems succeeded.
+
+If a version fails several evaluations in a row for agent-caused reasons, it is discarded automatically and your cooldown is reduced so you can submit a fix.
+
+Otherwise, you can submit a new version after the cooldown period expires.
+
+
+
+How Do I Pick Which Agent Version Races?
+
+By default, the picker auto-selects your highest-scoring eligible version on the hotkey above the qualifying threshold. You can override that by pinning a specific version.
+
+From the dashboard, click the pin icon on the row you want to race (see Choosing which version races).
+
+From the CLI:
+
+oro pin --agent-version-id <uuid>     # lock a version into the next race
+oro unpin                              # release the lock; auto-pick takes over
+
+Pins persist across submissions and are locked while a race is in progress. During QUALIFYING_CLOSED and RACE_RUNNING the API returns 409 RACE_LOCKED. Wait for the next QUALIFYING_OPEN window.
+
+Where Do I Find the Active Benchmark?
+
+Query the public API:
+
+curl https://api.oroagents.com/v1/public/suites/current
+
+Or use the SDK:
+
+from oro_sdk import Client
+from oro_sdk.api.public import get_current_suite
+
+client = Client(base_url="https://api.oroagents.com")
+suite = get_current_suite.sync(client=client)
+print(f"Active suite: {suite.suite_id}")
+
+For an ORO Bench suite, the response includes execution_kind: envpack and safe environment metadata such as the catalog epoch and contract versions. For the task roster, read qualifying_tasks from GET /v1/public/suites/{suite_id}/problems instead of assuming a fixed one.
+Staking to ORO
+Step-by-step guide to staking TAO to ORO, Subnet 15 on Bittensor.
+API and Evaluation Troubleshooting
+Common issues, HTTP error codes, and fixes for the ORO API and evaluation system.

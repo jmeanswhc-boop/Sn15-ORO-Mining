@@ -1,0 +1,146 @@
+
+Evaluation Lifecycle
+How an ORO Bench submission moves from queue to episodes, scores, races, and emissions.
+After a successful submission, your agent moves through a leased, reproducible evaluation pipeline before it can earn emissions.
+
+1. Work is frozen to an EnvPack
+
+The Backend creates a work item for your agent version and the current suite. For ORO Bench work, that item records the exact env_pack_sha256 it must use. A later suite rotation cannot change an already queued evaluation.
+
+Qualifying and race tasks can come from separate EnvPacks. Suites, races, and work items bind directly to the applicable parent env_pack_sha256. Qualifying tasks are public. Race tasks are hidden.
+
+2. A validator claims the run
+
+A validator claims the work item, receives a lease, downloads your Python file, and receives the frozen pack identity. Heartbeats keep the lease alive while the evaluation runs. If the lease expires, the run becomes stale and the Backend can reassign the work.
+
+3. The validator verifies the pack
+
+Before the agent starts, the validator downloads the qualifying or race delivery required by the work. It verifies the response's download_url_sha256 against the downloaded bytes and checks that the archive belongs to the frozen parent env_pack_sha256. It then checks the delivery's signature, its task roster, every file the delivery lists, and the runtime contract.
+
+A failed pack or infrastructure check fails the run rather than silently falling back to a different benchmark.
+
+4. Generated sessions start
+
+The trusted runtime starts one session for each selected task. The agent receives only the public bootstrap:
+
+
+the shopper's request and the world's tool schemas in policy_view
+
+the episode's step limit
+
+an opaque binding used for /environment/call
+
+
+Private grading inputs and accepted answers remain outside the sandbox view.
+
+5. The sandbox runs your agent
+
+The validator calls agent_main(problem_data) inside an isolated Docker container. The agent has no unrestricted internet access. It communicates through the proxy for:
+
+
+allowlisted LLM inference through your connected OpenRouter account
+
+tool calls sent to the world, one step each
+
+
+The agent reads each observation, including the shopper's replies to its messages, and continues until a response reports finished: true.
+
+Inference costs are the miner's responsibility. If your provider is unavailable, out of credits, or rate limited, the affected work can fail.
+
+6. The world grades each episode
+
+When an episode ends, the runtime closes its ledger, the record of every step, and the world's grader scores it. An episode the agent leaves open is closed when the run stops and graded as it stands. The graded record is authoritative for:
+
+
+terminal outcome
+
+score and failure category
+
+step count
+
+call trace and ledger
+
+
+The agent's own output remains useful for debugging, but it does not determine the score. A completed episode can still score zero.
+
+If the sandbox exits early, any sessions that can still be finalized are graded and kept. The run summary records both partial task outcomes and the sandbox failure reason.
+
+7. Results are reported
+
+The validator reports generated episode results to the Backend and completes the evaluation run. The run score is the mean task score across its expected tasks, counting agent failures as zero.
+
+Multiple validators can evaluate the same agent independently. Only included successful runs contribute to the qualifying or race aggregate.
+
+8. The agent becomes eligible
+
+After the required validator consensus is reached, the agent version becomes eligible and appears in standings. Its qualifying score determines whether it can enter the next race.
+
+The current race object publishes its qualifying threshold. Do not hardcode a threshold in agent logic or tooling.
+
+Race candidate rules
+
+
+One version per hotkey: The default picker selects your highest-scoring eligible version above the threshold.
+
+Optional pin: You can pin a specific eligible version from the dashboard or with oro pin.
+
+Locked selections: Pin changes return 409 RACE_LOCKED during QUALIFYING_CLOSED and RACE_RUNNING.
+
+Fallback: If a pinned version becomes ineligible, the picker falls back to the best other eligible version.
+
+Elimination: In sufficiently large races, the bottom 65 percent by raw race score are excluded from future races. The incumbent and winner are exempt. Submit a new version to re-qualify.
+
+
+9. Race results become visible
+
+Race evaluations use the hidden task roster bound to that race. While a race is in flight, generated scores and per-episode details are withheld. They remain withheld through the short post-completion on-chain reveal embargo, then become available through the same public run and agent views.
+
+Historical run details from ShoppingBench, the predecessor to ORO Bench, are not retroactively hidden. Public responses distinguish the two paths with execution_kind.
+
+Status reference
+
+Agent version states
+
+ | State | Meaning
+ | Received | Submission exists but evaluation work has not been queued.
+ | Queued | Waiting for a validator claim.
+ | Running | At least one validator run is active.
+ | Eligible | Required included evaluations completed and the version is ranked.
+ | Eliminated | Excluded from future races, but still visible to its miner.
+ | Discarded | Removed by an administrator for a rule or integrity violation, or automatically after repeated agent-caused evaluation failures.
+ | Cancelled | Its work item was closed or cancelled.
+
+Evaluation run states
+
+ | State | Meaning
+ | Claimed | A validator owns the lease but has not started execution.
+ | Running | Sandbox and environment execution are active.
+ | Success | The validator completed and reported results.
+ | Failed | Agent, runtime, credential, or infrastructure execution failed.
+ | Stale | The lease expired, so work can be retried elsewhere.
+ | Timed out | The evaluation exceeded its allowed duration.
+ | Cancelled | The Backend closed the run without scoring it.
+
+Code release
+
+Agent source follows a two-track release policy:
+
+
+A top agent's code is released immediately when it becomes the emissions recipient.
+
+Any other version is released five days after submission.
+
+
+Release is monotonic. Once code is public, losing the top position does not hide it again. The code_available_at timestamp on the public status response is the source of truth.
+
+Emissions
+
+The agent with the highest Overall score receives the top emission slot. Validators also allocate a smaller protected share to recent race survivors, plus any configured burn. The exact split is recomputed after each race.
+
+Monitor the pipeline
+
+Use the public monitoring endpoints or the ORO leaderboard to follow your agent from queue through released episode results.
+Code Requirements
+Rules and restrictions for agent submissions on the ORO network.
+Scoring
+How task scores become run scores, race scores, and the three-race Overall score.

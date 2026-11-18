@@ -1,0 +1,131 @@
+TOSKY / ICDI_CHIDORI_V4 — RACE 22 PUBLIC-EVIDENCE REVIEW
+
+Scope and evidence boundary
+
+Race: OROBench suite 160, race 22, 50c9c9e5-335e-4964-bd6d-98af7178d3dd.
+Submission: Tosky v1, 06af5d7e-bfd4-761c-8000-575e592cb36b, selected by the user's fixed public hotkey, not by name alone.
+User-identified source: agents/ICDI_chidori_v4.py, SHA-256 bbf30300c5039956ddd18faa5c22fd27b126458339f8ae67860c87425777e898. This matches the recorded v4 development artifact. The submitted version's source is still HIDDEN until its published code_available_at; independent public verification of the uploaded bytes is unavailable.
+Reference: incumbent entering race 22, CHIDORI v11, 06af2157-d650-7d40-8000-519949f07ca0; archived source SHA-256 b32f88b0ef42100f10d9ad29e3019a54dd79dfaefe8ded2b72a88772f9247bf2.
+
+Collected: live race roster, public status and run lists, four race-run metadata responses, four qualifying-run details, all 60 Tosky qualifying feedback records, 18 matched CHIDORI qualifying feedback records, the 30 public qualifying goals, validator variance, artifact availability responses, and code structure comparisons. Every trace used below has diagnostics_state=available. Two-run controls share the same qualifying catalog epoch, w-2385fe7c5e6d. Race run metadata identifies a different epoch, w-aa42af03ea67.
+
+At collection, all four race-run detail responses still had detail_released=false, no episode IDs, and withheld cost metadata. Both Tosky race log requests returned HTTP 403 / RACE_IN_FLIGHT. Its two qualifying log bundles returned ARTIFACT_NOT_FOUND. This is not evidence that an episode trace is empty or that a run processed zero tasks. Completion is followed by a public reveal embargo. No gate was bypassed. Exact failure counts by category for the 180 Tosky race episode executions cannot yet be stated.
+
+1. What the published race data actually establishes
+
+Same validators, same current service versions, two included successful runs per agent:
+
+Validator                              Tosky             CHIDORI
+ORO / SN15 Official Validator          18 / 90 = 20.00%   19 / 90 = 21.11%
+Yuma, a DCG Company                    20 / 90 = 22.22%   16 / 90 = 17.78%
+Combined binary task executions        38 / 180 = 21.11%  35 / 180 = 19.44%
+Reported inference requests            3,277             3,809
+Reported inference failures            2                 6
+Mean claim-to-completion elapsed        405.77 seconds    534.62 seconds
+Exact race inference cost              withheld          withheld
+
+CHIDORI's public status window rounds its raw aggregate to .1945, whereas the binary counts give .194444... . Keep this small API rounding distinction rather than treating either as a different run. Tosky's public raw value is .2111.
+
+Tosky beat the entering incumbent by about 1.67 percentage points on the raw race aggregate. It used 13.97% fewer reported inference requests and had a 24.10% shorter mean claim-to-result interval. These intervals include work outside pure sandbox execution; sandbox durations are withheld. This is a small race advantage, not a demonstrated dominant agent or a causal estimate of the v4 changes.
+
+Tosky's public window lists field anchor .2130 and delta -.0019: it was about 0.19 percentage points below the top-half field average. Its public window rank is 57; the race roster still withholds its final race_rank, so 57 must be labeled as the status-window rank. No elimination is reported, and its status lists it as an active qualifier. The public top endpoint currently has no top version ID during the release transition; do not infer a named new champion from that absence.
+
+The numbers .8333, .2111 and .2124 have different meanings: public qualifier, raw race aggregate, and three-race Overall, respectively. CHIDORI's reported Overall is .2214. Tosky is a first-race version with two seeded zero-delta races. CHIDORI retains +.0346 and +.0090 from races 21 and 20. The new version's modest single-race advantage was not enough to overcome that retained history and the additional challenge margin. The exact closing challenge margin is not in the collected public transition snapshot, so an exact final dethroning target cannot be reconstructed responsibly.
+
+2. What can and cannot be concluded about cost and time
+
+Both Tosky race runs are included SUCCESS runs. Each reports 90 completed outcomes and no run-level failure reason. Only two inference failures were reported across 3,277 requests. This weighs against a catastrophic run-wide provider outage or an unfinished run as the main explanation. It does NOT exclude a locally denied inference, an internal guard forcing a decline, an empty response, a per-episode timeout, or an error caught by the agent. Completed is an outcome label, not proof of a correct purchase.
+
+The two public qualifying runs cost $0.51601723 and $0.51498625, with actual sandbox durations 88.4 and 104.0 seconds. Mean: $0.51550 and 96.2 seconds. CHIDORI's published qualifying runs averaged $0.71452 and 113.55 seconds. Tosky's observed qualifier cost was 27.85% lower, despite making 833 versus 757 inference requests across the two runs. Requests alone cannot estimate billing.
+
+The local source sets AGENT_USD_LIMIT=.035 per episode and reserves .010 for procedures. Across 90 episodes that is a nominal $3.15 allocation per validator run. It is an internal admission model based on serialized prompt bytes, estimated token/pricing envelopes, reported cost and uncertainty reservations; it is not the provider's billed total or proof that the race cost stayed below $5. A conservative quote can deny a useful late call while actual billed room remains, and no public internal logs currently quantify how often that happened.
+
+ORO's documented $5 scoped-key cap applies PER EVALUATION RUN, not once to both validators combined. Two independent race runs can therefore be billed separately. No OpenRouter credentials were accessed; no paid inference, practice verification, submission or agent execution was performed in this analysis.
+
+3. Exact public qualifying failures and matched controls
+
+These are confirmed qualifying diagnoses and observations. They are not a substitute for the unreleased race task breakdown.
+
+A. Dining set, t-20fcb00ff0 — undiscovered needs, both Tosky runs
+
+Both traces finish in nine steps with a purchase. All three allowed shopper messages are spent: first seats, then style/shape/material, then a long list of overlapping topics. Every reply expresses indifference. ORO labels both episodes needs_not_found. CHIDORI fails both controls the same way in nine steps.
+
+Confirmed: a completed purchase occurred without discovering a required shopper need; the message budget was used. The hidden required property's identity and value are not exposed by these failures. It would be unsound to assert that a particular seat count, color or material was the missing requirement. The repeated long lists show questioning coverage is not equivalent to successful disclosure.
+
+B. Single-pack cola, t-3254025544 — stated request not met, both runs
+
+The request explicitly asks for the single pack type, one can/bottle, excluding multipacks. Both Tosky runs buy p-49ac068a9d5b. The viewed record has pack size 1, options 1 x 320ml, and can packaging, but does not supply the requested pack_type field. ORO reports request_not_met. CHIDORI buys the same listing and fails both controls.
+
+Strong candidate mechanism: treating evidence for pack size or packaging as if it settled a distinct requested pack-type property. However, the public grader does not expose which check failed. A one-can listing may look semantically adequate to a human. The trace supports an attribute-evidence mismatch as the investigation target, not a claim that the private check was read. A different public control exposes p-06d9cce41aa6 with pack_type=single and a successful purchase; no such listing ID belongs in production logic.
+
+C. Sugar-free cola, t-6fd2a792df — undiscovered needs, both Tosky runs
+
+In one trace, messages 1 and 3 describe shelf options while only the middle message asks about packaging type. In the other trace the questions cover packaging type and a bundle of other properties, followed by an informational message. Both end in a purchase with needs_not_found.
+
+The matched passing CHIDORI control asks about pack size first; the shopper explicitly replies with pack type=single. It then buys the listing whose record actually supplies pack_type=single and passes. CHIDORI's other control fails. The public evidence supports a concrete missed-disclosure opportunity and message-allocation weakness. It does not support a permanent hardcoded preference for that property on other tasks.
+
+D. Prescription glasses, t-fc0b16b797 — explicit property/range mismatch, both runs
+
+The request requires power lenses up to +/-6.00, permits clear or multicolor lens color, and asks for the cheapest fitting option. Both Tosky failures buy p-749e25fece7c at price 52. The inspected record exposes power_lenses=0.1-0.4, power=0.1, and multicolor lens color. It supplies no support for the requested +/-6.00 range. Much of the later work repeats clear-color searches; the cart remains the unsuitable product and checkout succeeds operationally but scores zero. CHIDORI fails both controls too.
+
+Confirmed visible problem: satisfying an allowed color and low price was not enough to establish the independent optical-power requirement. The exact internal review response and any budget denial are unavailable, so the trace does not identify whether the reviewer approved the wrong thing, never returned a usable answer, or was bypassed. The code permits those to be different mechanisms.
+
+E. Polyester sweater/cardigan, t-e622afe641 — false decline after reply interpretation, one Tosky run
+
+Step 10 already opens p-5a1a59c0c2d9: in the supplied Women's Sweaters and Cardigans category, material polyester, neckline boat neck, price 1611 under the 3250 ceiling. Step 16 gives the shopper response specifying boat neck. Subsequent searches contain the framing text closed, with boat neck and closed neckline. They return zero results; a targeted boat-neck search finds the known listing again at steps 19-20. Nevertheless the episode declines at step 33 and scores request_not_met.
+
+Tosky's other run receives the same shopper wording, buys that same listing, and passes at step 19. Both CHIDORI controls buy it and pass. This is unusually strong paired public evidence: the listing can pass this task, and the bad branch was not caused by that listing being absent or over budget. The trace strongly supports an unstable interpretation/normalization branch; internal model replies are not public, so the exact text stored in the ledger is an inference from the emitted searches, not a directly observed variable.
+
+F. Slip-on footwear, t-fa3dff6e42 — narrative contamination and false decline, one Tosky run
+
+The failed run immediately searches slip-on stage performance, even though stage-exit wording in the public request is narrative context. It repeatedly concentrates on stage-performance footwear with pearl-buckle descriptions, adds/removes such an item, continues several closely related queries, and declines at step 28. A search token is also populated with a category-looking string and receives an invalid-article response. A broad slip-on query had reported 630 matches; this is not itself proof a valid item exists.
+
+The actual passing Tosky run buys p-ee497ff6a7cc and passes at step 15; a CHIDORI control passes with that same listing. CHIDORI's other control also fails this task. This proves a valid outcome exists and supports a contaminated intent/search branch rather than global catalog impossibility. It does not prove which internal method first added stage performance or which v4 change caused the branch.
+
+Across the two Tosky qualifying runs: 50 passes, four needs_not_found failures and six request_not_met failures. Four task IDs fail consistently in both runs; two additional task IDs fail once. Three persistent failures are also persistent in CHIDORI. No qualifying failure is attributed by ORO to infrastructure, process_requirements, optimality or did_not_finish in this observed set. The single reported category is not an exhaustive list of all defects in an episode.
+
+4. The most consequential code weakness supported by these controls
+
+The central weakness is the reliability of the binding requirement state consumed by search, questioning and cart review. A well-formed model answer can still have the wrong property, scope, polarity, value, unit or narrative interpretation. Once that answer is admitted, later layers can faithfully optimize against the wrong requirement.
+
+Relevant local v4 code:
+- E1.read_brief, line 1821: initial free-text request -> model-generated musts/name/shelf/roles.
+- REPLY_PROMPT, line 317: already tells the model to strip surrounding answer framing. The observed framing leak therefore is not explained by the complete absence of such an instruction.
+- E6.read_answers, line 4632, and E6.fold_reading, line 4602: interpretation -> binding told needs. fold_reading accepts a nonempty need string and appends it without source-span or semantic admission checks.
+- E1.live_of, line 2031: combines musts and told needs minus dropped strings; dependent stages consume that shared state.
+- E5.value_words, line 3899: reuses the free-text value portion in searches.
+- G5B.lacks_values, line 8822: lexical evidence checks; token presence/absence cannot certify units, ranges or property identity.
+- ScopedControls.ensure_source_coverage, line 10947: explicitly preserves the existing ledger and reports omitted constraints. It can add supported omissions, but cannot remove an invented initial constraint or replace a mis-normalized existing value. It can also leave a bad old value beside a correct addition.
+- G5A.cart_check, line 8677: returns an empty issue string if no usable review object is returned. ScopedControls.terminal_recovery_hold, line 11271, requires a current positive review in fallback/recovery, while the ordinary path does not get the same unconditional positive-review guarantee. This is a verified code risk, not a proven explanation for any particular hidden race episode. Simply making every unavailable review block checkout could create a new non-finishing regression.
+
+AST comparison confirms the initial brief reader, reply reader, reply folding, value-word extraction, question planning and lexical missing-value helper are unchanged from the archived CHIDORI implementation. AST equality establishes implementation identity for these methods, not proof that their runtime outputs are identical. The observed shared failures are consistent with those inherited weaknesses surviving v4's additional recovery/procedure/audit layers.
+
+5. A scoped next-step plan, with evidence requirements
+
+First complete today's diagnosis after ORO releases the details: collect every expected/persisted race episode for both included runs and the comparator, verify counts and diagnostics availability, join by task ID and validator, inspect the first observable wrong decision, and separate intent, disclosure, evidence/comparison, recovery, time and inference-limit failures. Race losses must not be allocated to today's qualifier categories by guesswork.
+
+Then prioritize the constraint intake/revision boundary shared by initial request interpretation and shopper-response interpretation. Represent the source property, allowed/excluded values or range, unit, item scope, source quotation and later revision explicitly. Validation must support correcting or rejecting unsupported existing interpretations; adding more constraints alone does not cure a poisoned one. Uncertain equivalence between related property names must remain uncertain. Do not add lists of benchmark product IDs, fixed attribute/value registries, reply phrases, or accepted answers to production code.
+
+Start with the strongest bounded observation: frame leakage in a shopper value followed by false infeasibility. Verify that the successful boat-neck branch still works, its changed/retracted forms still work, unrelated properties remain separate, and source framing is not sent as a literal search value. Also preserve alternatives, negations, numeric units, quantities and reference requirements. This is a narrower and more testable first update than changing every search/review mechanism together.
+
+Next evaluate interview allocation using successful and failing controls, with procedure-message obligations preserved. A topic is valuable when it can resolve a real unknown, not merely because it is a frequent attribute. Keep semantic aliases tied to their item/property scope and avoid repeated information messages that exhaust disclosure opportunities.
+
+Keep the current budget limit until actual race billing and local denial traces are released. Prefer reusing validated state and bounded contradiction-triggered repair over adding a model call to every stage. Measure paired gains AND losses, correct terminal decisions, provider errors, local denials, cost per correct task and wall time before asserting improvement. Passing offline validation does not establish a race-score gain or guarantee no regression.
+
+6. Reproducibility and remaining collection
+
+analysis.json contains the computed metrics and per-task public controls. evidence-cases/ contains full public actions and observations for failures and matched successful controls. manifest.json records file sizes and SHA-256 hashes. Neither source agent was imported or executed, and neither was modified.
+
+collect_released.py retries only documented public endpoints through the monitor's shared paced client. It saves race-collection-state.json and resumes existing available episode files. The bounded watch checks whether ORO releases the four race runs; it does not claim successful collection when details remain withheld. The main dashboard's original automatic release checks remain running independently.
+
+Re-run the following after release to fill the missing race corpus, then re-run analyze_public.py for updated saved evidence:
+python3 logs/research/tosky-race-022-2026-11-13/collect_released.py
+python3 logs/research/tosky-race-022-2026-11-13/analyze_public.py
+
+Primary rules checked live:
+https://oroagents.com/docs/miners/scoring
+https://oroagents.com/docs/miners/monitoring
+https://oroagents.com/docs/miners/inference-providers
+https://oroagents.com/docs/miners/evaluation-lifecycle
+
+Evidence endpoints: public/agent-versions/{version}/status, public/agent-versions/{version}/runs, public/agent-versions/{version}/problems, public/evaluation-runs/{run}, public/episode-results/{episode}/feedback, public/races/{race}, public/races/{race}/validator-variance, public/artifacts/download-url. Only unauthenticated public operations were used.

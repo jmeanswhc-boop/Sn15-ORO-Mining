@@ -1,0 +1,561 @@
+{
+  "source": "agents/TOSKY.py",
+  "sha256": "31b083e8ac95bc6863a4a01f9768a61879914fed4eb9116ea0f27b394d825a18",
+  "source_changed": false,
+  "network_calls": 0,
+  "paid_calls": 0,
+  "counterexamples_confirmed": 34,
+  "positive_controls_passed": 9,
+  "positive_controls": [
+    "valid_same_product_evidence_selects_the_candidate",
+    "an_absent_quote_is_not_positive_evidence",
+    "a_known_over_budget_candidate_is_not_selected",
+    "grounded_unavailable_stock_excludes_the_candidate",
+    "an_unanswered_before_order_obligation_blocks_checkout",
+    "an_explicitly_ungrounded_addition_is_rejected",
+    "uncertain_environment_retry_preserves_binding_step_and_action",
+    "boolean_quantity_is_rejected_before_environment_dispatch",
+    "runtime_money_unit_conversion_is_cached_without_a_fixed_registry"
+  ],
+  "cases": [
+    {
+      "case": "requested_type_not_a_checked_requirement",
+      "severity": "P0",
+      "lines": [
+        797,
+        847,
+        966
+      ],
+      "observed": {
+        "requested_role": "travel bag",
+        "observed_kind": "camping stove",
+        "verdict": "true",
+        "selected": {
+          "1": "A"
+        },
+        "type_result_is_not_required_by_protocol": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "unavailable_evaluation_becomes_an_unrecoverable_current_unknown",
+      "severity": "P0",
+      "lines": [
+        794,
+        813,
+        883,
+        1239
+      ],
+      "observed": {
+        "verdict": "unknown",
+        "cached_as_current_revision": true,
+        "retry_interpreter_calls": 0,
+        "next_unverified": null
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "literal_dotted_attribute_keys_cannot_be_addressed_as_leaf_paths",
+      "severity": "P0",
+      "lines": [
+        90,
+        816
+      ],
+      "observed": {
+        "observed_literal_key": "surface.finish",
+        "actual_value": "matte",
+        "path_result": null,
+        "verdict": "unknown"
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "comparison_evidence_from_another_product_is_accepted",
+      "severity": "P0",
+      "lines": [
+        633,
+        635,
+        815,
+        837
+      ],
+      "observed": {
+        "candidate": "A",
+        "candidate_actual_surface": "matte",
+        "cited_entity": "B",
+        "verdict": "true",
+        "isolated_page_was_available_but_whole_response_used": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "unparseable_price_evidence_accepts_an_unsupported_model_amount",
+      "severity": "P0",
+      "lines": [
+        862,
+        863
+      ],
+      "observed": {
+        "numeric_price_in_row": 10,
+        "nonnumeric_citation": "Contact the seller for pricing.",
+        "accepted_price": "1"
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "stock_boolean_can_be_used_as_price_evidence",
+      "severity": "P0",
+      "lines": [
+        815,
+        863
+      ],
+      "observed": {
+        "cited_value": true,
+        "cited_value_type": "bool",
+        "accepted_price": "1"
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "changed_search_record_does_not_invalidate_cached_eligibility",
+      "severity": "P0",
+      "lines": [
+        607,
+        794,
+        1281
+      ],
+      "observed": {
+        "new_row_surface": "gloss",
+        "cached_detail_surface": "matte",
+        "cached_verdict": "true",
+        "checkout_ready": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "old_stock_evidence_is_promoted_to_a_fresh_offer",
+      "severity": "P0",
+      "lines": [
+        634,
+        636,
+        856,
+        857
+      ],
+      "observed": {
+        "latest_offer_stock": false,
+        "old_page_stock": true,
+        "accepted_stock": true,
+        "old_evidence_stamped_with_step": 5,
+        "checkout_ready": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "cart_quantity_is_grounded_by_an_unrelated_numeric_field",
+      "severity": "P0",
+      "lines": [
+        650,
+        653
+      ],
+      "observed": {
+        "actual_quantity": 2,
+        "price_field": 1,
+        "accepted_quantity": 1,
+        "checkout_ready": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "partial_cart_parser_output_is_accepted_as_an_exact_cart",
+      "severity": "P0",
+      "lines": [
+        645,
+        658,
+        1273
+      ],
+      "observed": {
+        "actual_line_ids": [
+          "A",
+          "B"
+        ],
+        "accepted_line_ids": [
+          "A"
+        ],
+        "checkout_ready": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "new_reference_pages_do_not_invalidate_an_unknown_candidate",
+      "severity": "P0",
+      "lines": [
+        565,
+        794,
+        833,
+        883
+      ],
+      "observed": {
+        "reference_pages_now_available": 1,
+        "verdict": "unknown",
+        "reevaluation_calls_after_new_reference": 0
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "ordinary_within_bounds_requirement_is_misclassified_as_a_reference",
+      "severity": "P1",
+      "lines": [
+        831,
+        834
+      ],
+      "observed": {
+        "literal_word_within_requires_reference": true,
+        "reference_required_by_task": false,
+        "verdict": "unknown"
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "a_dropped_requirement_has_no_source_quote_validation",
+      "severity": "P0",
+      "lines": [
+        759,
+        768
+      ],
+      "observed": {
+        "source": "No change is requested.",
+        "remaining_requirements": []
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "same_reply_replacement_erases_both_the_old_and_new_requirement",
+      "severity": "P0",
+      "lines": [
+        746,
+        757,
+        759,
+        768
+      ],
+      "observed": {
+        "source": "Use gloss instead of matte for the surface.",
+        "expected_active_need": "surface: gloss",
+        "actual_active_needs": [],
+        "new_need_was_added_then_removed_by_the_same_drop": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "budget_units_quantity_and_free_state_are_not_applied",
+      "severity": "P1",
+      "lines": [
+        737,
+        745,
+        770
+      ],
+      "observed": {
+        "budget_amount": "5",
+        "budget_unit_retained": "credits",
+        "quantity_retained": 1,
+        "free_field_ignored": [
+          "surface: matte"
+        ]
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "empty_market_change_quote_can_authorize_a_budget_revision",
+      "severity": "P1",
+      "lines": [
+        711,
+        718
+      ],
+      "observed": {
+        "observation": {
+          "notice": "The catalog was updated."
+        },
+        "accepted_budget": "500"
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "two_optional_messages_stop_discovery_despite_unused_budget",
+      "severity": "P1",
+      "lines": [
+        1068
+      ],
+      "observed": {
+        "message_limit": 8,
+        "messages_used": 2,
+        "unasked_optional_questions": 1,
+        "selected_question": null
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "nonapproval_message_duties_are_not_reserved",
+      "severity": "P1",
+      "lines": [
+        1063,
+        1066
+      ],
+      "observed": {
+        "message_limit": 2,
+        "mandatory_message_duties": 2,
+        "optional_question_admitted": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "a_clarification_request_is_counted_as_an_answered_question",
+      "severity": "P1",
+      "lines": [
+        674,
+        678
+      ],
+      "observed": {
+        "reply": "Please rephrase that question; I do not understand it.",
+        "property_marked_asked": true,
+        "mandatory_question_marked_answered": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "checkout_gate_does_not_enforce_the_optimality_frontier",
+      "severity": "P1",
+      "lines": [
+        1263,
+        1277,
+        1288,
+        1411
+      ],
+      "observed": {
+        "unresolved_better": true,
+        "cheaper_unassessed_price": "5",
+        "checkout_ready": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "extreme_objectives_compare_raw_numbers_across_measure_units",
+      "severity": "P1",
+      "lines": [
+        890,
+        984
+      ],
+      "observed": {
+        "A": {
+          "measure": "2",
+          "unit": "kg"
+        },
+        "B": {
+          "measure": "900",
+          "unit": "g"
+        },
+        "selected_by_raw_number": "B",
+        "no_measure_unit_normalization_is_called": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "row_cap_silently_drops_evidence_while_marking_scope_complete",
+      "severity": "P1",
+      "lines": [
+        596,
+        622
+      ],
+      "observed": {
+        "rows_returned": 81,
+        "candidates_retained": 80,
+        "scope_marked_complete": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "negative_acknowledgements_are_not_classified_as_action_failure",
+      "severity": "P1",
+      "lines": [
+        776,
+        1174
+      ],
+      "observed": {
+        "accepted_false_treated_as_error": false,
+        "success_false_treated_as_error": false
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "failed_before_selection_duty_does_not_block_cart_alignment",
+      "severity": "P0",
+      "lines": [
+        1382,
+        1391,
+        1435
+      ],
+      "observed": {
+        "cart_alignment_reached_before_required_permission": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "mandatory_question_branch_ignores_the_message_ceiling",
+      "severity": "P1",
+      "lines": [
+        1386,
+        1387
+      ],
+      "observed": {
+        "message_limit": 0,
+        "mandatory_question_attempted": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "successful_required_read_invalidates_its_own_basket_proof",
+      "severity": "P0",
+      "lines": [
+        857,
+        919,
+        1048,
+        1186
+      ],
+      "observed": {
+        "performed_read_was_satisfied": true,
+        "satisfied_after_evaluating_same_page": false,
+        "price_and_stock_materially_changed": false
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "a_message_reply_can_satisfy_a_read_obligation",
+      "severity": "P0",
+      "lines": [
+        683,
+        686,
+        1173,
+        1307
+      ],
+      "observed": {
+        "required_action_kind": "read",
+        "executed_tool": "ask_user",
+        "read_obligation_satisfied": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "reported_spend_is_never_used_as_an_admission_limit",
+      "severity": "P0",
+      "lines": [
+        320,
+        345,
+        346
+      ],
+      "observed": {
+        "physical_requests_after_already_exceeding_5_divided_by_90": 3,
+        "controlled_reported_cost_usd": 0.18,
+        "per_episode_dollar_limit": null,
+        "limitation": "Controlled billing replies, not an estimate of real model prices or expected spend."
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "credit_402_does_not_stop_backup_or_later_inference",
+      "severity": "P0",
+      "lines": [
+        337,
+        342
+      ],
+      "observed": {
+        "requests_for_two_logical_calls": 4,
+        "requests_after_first_402": 3
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "finished_terminal_receipt_still_triggers_observation_inference",
+      "severity": "P1",
+      "lines": [
+        545,
+        547,
+        559,
+        1172
+      ],
+      "observed": {
+        "world_finished": true,
+        "interpreter_calls_after_terminal_receipt": [
+          "observation"
+        ]
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "duplicate_relation_proofs_can_cover_an_omitted_relation",
+      "severity": "P1",
+      "lines": [
+        956,
+        958
+      ],
+      "observed": {
+        "required_relations": [
+          "relation one",
+          "relation two"
+        ],
+        "cited_relations": [
+          "relation one",
+          "relation one"
+        ],
+        "accepted": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "a_string_in_contract_hard_becomes_character_requirements",
+      "severity": "P1",
+      "lines": [
+        423,
+        425
+      ],
+      "observed": {
+        "returned_hard_field": "matte",
+        "accepted_requirements": [
+          "m",
+          "a",
+          "t",
+          "t",
+          "e"
+        ]
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "string_pattern_and_length_constraints_are_not_validated",
+      "severity": "P2",
+      "lines": [
+        151,
+        191
+      ],
+      "observed": {
+        "invalid_argument": {
+          "code": "x"
+        },
+        "schema_pattern": "^[A-Z]{2}$",
+        "local_errors": []
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    },
+    {
+      "case": "numeric_and_stock_helpers_accept_ambiguous_or_invalid_values",
+      "severity": "P1",
+      "lines": [
+        66,
+        69,
+        146
+      ],
+      "observed": {
+        "nonfinite_number_retained": true,
+        "comma_decimal_1_25_parsed_as": "125",
+        "not_in_stock_parsed_as": true
+      },
+      "scope": "Deterministic controller counterexample using controlled interpreter replies; no paid inference or task grading."
+    }
+  ]
+}

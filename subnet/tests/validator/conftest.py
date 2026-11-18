@@ -1,0 +1,135 @@
+"""Shared pytest fixtures for validator tests."""
+
+import logging as _stdlib_logging
+import sys
+import tempfile
+import types
+from datetime import datetime, timedelta
+from pathlib import Path
+from unittest.mock import MagicMock
+
+import pytest
+from bittensor_wallet import Keypair, Wallet
+
+from oro_sdk.models import HeartbeatResponse
+
+# Stub bittensor.utils.btlogging when the real module is unavailable so any
+# test importing progress_reporter (which imports btlogging at module import)
+# can collect. Real bittensor sometimes can't import in CI due to unrelated
+# env breakage in async_substrate_interface.
+if "bittensor.utils.btlogging" not in sys.modules:
+    try:
+        import bittensor.utils.btlogging  # noqa: F401
+    except Exception:
+        _btlogging = types.ModuleType("bittensor.utils.btlogging")
+        _btlogging.logging = _stdlib_logging.getLogger("bittensor")
+        sys.modules.setdefault("bittensor", types.ModuleType("bittensor"))
+        sys.modules.setdefault(
+            "bittensor.utils", types.ModuleType("bittensor.utils")
+        )
+        sys.modules["bittensor.utils.btlogging"] = _btlogging
+
+from validator.backend_client import BackendClient, WeightSalt
+
+
+# =============================================================================
+# Common Temp File Fixtures
+# =============================================================================
+
+
+@pytest.fixture
+def temp_storage_path():
+    """Create a temporary file path for retry queue storage."""
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+        path = Path(f.name)
+    yield path
+    # Explicit cleanup since delete=False
+    if path.exists():
+        path.unlink()
+
+
+@pytest.fixture
+def temp_output_file():
+    """Create a temporary JSONL file for progress reporter tests."""
+    with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+        path = Path(f.name)
+    yield path
+    # Explicit cleanup since delete=False
+    if path.exists():
+        path.unlink()
+
+
+# =============================================================================
+# Basic Mock Fixtures (can be overridden in test files)
+# =============================================================================
+
+
+@pytest.fixture
+def mock_backend_client():
+    """Create a basic mock BackendClient.
+
+    Test files can configure specific method return values as needed.
+    """
+    client = MagicMock(spec=BackendClient)
+    # Default: no epoch-pinned standings (matches a dark Backend).
+    # Set explicitly so tests don't depend on MagicMock's default behaviour.
+    client.fetch_weight_salt.return_value = WeightSalt(epoch_standings=None)
+    return client
+
+
+@pytest.fixture
+def mock_wallet():
+    """Create a mock wallet with a real keypair for signing.
+
+    Uses a deterministic test keypair for reproducible tests.
+    """
+    keypair = Keypair.create_from_uri("//TestValidator")
+    wallet = MagicMock(spec=Wallet)
+    wallet.hotkey = keypair
+    return wallet
+
+
+@pytest.fixture
+def mock_wallet_simple():
+    """Create a simple mock wallet without real keypair.
+
+    Use this when signing is not needed.
+    """
+    return MagicMock()
+
+
+@pytest.fixture
+def mock_subtensor():
+    """Create a mock subtensor."""
+    subtensor = MagicMock()
+    subtensor.blocks_since_last_update.return_value = 0
+    subtensor.tempo.return_value = 100
+    return subtensor
+
+
+@pytest.fixture
+def mock_metagraph():
+    """Create a mock metagraph with basic hotkeys and uids.
+
+    Hotkey "5GrwvaEF..." at index 1 is used as the top miner in weight setter tests.
+    """
+    metagraph = MagicMock()
+    metagraph.hotkeys = ["5Hotkey1...", "5GrwvaEF...", "5Hotkey3..."]
+    metagraph.uids = [0, 1, 2]
+    metagraph.S = [1.0, 1.0, 1.0]
+    metagraph.axons = [MagicMock(), MagicMock(), MagicMock()]
+    return metagraph
+
+
+# =============================================================================
+# Pre-configured Mock Fixtures for Specific Use Cases
+# =============================================================================
+
+
+@pytest.fixture
+def mock_backend_client_with_heartbeat(mock_backend_client):
+    """Mock BackendClient configured for heartbeat tests."""
+    mock_backend_client.heartbeat.return_value = HeartbeatResponse(
+        lease_expires_at=datetime.now() + timedelta(minutes=5)
+    )
+    return mock_backend_client

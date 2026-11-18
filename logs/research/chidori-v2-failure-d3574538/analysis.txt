@@ -1,0 +1,27 @@
+Failure diagnosis: local-d357453886534e12a9b57e574b2f8a73
+
+The tested source hash exactly matches ICDI_chidori_v1.py:
+295f290c70a2fc71035052f23f78e40bd8c6e23782c6d457829454e7473baaf3.
+
+All 30 tasks scored zero and ended in "did not finish". Each sandbox function returned normally, explaining the sandbox SUCCESS labels and the run's completed status. Those labels describe successful execution of the Python function, not successful shopping.
+
+Across the entire run there were exactly 30 GET /inference/models requests, each receiving HTTP 401 with "Inference key does not match active run". There were zero model completion requests and zero environment actions. Each sandbox execution took approximately 0.24-0.34 seconds.
+
+The root cause is the mandatory pricing lookup introduced by the v1 update. The provided ProxyClient.get() calls requests.get(url, timeout=...) without the authorization header. ProxyClient.post_verbose() supplies that header for inference POSTs. The proxy rejects the anonymous GET before a model catalog can be returned. The agent interprets the missing catalog as pricing_unavailable, stops inference, and never obtains a shopping brief or tool roles. Its final fallback therefore cannot finish a task.
+
+The logs establish this startup failure. They do not measure the agent's shopping accuracy, and show no agent inference-cap exhaustion event.
+
+The earlier 83 offline checks replaced the complete client with FakeClient, including get(). That bypassed request construction and missed the actual transport incompatibility. The pricing fixture also used a simplified flat format. Current public model metadata contains overrides arrays and 1-hour cache fields that the v1 parser rejects; fixing authentication alone would leave that second blocker.
+
+Correction: agents/ICDI_chidori_v2.py removes the runtime catalog GET dependency. It uses reviewed monetary settings derived from the maximum published rates across context tiers for the same three models. This keeps the agent compatible with existing validator helpers, without direct HTTP imports, credential manipulation, or a required runtime SDK update. Budget admission, retry controls, protected procedure funds and shopping/procedure methods retain their v1 implementations. Only BudgetControls.budget_post changes, alongside the new financial configuration and version comment. V1 and the released CHIDORI original remain unchanged.
+
+The public metadata reference is https://openrouter.ai/api/v1/models, observed on 2026-11-12. The reviewed fields and normalization are retained in pricing-snapshot.json. Default 5-minute cache-write prices are used because the agent does not request a 1-hour cache TTL. The settings are financial configuration, independent of tasks, products, phase and race identifiers. They require review when provider prices change and are not guaranteed maximum routed prices.
+
+Verification now exercises the real ProxyClient, with HTTP mocked at requests.get/post underneath it. One regression reproduces the original anonymous GET and consequent shutdown. Another verifies v2's authenticated inference POST with no preceding GET. All 30 actual recorded inputs were passed through the exact initial briefing construction and monetary admission with simulated completions. Each could start its first inference request. This check does not solve or grade those 30 tasks.
+
+The v2-specific suite has 65 passing checks: 9 transport/configuration regressions, 20 budget checks, 17 procedure-state checks and 19 boundary/integration checks. The complete suite, including unchanged v1 checks, has 148 passing checks. Local AST/import/entry-point/file-size checks also pass. The private submission checker was not invoked.
+
+No paid model tests, qualifying submissions or race evaluations were launched. The correction addresses the verified startup defect; real accuracy and full-run spending remain unmeasured. The $0.035 per-task agent allowance and $0.010 protected procedure allowance are unchanged. Shared simulator billing and token/routed-price uncertainty still prevent an unconditional $5 whole-run guarantee.
+
+Review verification.json, offline-verification.log and v1-to-v2.diff for evidence and exact changes. Reproduce the targeted offline checks from the repository root with:
+python3 -m unittest discover -s agents/tests -p test_chidori_v2_transport.py -v

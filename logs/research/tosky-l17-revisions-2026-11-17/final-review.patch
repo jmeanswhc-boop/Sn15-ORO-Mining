@@ -1,0 +1,83 @@
+--- before
++++ after
+@@ -1977,12 +1977,15 @@
+             return None
+         fresh = [it for it in live if not it.questions]
+         it = fresh[0] if fresh else sorted(live, key=lambda it: (bool(it.told), it.lost > 0, -it.odds, it.idx))[0]
++        if self.crowded:
++            it = sorted(live, key=lambda it: (bool(it.told), it.singles, -it.odds, it.idx))[0]
+         if it.last_kind == 'lost' and it.lost == 1 and it.last and it.last[0] in it.open_props():
+             return {'kind': 'reword', 'parts': [(it, it.last[:1])], 'focus': (it, it.last[0])}
+         props = _sd_distinct(it.open_props(), SD_LIST_LEN) if fresh else self.again_list(it)
+         if self.crowded:
+             props = props[:1]
+-        return {'kind': 'list' if fresh else 'again', 'parts': [(it, props)], 'focus': (it, props[0])}
++        return {'kind': 'single' if self.crowded else 'list' if fresh else 'again',
++                'parts': [(it, props)], 'focus': (it, props[0])}
+ 
+     def again_list(self, it):
+         allowed = set(it.open_props())
+@@ -5550,7 +5553,7 @@
+         return _dump([self.version, self.budget, self.needs_now(),
+                       [[it.name, it.shelf, it.qty] for it in self.items], lines])
+ 
+-    def checkout_hold(self) -> str:
++    def checkout_hold(self, procedures: bool=True) -> str:
+         ids = self.cart_ids()
+         if not ids:
+             return 'The cart is empty; choose and add the requested items first.'
+@@ -5562,7 +5565,7 @@
+             return self.review_blocks.get(key) or 'The current cart has a negative review; repair it or obtain new evidence.'
+         if self.refused_cart == self.cart_mark() and self.verdicts.get(key) is not True:
+             return 'The last checkout was refused; apply its observation and revalidate the cart before retrying.'
+-        if self.gate_due('order'):
++        if procedures and self.gate_due('order'):
+             return 'Complete the required order procedure before checkout.'
+         return ''
+ 
+@@ -6200,6 +6203,8 @@
+                 self.check_cart(list(lines), SPEND_HARD)
+                 if not self.verdicts.get(self.check_key(list(lines))) or self.left() < 1 or self.finished or any((self.sold_out(i) for i in lines)):
+                     break
++            if self.checkout_hold(procedures=False):
++                break
+             go, said = self.gate('order')
+             if said:
+                 replies.append(said)
+@@ -6307,6 +6312,8 @@
+         faults = []
+         args = _shape(dict(self.brief.get('buy_args') or {}), self.schemas.get(buy), 'args', faults)
+         if faults or self.left() < 1:
++            return False
++        if self.checkout_hold(procedures=False):
+             return False
+         if self.left() >= 2:
+             go, _ = self.gate('order')
+@@ -6749,6 +6756,10 @@
+                     continue
+                 args = self.quiet(name, args)
+             if self.is_buy(name, args):
++                blocked = self.checkout_hold(procedures=False)
++                if blocked:
++                    out.append((cid, 'Not run (no step used): ' + blocked))
++                    continue
+                 late = self.late_question()
+                 if late:
+                     out.append((cid, 'Not run yet. ' + late + '\nCart now: ' + self.cart_text()))
+@@ -6905,12 +6916,13 @@
+             faults: list[str] = []
+             args = _shape(dict(self.brief.get('buy_args') or {}), self.schemas.get(buy), 'args', faults)
+             if not faults:
+-                go, said = (not self.gate_due('order'), '')
+-                if self.left() >= 2:
++                blocked = self.checkout_hold(procedures=False)
++                go, said = (not blocked and not self.gate_due('order'), '')
++                if not blocked and self.left() >= 2:
+                     go, said = self.gate('order')
+                 if self.finished or self.left() <= 0:
+                     return ''
+-                blocked = self.checkout_hold() or (said if not go else '')
++                blocked = blocked or self.checkout_hold() or (said if not go else '')
+                 if not go or blocked:
+                     self.trace.append({'kind': 'checkout_hold', 'reason': blocked or 'Required order procedure is incomplete.'})
+                     if again:

@@ -1,0 +1,330 @@
+{
+  "schema_version": "oro.episode_feedback.v1",
+  "episode_result_id": "617332e9-e6ce-462f-a7d2-d013f9176a1a",
+  "task_id": "TF5-ranking-200166",
+  "query": "Please pick for me from exactly these four: 2162870826578660369::5074760714-1, 6180302766928974801::4563262992-default, 1647185915647219989::4317786287-1, 5079150966186135390::4223114561-default. An in-stock monitor at or under 5500.00 PHP; highest wattage first, largest screen second, lowest price third. Skip any that is strictly worse than another of the four on those three, and nothing outside the four.\n\nTask rules:\nYou are a shopping agent. The user names a product category and has a stated tradeoff priority. Follow the stated attribute order, using each later attribute only to break ties, and use the lowest price as the final tie-break. Inspect product facts, variant options, price, and stock; do not choose an item that is strictly worse than another available option on every tradeoff axis. View or compare the best initial candidate's facts before adding it to the cart; the first cart choice must be the best-ranked available option, not a placeholder. Use an explicit selected-variant specification before a product-wide value. Do not assume a multi-model listing's maximum specification belongs to a different selected model. Prices or stock can change while you shop, so if the market changes after your first cart action, re-rank the live options before ordering, and inspect the replacement's current price and stock after the change. Compare a focused shortlist rather than inspecting every option. Once you have verified your best-ranked valid option's current price and stock, place the order - do not wait for permission or further confirmation.\nThe catalog category_path is available in view and compare. Check that classification against the required category. Reject accessories and non-device listings when a device is requested.\nRead shopper messages returned after cart actions before placing an order. The shopper may clarify requirements or tighten the budget; once stated, those updates apply to later choices. Answer any direct clarification request.\nUnless the shopper asks for a reason, structured justification is optional. If you supply it, use only field/value claims supported by view or compare of the final product and its current price/stock. Specification claims need raw product facts, not title guesses. Do not include summary or evidence free text.",
+  "family": "ranking",
+  "phase": "RACE",
+  "outcome": "completed",
+  "passed": true,
+  "paid_reward": 1.0,
+  "step_count": 9,
+  "tool_call_count": 9,
+  "search_call_count": 0,
+  "termination_code": "placed_order",
+  "interaction": [
+    {
+      "step_index": 0,
+      "turn": 1,
+      "calls": [
+        {
+          "call_id": "6243323787c84f428f660b256c3c18c0-turn-1-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "2162870826578660369"
+          },
+          "observation": {
+            "brand": "Xiaomi",
+            "category_path": [
+              "Computers & Components",
+              "Monitors"
+            ],
+            "facts": {
+              "condition": "new",
+              "display": "1920 x 1080",
+              "model": "xiaomi 2k gaming monitor g27qi",
+              "navigation": "hdmi, dp",
+              "size": "27-inch",
+              "wattage": "48w"
+            },
+            "product_id": "2162870826578660369",
+            "title": "Xiaomi 2K Gaming Monitor G27Qi 27-inch Fast LCD FreeSync 180Hz High Refresh Rate Response Only 1ms 95%DCI-P3 And 100% sRGB",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "mi g27qi 27inch",
+                "price": 5315.5,
+                "sku": "5074760714-1"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "6243323787c84f428f660b256c3c18c0-turn-1-2",
+          "tool_name": "view",
+          "args": {
+            "product_id": "6180302766928974801"
+          },
+          "observation": {
+            "brand": "Hikvision",
+            "category_path": [
+              "Computers & Components",
+              "Monitors"
+            ],
+            "facts": {
+              "condition": "new",
+              "display": "1920 x 1080",
+              "model": "ds-d5022fn00",
+              "navigation": "hdmi",
+              "size": "21.5 inches",
+              "wattage": "≤ 24 w"
+            },
+            "product_id": "6180302766928974801",
+            "title": "Hikvision 21.5inch FHD Borderless Monitor 1080P Display Ultra-wide View Screen Dual Interface of HDMI and VGA",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": null,
+                "price": 3699.0,
+                "sku": "4563262992-default"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "6243323787c84f428f660b256c3c18c0-turn-1-3",
+          "tool_name": "view",
+          "args": {
+            "product_id": "1647185915647219989"
+          },
+          "observation": {
+            "brand": "AOC",
+            "category_path": [
+              "Computers & Components",
+              "Monitors"
+            ],
+            "facts": {
+              "condition": "new",
+              "display": "1920 x 1080",
+              "navigation": "hdmi",
+              "size": "21.5 inches",
+              "wattage": "20w"
+            },
+            "product_id": "1647185915647219989",
+            "title": "AOC 22B30HM22 21.5\" 120Hz VA FHD VGA/HDMI Monitor| Monitors",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "120hz",
+                "price": 4212.0,
+                "sku": "4317786287-1"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "6243323787c84f428f660b256c3c18c0-turn-1-4",
+          "tool_name": "view",
+          "args": {
+            "product_id": "5079150966186135390"
+          },
+          "observation": {
+            "brand": "Redragon",
+            "category_path": [
+              "Computers & Components",
+              "Monitors"
+            ],
+            "facts": {
+              "condition": "new",
+              "display": "1920 x 1080",
+              "navigation": "hdmi",
+              "size": "23.8 inches",
+              "warranty_type": "local supplier warranty",
+              "wattage": "30w"
+            },
+            "product_id": "5079150966186135390",
+            "title": "23.8 Inches IPS Monitor 100Hz 1080P Nvision (N2488 White) | Frameless Design | VGA+HDMI Port | VESA Wall Mountable | Collinx Computer",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": null,
+                "price": 4575.0,
+                "sku": "4223114561-default"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 1,
+      "turn": 2,
+      "calls": [
+        {
+          "call_id": "6243323787c84f428f660b256c3c18c0-turn-2-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "2162870826578660369",
+            "sku": "5074760714-1"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": false,
+              "price": 5315.5,
+              "product_id": "2162870826578660369",
+              "sku": "5074760714-1"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 5315.5,
+                "in_stock": false,
+                "price_at_add": 5315.5,
+                "product_id": "2162870826578660369",
+                "sku": "5074760714-1"
+              }
+            ],
+            "market_event": {
+              "contract_version": "oro_event_v3",
+              "currency": "PHP",
+              "in_stock_after": false,
+              "in_stock_before": true,
+              "kind": "stockout",
+              "new_price": null,
+              "old_price": 5315.5,
+              "target": {
+                "product_id": "2162870826578660369",
+                "sku": "5074760714-1"
+              }
+            }
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 2,
+      "turn": 3,
+      "calls": [
+        {
+          "call_id": "6243323787c84f428f660b256c3c18c0-turn-3-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "5079150966186135390",
+            "sku": "4223114561-default"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": true,
+              "price": 4575.0,
+              "product_id": "5079150966186135390",
+              "sku": "4223114561-default"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 5315.5,
+                "in_stock": false,
+                "price_at_add": 5315.5,
+                "product_id": "2162870826578660369",
+                "sku": "5074760714-1"
+              },
+              {
+                "currency": "PHP",
+                "current_price": 4575.0,
+                "in_stock": true,
+                "price_at_add": 4575.0,
+                "product_id": "5079150966186135390",
+                "sku": "4223114561-default"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": "wait, is that still available?",
+      "message": null
+    },
+    {
+      "step_index": 3,
+      "turn": 4,
+      "calls": [
+        {
+          "call_id": "6243323787c84f428f660b256c3c18c0-turn-4-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "5079150966186135390",
+            "sku": "4223114561-default"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 4575.0,
+            "product_id": "5079150966186135390",
+            "sku": "4223114561-default"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 4,
+      "turn": 5,
+      "calls": [
+        {
+          "call_id": "6243323787c84f428f660b256c3c18c0-turn-5-1",
+          "tool_name": "message",
+          "args": {
+            "content": "Yes, the Redragon N2488 (23.8\", 30W, 4575 PHP) is still in stock and under budget. Placing the order now."
+          },
+          "observation": {
+            "sent": true
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "6243323787c84f428f660b256c3c18c0-turn-5-2",
+          "tool_name": "place_test_order",
+          "args": {
+            "product_id": "5079150966186135390",
+            "sku": "4223114561-default"
+          },
+          "observation": {
+            "order": {
+              "currency": "PHP",
+              "in_stock_at_order": true,
+              "price_at_order": 4575.0,
+              "target": {
+                "product_id": "5079150966186135390",
+                "sku": "4223114561-default"
+              }
+            },
+            "status": "placed"
+          },
+          "done": true,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    }
+  ],
+  "observable_issues": [],
+  "diagnostics_state": "available",
+  "failure_category": null,
+  "end_reason": null
+}

@@ -1,0 +1,610 @@
+--- released-CHIDORI-v11.py
++++ ICDI_chidori_v1.py
+@@ -1,4 +1,6 @@
++# ICDI CHIDORI v1: budget admission and required-procedure enforcement.
+ import json
++from decimal import Decimal, InvalidOperation, ROUND_CEILING
+ import random
+ import re
+ import time
+@@ -293,7 +295,7 @@
+ "rules": every instruction contained in the request on working method or on the way to finish, each no longer than 12 words.
+ "wishes": nice-to-haves, preferences the shopper voices without requiring them.
+ "ask_first": whatever the request explicitly wants confirmed with the shopper prior to choosing; empty if none.
+-"process": duties the request imposes on top of locating and purchasing the correct items (securing approval from the shopper; informing the shopper of, or displaying to them, some matter; confirming a point with the shopper; reading a thing before acting; employing a specific tool). Each entry is an object of three fields: "step" (the duty, no longer than 15 words), "when" (exactly one of "choose" = before any product is chosen, "order" = just before checking out, "end" = just before finishing with no purchase) and "messages" (the number of shopper messages the duty consumes, 0 if none). An empty list if the request imposes no such duty. Not duties: item requirements, budget, stock, the message and step limits, and what to do if nothing fits.
++"process": duties the request imposes on top of locating and purchasing the correct items (securing approval from the shopper; informing the shopper of, or displaying to them, some matter; confirming a point with the shopper; reading a thing before acting; employing a specific tool). Each entry is an object with fields: "step" (the duty, no longer than 15 words), "when" (exactly one of "choose" = before any product is chosen, "order" = just before checking out, "end" = just before finishing with no purchase) and "messages" (the number of shopper messages the duty consumes, 0 if none), "source" (an exact quotation from the request stating this duty), "actions" (minimum number of tool calls required, at least 1), "cart_dependent" (true if it concerns the current cart or approval for this purchase), "group" (empty unless the request explicitly permits sharing one action with another duty), "combine_source" (the exact request quotation granting that sharing, otherwise empty). Always include process:[], explicitly, if there are no duties. Not duties: item requirements, budget, stock, the message and step limits, and what to do if nothing fits.
+ "quiet_decline": true if the request forbids suggesting or naming alternatives in case nothing fits; false if it wants alternatives; null if silent.
+ "fits": one entry for every requested item that, by the request, has to work together with some OTHER item of the request, or fit it, or suit it (that is, suit whichever listing the agent picks for that other item), as an object of two item numbers: "item" (the dependent item) and "with" (that other item). An empty list if none.
+ "roles": an object that maps each of nine jobs to the precise tool name, or to null where no tool performs it: "search"; "open" (displays the properties or attributes of a single listing; given two tools that each display a single listing, pick the one that, by its own description, offers specifications, properties or attributes); "offer" (displays one listing's live offer, for instance price and stock, and only if a tool other than the open one does that); "compare" (displays several listings completely); "ask" (messages the shopper); "cart" (modifies the cart); "cart_view" (displays the cart); "buy" (performs the checkout); "refuse" (finishes with no purchase).
+@@ -1659,7 +1661,7 @@
+             body["tool_choice"] = "auto"
+         if effort:
+             body["reasoning"] = {"effort": "low"}
+-        res = model_client(self.room()).post_verbose("/inference/chat/completions", body)
++        res = self.budget_post(body)
+         data = res.data
+         ok = isinstance(data, dict) and bool(data.get("choices"))
+         if effort and not ok:
+@@ -1671,10 +1673,6 @@
+                 self.trace.append({"kind": "effort_refused", "model": model, "status": st})
+                 return self.one_call(model, messages, cap, tools)
+         if ok:
+-            usage = data.get("usage")
+-            cost = usage.get("cost") if isinstance(usage, dict) else None
+-            if is_num(cost):
+-                self.spend += cost
+             ch = data["choices"][0] if isinstance(data["choices"], list) else {}
+             if not isinstance(ch, dict):
+                 ch = {}
+@@ -1687,7 +1685,7 @@
+             self.trace.append({"kind": "empty_reply", "model": model})
+             return None, 0
+         err = res.error or {}
+-        status = err.get("status")
++        status = err.get("status", 0 if data is not None else None)
+         body_text = err.get("body")
+         if isinstance(data, dict) and isinstance(data.get("error"), dict):
+             status = count_of(data["error"].get("code"))
+@@ -9348,8 +9346,8 @@
+             kept.append(self.show(o))
+             if self.finished:
+                 break
+-        if not kept and not gate_txt:
+-            return ""
++        if not kept:
++            return gate_txt
+         t = (COMPLETION_OPEN + ": an independent check passed " + self.confirmed + ", so Cairn changed the cart (" + "; ".join(sent) +
+              ") and placed the order.")
+         if gate_txt:
+@@ -9908,7 +9906,7 @@
+                 ls = self.late_show()
+                 if ls:
+                     tail.insert(0, "[Cairn] " + ls)
+-            if fin and self.left() >= 2:
++            if fin:
+                 go, gt = self.gate("order" if is_ord else "end")
+                 if not go:
+                     replies.append(BARE_HOLD + " " + gt + self.cart_footer())
+@@ -10090,8 +10088,9 @@
+                     self.reread()
+                     if self.finished or self.left() <= 0:
+                         return ""
+-                if self.left() >= 2:
+-                    self.gate("order")
++                go, text = self.gate("order")
++                if not go:
++                    return text or "A required procedure remains unresolved."
+                 if self.finished or self.left() <= 0:
+                     return ""
+                 res = self.env(buy, oa)
+@@ -10108,8 +10107,9 @@
+         if ref:
+             da, f = shape_args(self.quiet_fill(dict(self.brief.get("refuse_args") or {})), self.schemas.get(ref) or {})
+             if not f:
+-                if self.left() >= 2:
+-                    self.gate("end")
++                go, text = self.gate("end")
++                if not go:
++                    return text or "A required procedure remains unresolved."
+                 if self.finished or self.left() <= 0:
+                     return ""
+                 res = self.env(ref, da)
+@@ -10144,7 +10144,517 @@
+         best = max(cands, key=lambda k: (len(set(figs[k])), len(figs[k]), -order.index(k)))
+         return best if len(set(figs[best])) >= 3 else None
+ 
+-class Episode(G6B, G6A, G5B, G5A, G4B, G4A, G3B, G3A, E1, E2, E3, E4, E5, E6, E7, E8, E9):
++# Monetary amounts are integral nanodollars; prices are read through the proxy.
++AGENT_USD_LIMIT = "0.035"
++PROCEDURE_USD_RESERVE = "0.010"
++MIN_REPLY_TOKENS = 512
++
++
++def money_units(value):
++    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
++        return None
++    try:
++        number = Decimal(str(value))
++        if not number.is_finite() or number < 0:
++            return None
++        return int((number * 1000000000).to_integral_value(rounding=ROUND_CEILING))
++    except (InvalidOperation, ValueError, OverflowError):
++        return None
++
++
++class BudgetReply:
++    def __init__(self, reason):
++        self.data = None
++        self.error = {"status": 0, "body": reason}
++
++
++class InferenceBudget:
++    def __init__(self):
++        self.limit = money_units(AGENT_USD_LIMIT)
++        self.protected = money_units(PROCEDURE_USD_RESERVE)
++        self.actual = 0
++        self.uncertain = 0
++        self.pending = 0
++        self.attempts = 0
++        self.breached = False
++        self.prices = None
++
++    def remaining(self, protected=0):
++        return max(0, self.limit - self.actual - self.uncertain - self.pending - protected)
++
++    def load_prices(self, catalog):
++        self.prices = {}
++        rows = catalog.get("data") if isinstance(catalog, dict) else None
++        if not isinstance(rows, list):
++            return
++        for row in rows:
++            if not isinstance(row, dict) or row.get("id") not in (LIGHT, HEAVY, SPARE):
++                continue
++            pricing = row.get("pricing")
++            if not isinstance(pricing, dict):
++                continue
++            values = {k: money_units(v) for k, v in pricing.items()}
++            if values.get("prompt") is None or values.get("completion") is None:
++                continue
++            used = {"prompt", "completion", "request", "input_cache_read", "input_cache_write", "internal_reasoning"}
++            unused_text = {"image", "web_search", "audio", "input_audio_cache", "input_audio", "output_audio"}
++            if any(v is None or (k not in used and k not in unused_text and v > 0) for k, v in values.items()):
++                continue
++            top = row.get("top_provider") or {}
++            top = top if isinstance(top, dict) else {}
++            context = count_of(top.get("context_length")) or count_of(row.get("context_length"))
++            completion = count_of(top.get("max_completion_tokens"))
++            if context is None or context <= 0:
++                continue
++            self.prices[row["id"]] = {
++                "input": max(values["prompt"], values.get("input_cache_read", 0), values.get("input_cache_write", 0)),
++                "plain_input": values["prompt"],
++                "output": values["completion"] + values.get("internal_reasoning", 0),
++                "request": values.get("request", 0),
++                "context": context,
++                "completion": completion,
++            }
++
++    def quote(self, body, protected=0):
++        price = (self.prices or {}).get(body.get("model"))
++        if price is None:
++            return None, "pricing_unavailable"
++        messages = body.get("messages")
++        if not isinstance(messages, list):
++            return None, "unsupported_message"
++        for message in messages:
++            if not isinstance(message, dict):
++                return None, "unsupported_message"
++            content = message.get("content")
++            if isinstance(content, list):
++                if any(not isinstance(p, dict) or p.get("type") != "text" or not isinstance(p.get("text"), str) for p in content):
++                    return None, "unsupported_message"
++            elif content is not None and not isinstance(content, str):
++                return None, "unsupported_message"
++        # A conservative estimate, not a certified tokenizer or routed-price bound.
++        prompt = len(json.dumps(body, ensure_ascii=False).encode("utf-8")) + 512 + 64 * len(messages) + 128 * len(body.get("tools") or [])
++        requested = count_of(body.get("max_tokens"))
++        if requested is None or requested <= 0 or prompt >= price["context"]:
++            return None, "context_or_output_limit"
++        cap = min(requested, price["context"] - prompt)
++        if price["completion"] is not None:
++            cap = min(cap, price["completion"])
++        available = self.remaining(protected)
++        input_rate = price["input"]
++        cached = any(isinstance(m.get("content"), list) and any(p.get("cache_control") for p in m["content"]) for m in messages)
++        if cached:
++            input_rate = max(input_rate, (price["plain_input"] * 5 + 3) // 4)
++        base = prompt * input_rate + price["request"]
++        raw_room = available * 4 // 5 - base
++        if raw_room < 0:
++            return None, "allocation_exhausted"
++        if price["output"]:
++            cap = min(cap, raw_room // price["output"])
++        if cap < min(MIN_REPLY_TOKENS, requested):
++            return None, "allocation_exhausted"
++        reserve = ((base + cap * price["output"]) * 5 + 3) // 4
++        if reserve > available:
++            return None, "allocation_exhausted"
++        return {"units": reserve, "cap": cap, "prompt_estimate": prompt}, ""
++
++    def settle(self, quote, data):
++        self.pending -= quote["units"]
++        usage = data.get("usage") if isinstance(data, dict) else None
++        reported = usage.get("cost") if isinstance(usage, dict) else None
++        cost = money_units(reported) if isinstance(reported, (int, float)) and not isinstance(reported, bool) else None
++        if cost is None:
++            self.uncertain += quote["units"]
++        else:
++            self.actual += cost
++            if cost > quote["units"]:
++                self.breached = True
++        tokens = usage.get("prompt_tokens") if isinstance(usage, dict) else None
++        if isinstance(tokens, int) and not isinstance(tokens, bool) and tokens > quote["prompt_estimate"]:
++            self.breached = True
++        tokens = usage.get("completion_tokens") if isinstance(usage, dict) else None
++        if isinstance(tokens, int) and not isinstance(tokens, bool) and tokens > quote["cap"]:
++            self.breached = True
++        return cost
++
++
++class BudgetControls:
++    def __init__(self, problem_data):
++        super().__init__(problem_data)
++        self.inference_budget = InferenceBudget()
++        self.budget_mode = "work"
++        self.brief_read = False
++        self.last_budget_denial = ""
++        self.budget_locally_stopped = False
++
++    def budget_post(self, body):
++        budget = self.inference_budget
++        self.last_budget_denial = ""
++        if self.no_credit or budget.breached or budget.attempts >= CALL_CAP or self.room() < CALL_FLOOR:
++            self.last_budget_denial = "inference_stopped"
++            return BudgetReply(self.last_budget_denial)
++        if budget.prices is None:
++            try:
++                catalog = model_client(min(10, self.room())).get("/inference/models")
++            except Exception:
++                catalog = None
++            budget.load_prices(catalog)
++        protected = 0
++        if self.budget_mode != "procedure" and (not self.brief_read or self.duties or not getattr(self, "procedures_valid", True)):
++            protected = budget.protected
++        if protected and self.budget_mode != "procedure":
++            required = 2 + sum(max(1, d.get("actions", 1)) for d in self.duties)
++            if budget.attempts >= CALL_CAP - min(CALL_CAP // 2, required):
++                self.last_budget_denial = "procedure_attempts_reserved"
++                return BudgetReply(self.last_budget_denial)
++        quote, reason = budget.quote(body, protected)
++        if quote is None:
++            self.last_budget_denial = reason
++            self.trace.append({"kind": "budget_denied", "model": body.get("model"), "reason": reason})
++            return BudgetReply(reason)
++        body = dict(body)
++        body["max_tokens"] = quote["cap"]
++        budget.pending += quote["units"]
++        budget.attempts += 1
++        self.calls = budget.attempts
++        try:
++            result = model_client(self.room()).post_verbose("/inference/chat/completions", body)
++        except Exception:
++            result = BudgetReply("uncertain_transport_failure")
++            result.error["status"] = None
++        cost = budget.settle(quote, result.data)
++        self.spend = (budget.actual + budget.uncertain) / 1000000000
++        self.trace.append({"kind": "inference_budget", "model": body.get("model"), "attempt": budget.attempts,
++                           "reserved_usd": quote["units"] / 1000000000, "reported_usd": None if cost is None else cost / 1000000000,
++                           "uncertain_usd": budget.uncertain / 1000000000, "cap": quote["cap"],
++                           "envelope_breached": budget.breached})
++        if budget.breached:
++            self.no_credit = True
++            self.budget_locally_stopped = False
++        error = result.error if isinstance(result.error, dict) else {}
++        data_error = result.data.get("error") if isinstance(result.data, dict) else None
++        status = count_of(data_error.get("code")) if isinstance(data_error, dict) else error.get("status")
++        if status == 402:
++            self.no_credit = True
++            self.budget_locally_stopped = False
++        return result
++
++    def think(self, messages, models, cap, tools=None):
++        if self.no_credit:
++            return None
++        denied = []
++        for model in models:
++            if self.calls >= CALL_CAP or self.room() < CALL_FLOOR or self.no_credit:
++                return None
++            tries = 0
++            while True:
++                msg, status = self.one_call(model, messages, cap, tools)
++                if msg is not None:
++                    return msg
++                if self.last_budget_denial:
++                    denied.append(self.last_budget_denial)
++                    break
++                if status == 402 or self.no_credit:
++                    return None
++                retryable = status is None or (isinstance(status, int) and (status >= 500 or bool(_RETRY_STATUS.fullmatch(str(status)))))
++                limit = 1 if status is None or status == 408 else len(WAITS)
++                if not retryable or tries >= limit or self.calls >= CALL_CAP:
++                    break
++                wait = WAITS[tries]
++                if self.waited + wait > WAIT_BUDGET or self.room() - 1.2 * wait < CALL_FLOOR:
++                    break
++                time.sleep(wait * random.uniform(0.8, 1.2))
++                self.waited += wait
++                tries += 1
++        if denied:
++            self.no_credit = True
++            self.budget_locally_stopped = True
++            self.trace.append({"kind": "local_inference_stop", "reasons": denied})
++        return None
++
++    def read_brief(self):
++        super().read_brief()
++        self.brief_read = True
++
++    def gate(self, stage):
++        return self.with_procedure_budget(super().gate, stage)
++
++    def with_procedure_budget(self, callback, *args):
++        previous = self.budget_mode
++        was_locally_stopped = self.no_credit and self.budget_locally_stopped
++        self.budget_mode = "procedure"
++        if was_locally_stopped and not self.inference_budget.breached:
++            self.no_credit = False
++        try:
++            return callback(*args)
++        finally:
++            self.budget_mode = previous
++            if was_locally_stopped and not self.no_credit:
++                self.no_credit = True
++                self.budget_locally_stopped = True
++
++
++
++PROCEDURE_PROMPT = """Carry out only the procedures explicitly required by the public instruction.
++The local IDs in DUE must each occur exactly once in steps. An action proposal is not evidence.
++Use {\"steps\":[{\"id\":\"local duty ID\",\"done\":false,\"evidence\":[executed step numbers]}],
++\"call\":{\"duty_id\":\"one pending ID\",\"tool\":\"supplied nonterminal tool\",\"args\":{}},
++\"hold\":\"required cart repair or empty string\",\"needs\":[]}.
++Use call:null only if all duties are performed or no permitted action can perform the next one.
++Mark done only when the successful recorded actions and replies actually perform that duty.
++A product-property question does not obtain purchase approval. An approval must concern the current cart.
++Use a separate message for independent duties unless their stated shared group permits one message.
++Messages are concise and limited to the requested procedure. Read the shopper's reply for changed needs
++or a refused approval. Report a changed requirement through needs or hold before allowing an order.
++Do not select products, change the cart, order, or decline. No private grading information is available.
++"""
++
++
++class ProcedureControls:
++    def __init__(self, problem_data):
++        super().__init__(problem_data)
++        self.procedures_valid = False
++        self.procedure_busy = False
++        self.procedure_events = {}
++        self.procedure_cart_signature = self.cart_mark() + "#" + str(self.version)
++        self.procedure_cart_changed_at = -1
++        self.procedure_first_selection = None
++        self.procedure_attempts = {}
++
++    def read_brief(self):
++        super().read_brief()
++        raw = self.brief.get("process")
++        duties = []
++        valid = isinstance(raw, list)
++        request = " ".join(self.request.split())
++        for entry in raw if isinstance(raw, list) else []:
++            if not isinstance(entry, dict):
++                valid = False
++                continue
++            source = entry.get("source")
++            source = " ".join(source.split()) if isinstance(source, str) else ""
++            stage = entry.get("when")
++            messages = count_of(entry.get("messages"))
++            actions = count_of(entry.get("actions"))
++            text = str(entry.get("step") or "").strip()
++            if not source or source not in request or not text or stage not in ("choose", "order", "end") or messages is None or messages < 0:
++                valid = False
++                continue
++            group = entry.get("group")
++            combined = entry.get("combine_source")
++            combined = " ".join(combined.split()) if isinstance(combined, str) else ""
++            if not isinstance(group, str) or not group or not combined or combined not in request:
++                group = ""
++            duties.append({"id": "d%d" % (len(duties) + 1), "text": text, "source": source,
++                           "stage": stage, "messages": messages, "actions": max(1, messages, actions or 1),
++                           "cart_dependent": entry.get("cart_dependent") is not False if stage != "choose" else False,
++                           "group": group, "evidence": [], "completed": False, "signature": None})
++        self.duties = duties
++        self.procedures_valid = valid
++        self.refresh_procedure_reserve()
++        self.trace.append({"kind": "procedures_parsed", "valid": valid, "count": len(duties)})
++
++    def sync_procedures(self):
++        signature = self.cart_mark() + "#" + str(self.version)
++        if signature != self.procedure_cart_signature:
++            self.procedure_cart_signature = signature
++            self.procedure_cart_changed_at = self.step
++        for duty in self.duties:
++            if duty.get("cart_dependent") and duty.get("signature") != signature:
++                duty["completed"] = False
++                duty["evidence"] = []
++
++    def pending_procedures(self, stage):
++        self.sync_procedures()
++        return [d for d in self.duties if d["stage"] == stage and not d.get("completed")]
++
++    def procedure_resources(self, stage, field):
++        groups = {}
++        for duty in self.pending_procedures(stage):
++            key = duty.get("group") or duty["id"]
++            groups[key] = max(groups.get(key, 0), duty[field])
++        return sum(groups.values())
++
++    def refresh_procedure_reserve(self):
++        self.msg_reserve = self.procedure_resources("choose", "messages") + max(
++            self.procedure_resources("order", "messages"), self.procedure_resources("end", "messages"))
++
++    def free_msgs(self):
++        self.refresh_procedure_reserve()
++        return max(0, self.msg_limit - self.msg_used - self.msg_reserve)
++
++    def reserve(self):
++        return 1 + self.procedure_resources("choose", "actions") + max(
++            self.procedure_resources("order", "actions"), self.procedure_resources("end", "actions"))
++
++    def gate_due(self, stage):
++        return not self.procedures_valid or bool(self.pending_procedures(stage))
++
++    def gate(self, stage):
++        return self.with_procedure_budget(self.procedure_gate, stage)
++
++    def procedure_gate(self, stage):
++        if not self.procedures_valid:
++            return False, "The required-procedure parse is unresolved."
++        due = self.pending_procedures(stage)
++        if not due:
++            return True, ""
++        if self.finished or self.procedure_busy:
++            return False, "The procedure cannot run in the current state."
++        if stage == "choose" and self.procedure_first_selection is not None:
++            return False, "A required before-selection step missed its boundary."
++        key = (stage, self.procedure_cart_signature, self.step, self.msg_used)
++        if self.procedure_attempts.get(key, 0) >= 2:
++            return False, "The procedure is unresolved with no new evidence."
++        self.procedure_attempts[key] = self.procedure_attempts.get(key, 0) + 1
++        self.procedure_busy = True
++        performed = []
++        seen_calls = set()
++        try:
++            rounds = min(CALL_CAP, 2 + sum(d["actions"] for d in due))
++            for _ in range(rounds):
++                due = self.pending_procedures(stage)
++                if not due:
++                    self.refresh_procedure_reserve()
++                    return True, "\n".join(performed)
++                records = []
++                for event in self.procedure_events.values():
++                    relevant = [d for d in due if not d["cart_dependent"] or
++                                (event["signature"] == self.procedure_cart_signature and event["step"] > self.procedure_cart_changed_at)]
++                    if relevant:
++                        records.append(event)
++                allowed = [t for t in self.tools if t["function"]["name"] not in
++                           (self.roles.get("buy"), self.roles.get("refuse"), self.roles.get("cart"))]
++                prompt = PROCEDURE_PROMPT + "\nREQUEST:\n" + self.request + "\nDUE:\n" + dump(due)
++                prompt += "\nCURRENT CART:\n" + self.cart_text() + "\nSUCCESSFUL RECORDS:\n" + dump(records)
++                prompt += "\nTOOLS:\n" + dump(allowed) + "\nMESSAGES LEFT: %d; STEPS LEFT: %d" % (self.msg_limit - self.msg_used, self.left())
++                answer = self.json_ask(prompt, [LIGHT], max(700, 200 + 180 * len(due)))
++                entries = answer.get("steps") if isinstance(answer, dict) else None
++                if not isinstance(entries, list) or any(not isinstance(e, dict) for e in entries):
++                    return False, "The procedure decision is missing or malformed."
++                ids = [e.get("id") for e in entries]
++                if any(not isinstance(i, str) for i in ids) or len(ids) != len(due) or set(ids) != {d["id"] for d in due}:
++                    return False, "The procedure decision does not cover every required ID."
++                changed = []
++                self.fold_reading({"needs": answer.get("needs")}, changed)
++                hold = str(answer.get("hold") or "").strip()
++                if changed or hold:
++                    self.version += 1
++                    self.sync_procedures()
++                    return False, "The shopper requires a repair: " + "; ".join(changed + ([hold] if hold else []))
++                claimed = {}
++                for duty in self.duties:
++                    if duty.get("completed"):
++                        for step in duty.get("evidence", []):
++                            claimed[step] = duty.get("group") or duty["id"]
++                for duty in due:
++                    entry = next(e for e in entries if e["id"] == duty["id"])
++                    evidence = entry.get("evidence")
++                    if entry.get("done") is not True or not isinstance(evidence, list) or not evidence:
++                        continue
++                    if any(not isinstance(s, int) or isinstance(s, bool) or s not in self.procedure_events for s in evidence):
++                        continue
++                    events = [self.procedure_events[s] for s in set(evidence)]
++                    identity = duty.get("group") or duty["id"]
++                    if any(s in claimed and claimed[s] != identity for s in evidence):
++                        continue
++                    if duty["cart_dependent"] and any(e["signature"] != self.procedure_cart_signature or e["step"] <= self.procedure_cart_changed_at for e in events):
++                        continue
++                    if duty["stage"] == "choose" and self.procedure_first_selection is not None and any(e["step"] >= self.procedure_first_selection for e in events):
++                        continue
++                    if sum(e["tool"] == self.roles.get("ask") for e in events) < duty["messages"] or len(events) < duty["actions"]:
++                        continue
++                    duty.update(completed=True, evidence=sorted(set(evidence)), signature=self.procedure_cart_signature)
++                    for step in evidence:
++                        claimed[step] = identity
++                if not self.pending_procedures(stage):
++                    self.refresh_procedure_reserve()
++                    return True, "\n".join(performed)
++                call = answer.get("call")
++                if not isinstance(call, dict) or not isinstance(call.get("duty_id"), str) or call.get("duty_id") not in {d["id"] for d in self.pending_procedures(stage)}:
++                    return False, "A required procedure remains unperformed."
++                tool = call.get("tool")
++                args = call.get("args")
++                if not isinstance(tool, str) or tool not in self.schemas or tool in (self.roles.get("buy"), self.roles.get("refuse"), self.roles.get("cart")) or not isinstance(args, dict):
++                    return False, "The proposed procedure action is not permitted."
++                args, faults = shape_args(args, self.schemas[tool])
++                mark = tool + dump(args)
++                if faults or mark in seen_calls or self.left() < 2:
++                    return False, "No valid new procedure action fits the remaining steps."
++                if tool == self.roles.get("ask"):
++                    if self.msg_used >= self.msg_limit:
++                        return False, "The required message allowance is exhausted."
++                    text = strings(args)
++                    if not text:
++                        return False, "The procedure message is empty."
++                    sent = self.send([(1, "", max(text, key=len))], 1)
++                    if not sent:
++                        return False, "The procedure message was not sent."
++                    self.gate_msgs += 1
++                    performed.append("Performed required message at step %d." % self.step)
++                else:
++                    result = self.env(tool, args)
++                    if result is None:
++                        return False, "The procedure action did not return an observation."
++                    self.absorb(result.get("observation"))
++                    performed.append("Performed required tool %s at step %d." % (tool, self.step))
++                seen_calls.add(mark)
++            return False, "Required procedures remain unresolved after bounded attempts."
++        finally:
++            self.procedure_busy = False
++
++    def opening(self):
++        if self.procedures_valid and self.pending_procedures("choose"):
++            self.gate("choose")
++        return super().opening()
++
++    def env(self, tool, args):
++        if self.finished or self.left() <= 0:
++            return None
++        order = self.is_order(tool, args)
++        decline = self.is_decline(tool, args)
++        if (order and decline) or (tool in (self.roles.get("buy"), self.roles.get("refuse")) and not order and not decline):
++            self.trace.append({"kind": "ambiguous_finish_blocked", "tool": tool})
++            return None
++        selecting = tool == self.roles.get("cart") or order
++        if not self.procedure_busy:
++            stages = (["choose"] if selecting else []) + (["order"] if order else ["end"] if decline else [])
++            for stage in stages:
++                go, text = self.gate(stage)
++                if not go:
++                    self.trace.append({"kind": "procedure_blocked", "stage": stage, "detail": text})
++                    self.queued.append(text)
++                    return None
++            if not order and not decline and self.duties:
++                reserve = self.reserve()
++                if tool == self.roles.get("cart"):
++                    # A changed basket can require a fresh approval even after a cached pass.
++                    pending = [d for d in self.duties if d["stage"] == "order" and d["cart_dependent"]]
++                    grouped = {}
++                    for duty in pending:
++                        key = duty.get("group") or duty["id"]
++                        grouped[key] = max(grouped.get(key, 0), duty["actions"])
++                    reserve = max(reserve, 1 + sum(grouped.values()))
++                if self.left() <= reserve or (tool == self.roles.get("ask") and self.free_msgs() <= 0):
++                    self.trace.append({"kind": "procedure_resources_reserved", "tool": tool})
++                    return None
++        result = super().env(tool, args)
++        if result is None:
++            return None
++        observation = result.get("observation")
++        successful = not failure_only(observation) and not (isinstance(observation, dict) and observation.get("error"))
++        if successful:
++            self.sync_procedures()
++            if self.step not in self.procedure_events:
++                shown = self.spoken(observation) if tool == self.roles.get("ask") else dump(observation)[:400]
++                self.procedure_events[self.step] = {"step": self.step, "tool": tool, "args": dict(args),
++                                                   "observation": shown, "signature": self.procedure_cart_signature}
++            if selecting and self.procedure_first_selection is None:
++                self.procedure_first_selection = self.step
++        return result
++
++
++
++class Episode(ProcedureControls, BudgetControls, G6B, G6A, G5B, G5A, G4B, G4A, G3B, G3A, E1, E2, E3, E4, E5, E6, E7, E8, E9):
+     pass
+ 
+ 

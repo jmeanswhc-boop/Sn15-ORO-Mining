@@ -1,0 +1,570 @@
+{
+  "created_at": "2026-11-13T16:11:51.973542+00:00",
+  "source": {
+    "source_sha256": "31b083e8ac95bc6863a4a01f9768a61879914fed4eb9116ea0f27b394d825a18",
+    "infer_sites": [
+      {
+        "caller": "bootstrap",
+        "line": 414,
+        "purpose": "'contract'",
+        "options": {
+          "deep": "True",
+          "tokens": "3300"
+        }
+      },
+      {
+        "caller": "absorb",
+        "line": 559,
+        "purpose": "'observation'",
+        "options": {
+          "deep": "tool == self.role('message')",
+          "tokens": "1700"
+        }
+      },
+      {
+        "caller": "absorb_reply",
+        "line": 702,
+        "purpose": "'shopper revision'",
+        "options": {
+          "deep": "False",
+          "tokens": "900"
+        }
+      },
+      {
+        "caller": "absorb_changes",
+        "line": 723,
+        "purpose": "'market note'",
+        "options": {
+          "deep": "False",
+          "tokens": "700"
+        }
+      },
+      {
+        "caller": "evaluate",
+        "line": 813,
+        "purpose": "'candidate evidence'",
+        "options": {
+          "deep": "True",
+          "tokens": "1750"
+        }
+      },
+      {
+        "caller": "compatible_units",
+        "line": 907,
+        "purpose": "'money units'",
+        "options": {
+          "deep": "True",
+          "tokens": "400"
+        }
+      },
+      {
+        "caller": "relation_ok",
+        "line": 953,
+        "purpose": "'cross-item fit'",
+        "options": {
+          "deep": "True",
+          "tokens": "850"
+        }
+      },
+      {
+        "caller": "discover_questions",
+        "line": 1091,
+        "purpose": "'question discovery'",
+        "options": {
+          "deep": "False",
+          "tokens": "850"
+        }
+      },
+      {
+        "caller": "plan_action",
+        "line": 1124,
+        "purpose": "'action ' + intent",
+        "options": {
+          "deep": "intent in ('cart', 'checkout', 'decline', 'approval', 'procedure')",
+          "tokens": "1100"
+        }
+      },
+      {
+        "caller": "perform",
+        "line": 1177,
+        "purpose": "'process proof'",
+        "options": {
+          "deep": "True",
+          "tokens": "450"
+        }
+      }
+    ],
+    "global_transports": [
+      "_inference",
+      "_environment"
+    ],
+    "per_task_step_and_call_limits": [
+      {
+        "initial_world_steps": 20,
+        "model_attempt_limit": 54
+      },
+      {
+        "initial_world_steps": 30,
+        "model_attempt_limit": 74
+      },
+      {
+        "initial_world_steps": 38,
+        "model_attempt_limit": 90
+      },
+      {
+        "initial_world_steps": 60,
+        "model_attempt_limit": 90
+      }
+    ],
+    "budget_math": {
+      "five_usd_for_ninety_mean_usd": "0.05555555555555555555555555556",
+      "illustrative_episode_envelope_usd": "0.035",
+      "ninety_envelopes_usd": "3.150",
+      "headroom_usd": "1.850",
+      "illustrative_envelope_present_in_agent": false
+    }
+  },
+  "pricing": {
+    "anthropic/claude-sonnet-5.5": {
+      "input_low": "0.000002",
+      "input_high": "0.0000022",
+      "output_low": "0.00001",
+      "output_high": "0.000011",
+      "long_context_tiers": []
+    },
+    "anthropic/claude-haiku-5.5": {
+      "input_low": "1E-7",
+      "input_high": "1.1E-7",
+      "output_low": "5E-7",
+      "output_high": "5.5E-7",
+      "long_context_tiers": [
+        {
+          "min_prompt_tokens": 100000,
+          "input": "5E-7",
+          "output": "0.0000025"
+        },
+        {
+          "min_prompt_tokens": 100000,
+          "input": "5E-7",
+          "output": "0.0000025"
+        },
+        {
+          "min_prompt_tokens": 100000,
+          "input": "5E-7",
+          "output": "0.0000025"
+        },
+        {
+          "min_prompt_tokens": 100000,
+          "input": "5E-7",
+          "output": "0.0000025"
+        },
+        {
+          "min_prompt_tokens": 100000,
+          "input": "5E-7",
+          "output": "0.0000025"
+        },
+        {
+          "min_prompt_tokens": 100000,
+          "input": "5.5E-7",
+          "output": "0.00000275"
+        },
+        {
+          "min_prompt_tokens": 100000,
+          "input": "5.5E-7",
+          "output": "0.00000275"
+        },
+        {
+          "min_prompt_tokens": 100000,
+          "input": "5.5E-7",
+          "output": "0.00000275"
+        },
+        {
+          "min_prompt_tokens": 100000,
+          "input": "5.5E-7",
+          "output": "0.00000275"
+        },
+        {
+          "min_prompt_tokens": 100000,
+          "input": "5.5E-7",
+          "output": "0.00000275"
+        }
+      ]
+    },
+    "deepseek/deepseek-v3.2": {
+      "input_low": "2.088E-7",
+      "input_high": "3E-7",
+      "output_low": "3.096E-7",
+      "output_high": "9.6E-7",
+      "long_context_tiers": []
+    }
+  },
+  "controlled_profiles": [
+    {
+      "scenario": "healthy",
+      "summary": {
+        "scenario": "healthy",
+        "finished": true,
+        "terminal": "order_now",
+        "steps": 7,
+        "model_requests": 17,
+        "evaluations": 2,
+        "reference_reads": 0,
+        "requested_output_tokens_total": 26400,
+        "model_prompt_utf8_bytes_total": 21956,
+        "world_actions": [
+          "find_catalog",
+          "read_item",
+          "inspect_cart",
+          "change_cart",
+          "inspect_cart",
+          "read_offer",
+          "order_now"
+        ],
+        "model_distribution": {
+          "anthropic/claude-haiku-5.5": 12,
+          "anthropic/claude-sonnet-5.5": 5
+        },
+        "limitation": "Controlled interpreter and world replies. No live task score or measured inference cost/latency."
+      },
+      "requests_by_purpose": {
+        "contract": {
+          "requests": 1,
+          "requested_output_tokens": 3300
+        },
+        "action search": {
+          "requests": 1,
+          "requested_output_tokens": 1100
+        },
+        "observation": {
+          "requests": 7,
+          "requested_output_tokens": 11900
+        },
+        "action open": {
+          "requests": 2,
+          "requested_output_tokens": 2200
+        },
+        "candidate evidence": {
+          "requests": 2,
+          "requested_output_tokens": 3500
+        },
+        "action cart view": {
+          "requests": 2,
+          "requested_output_tokens": 2200
+        },
+        "action cart": {
+          "requests": 1,
+          "requested_output_tokens": 1100
+        },
+        "action checkout": {
+          "requests": 1,
+          "requested_output_tokens": 1100
+        }
+      },
+      "requests_by_model": {
+        "anthropic/claude-sonnet-5.5": {
+          "requests": 5,
+          "requested_output_tokens": 9000
+        },
+        "anthropic/claude-haiku-5.5": {
+          "requests": 12,
+          "requested_output_tokens": 17400
+        }
+      },
+      "full_requested_output_cap_cost_usd_before_input": [
+        "0.0987000",
+        "0.10857000"
+      ],
+      "ninety_repetitions_output_only_full_cap_usd": [
+        "8.8830000",
+        "9.77130000"
+      ],
+      "actual_billed_cost": null,
+      "logical_calls_without_a_transmission": 0,
+      "limitation": "Controlled flows. Catalog base-context rates applied to full requested output caps. Excludes input, billing adjustments and pricing changes; this is not an actual cost forecast or measured bill."
+    },
+    {
+      "scenario": "format_failure",
+      "summary": {
+        "scenario": "format_failure",
+        "finished": true,
+        "terminal": "stop_shopping",
+        "steps": 6,
+        "model_requests": 14,
+        "evaluations": 1,
+        "reference_reads": 0,
+        "requested_output_tokens_total": 21850,
+        "model_prompt_utf8_bytes_total": 19935,
+        "world_actions": [
+          "find_catalog",
+          "read_item",
+          "find_catalog",
+          "find_catalog",
+          "find_catalog",
+          "stop_shopping"
+        ],
+        "model_distribution": {
+          "anthropic/claude-haiku-5.5": 11,
+          "anthropic/claude-sonnet-5.5": 3
+        },
+        "limitation": "Controlled interpreter and world replies. No live task score or measured inference cost/latency."
+      },
+      "requests_by_purpose": {
+        "contract": {
+          "requests": 1,
+          "requested_output_tokens": 3300
+        },
+        "action search": {
+          "requests": 4,
+          "requested_output_tokens": 4400
+        },
+        "observation": {
+          "requests": 6,
+          "requested_output_tokens": 10200
+        },
+        "action open": {
+          "requests": 1,
+          "requested_output_tokens": 1100
+        },
+        "candidate evidence": {
+          "requests": 1,
+          "requested_output_tokens": 1750
+        },
+        "action decline": {
+          "requests": 1,
+          "requested_output_tokens": 1100
+        }
+      },
+      "requests_by_model": {
+        "anthropic/claude-sonnet-5.5": {
+          "requests": 3,
+          "requested_output_tokens": 6150
+        },
+        "anthropic/claude-haiku-5.5": {
+          "requests": 11,
+          "requested_output_tokens": 15700
+        }
+      },
+      "full_requested_output_cap_cost_usd_before_input": [
+        "0.0693500",
+        "0.07628500"
+      ],
+      "ninety_repetitions_output_only_full_cap_usd": [
+        "6.2415000",
+        "6.86565000"
+      ],
+      "actual_billed_cost": null,
+      "logical_calls_without_a_transmission": 0,
+      "limitation": "Controlled flows. Catalog base-context rates applied to full requested output caps. Excludes input, billing adjustments and pricing changes; this is not an actual cost forecast or measured bill."
+    },
+    {
+      "scenario": "reference_dependency",
+      "summary": {
+        "scenario": "reference_dependency",
+        "finished": true,
+        "terminal": "stop_shopping",
+        "steps": 6,
+        "model_requests": 14,
+        "evaluations": 1,
+        "reference_reads": 0,
+        "requested_output_tokens_total": 21850,
+        "model_prompt_utf8_bytes_total": 20390,
+        "world_actions": [
+          "find_catalog",
+          "read_item",
+          "find_catalog",
+          "find_catalog",
+          "find_catalog",
+          "stop_shopping"
+        ],
+        "model_distribution": {
+          "anthropic/claude-haiku-5.5": 11,
+          "anthropic/claude-sonnet-5.5": 3
+        },
+        "limitation": "Controlled interpreter and world replies. No live task score or measured inference cost/latency."
+      },
+      "requests_by_purpose": {
+        "contract": {
+          "requests": 1,
+          "requested_output_tokens": 3300
+        },
+        "action search": {
+          "requests": 4,
+          "requested_output_tokens": 4400
+        },
+        "observation": {
+          "requests": 6,
+          "requested_output_tokens": 10200
+        },
+        "action open": {
+          "requests": 1,
+          "requested_output_tokens": 1100
+        },
+        "candidate evidence": {
+          "requests": 1,
+          "requested_output_tokens": 1750
+        },
+        "action decline": {
+          "requests": 1,
+          "requested_output_tokens": 1100
+        }
+      },
+      "requests_by_model": {
+        "anthropic/claude-sonnet-5.5": {
+          "requests": 3,
+          "requested_output_tokens": 6150
+        },
+        "anthropic/claude-haiku-5.5": {
+          "requests": 11,
+          "requested_output_tokens": 15700
+        }
+      },
+      "full_requested_output_cap_cost_usd_before_input": [
+        "0.0693500",
+        "0.07628500"
+      ],
+      "ninety_repetitions_output_only_full_cap_usd": [
+        "6.2415000",
+        "6.86565000"
+      ],
+      "actual_billed_cost": null,
+      "logical_calls_without_a_transmission": 0,
+      "limitation": "Controlled flows. Catalog base-context rates applied to full requested output caps. Excludes input, billing adjustments and pricing changes; this is not an actual cost forecast or measured bill."
+    },
+    {
+      "scenario": "read_procedure",
+      "summary": {
+        "scenario": "read_procedure",
+        "finished": true,
+        "terminal": "stop_shopping",
+        "steps": 17,
+        "model_requests": 54,
+        "evaluations": 11,
+        "reference_reads": 0,
+        "requested_output_tokens_total": 71850,
+        "model_prompt_utf8_bytes_total": 74308,
+        "world_actions": [
+          "find_catalog",
+          "read_item",
+          "inspect_cart",
+          "change_cart",
+          "inspect_cart",
+          "read_offer",
+          "read_item",
+          "read_item",
+          "read_item",
+          "read_item",
+          "read_item",
+          "read_item",
+          "read_item",
+          "read_item",
+          "read_item",
+          "read_item",
+          "stop_shopping"
+        ],
+        "model_distribution": {
+          "anthropic/claude-haiku-5.5": 21,
+          "anthropic/claude-sonnet-5.5": 33
+        },
+        "limitation": "Controlled interpreter and world replies. No live task score or measured inference cost/latency."
+      },
+      "requests_by_purpose": {
+        "contract": {
+          "requests": 1,
+          "requested_output_tokens": 3300
+        },
+        "action search": {
+          "requests": 1,
+          "requested_output_tokens": 1100
+        },
+        "observation": {
+          "requests": 16,
+          "requested_output_tokens": 27200
+        },
+        "action open": {
+          "requests": 2,
+          "requested_output_tokens": 2200
+        },
+        "candidate evidence": {
+          "requests": 11,
+          "requested_output_tokens": 19250
+        },
+        "action cart view": {
+          "requests": 2,
+          "requested_output_tokens": 2200
+        },
+        "action cart": {
+          "requests": 1,
+          "requested_output_tokens": 1100
+        },
+        "action procedure": {
+          "requests": 10,
+          "requested_output_tokens": 11000
+        },
+        "process proof": {
+          "requests": 10,
+          "requested_output_tokens": 4500
+        }
+      },
+      "requests_by_model": {
+        "anthropic/claude-sonnet-5.5": {
+          "requests": 33,
+          "requested_output_tokens": 39150
+        },
+        "anthropic/claude-haiku-5.5": {
+          "requests": 21,
+          "requested_output_tokens": 32700
+        }
+      },
+      "full_requested_output_cap_cost_usd_before_input": [
+        "0.4078500",
+        "0.44863500"
+      ],
+      "ninety_repetitions_output_only_full_cap_usd": [
+        "36.7065000",
+        "40.37715000"
+      ],
+      "actual_billed_cost": null,
+      "logical_calls_without_a_transmission": 4,
+      "limitation": "Controlled flows. Catalog base-context rates applied to full requested output caps. Excludes input, billing adjustments and pricing changes; this is not an actual cost forecast or measured bill."
+    }
+  ],
+  "resource_trace": {
+    "actual_http_requests": 0,
+    "actual_file_writes": 0,
+    "intercepted_http_requests": 1,
+    "intercepted_file_open_attempts": [
+      {
+        "role": "harness_request_log",
+        "mode": "a",
+        "caller_file": "proxy_client.py",
+        "caller_function": "_write",
+        "caller_line": 108
+      },
+      {
+        "role": "harness_inference_stats",
+        "mode": "a",
+        "caller_file": "proxy_client.py",
+        "caller_function": "_flush",
+        "caller_line": 307
+      },
+      {
+        "role": "harness_request_log",
+        "mode": "a",
+        "caller_file": "proxy_client.py",
+        "caller_function": "_write",
+        "caller_line": 108
+      }
+    ],
+    "inference_body_keys": [
+      "model",
+      "messages",
+      "temperature",
+      "max_tokens"
+    ],
+    "native_provider_tools_requested": false,
+    "per_task_shopping_state_isolated": true,
+    "interpretation": "The supplied client attempts append-only harness logging. TOSKY itself does not choose log files or persist shopping state. Paths and HTTP were intercepted by this offline test."
+  },
+  "paid_calls": 0,
+  "agent_modified": false
+}

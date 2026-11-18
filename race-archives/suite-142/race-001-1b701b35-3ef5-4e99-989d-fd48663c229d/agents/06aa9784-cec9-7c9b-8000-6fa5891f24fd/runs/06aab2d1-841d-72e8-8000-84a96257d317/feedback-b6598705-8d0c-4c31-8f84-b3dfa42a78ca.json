@@ -1,0 +1,664 @@
+{
+  "schema_version": "oro.episode_feedback.v1",
+  "episode_result_id": "b6598705-8d0c-4c31-8f84-b3dfa42a78ca",
+  "task_id": "TF6-recovery-200173",
+  "query": "I am after a smartphone at or below 3350.00 PHP, in stock. a genuine smartphone, not a feature phone or accessory listing. What I really want is the black SMARTPHONEF9. If it goes away, stay within budget and in stock; a different color of the same model beats a different model.\n\nTask rules:\nYou are a shopping agent. The shopper's critical constraints are category, budget, and in-stock availability; never relax those. The shopper may also name preferred model and color. Those preferences are relaxable only after the exact item becomes unavailable: first try the same model in another color, and only then consider changing models. Prices or stock can change while you shop, so if the exact item disappears after a cart action, recover by finding the least-relaxed in-stock option within budget before ordering. For model identity, use the product's model fact first. Only when that fact is absent may you use an unambiguous model in the title. An unusable or ambiguous model fact cannot be overridden by the title. For color, use the selected variant's options first, then a color fact, then the title. If a source names conflicting colors, treat color as unresolved rather than falling back to another source. A category label alone does not establish model or color. Choose an option with resolved identity. Any eligible listing matching the preferred model and color is a valid first choice. Inspect that actual choice before adding it, and inspect the replacement's identity and current stock after the event. The ordered product must genuinely be a smartphone, judged from its own product facts and the selected variant, not from the title or a category label alone.\nThe catalog category_path is available in view and compare. Check that classification against the required category. Reject accessories and non-device listings when a device is requested.\nRead shopper messages returned after cart actions before placing an order. The shopper may clarify requirements or tighten the budget; once stated, those updates apply to later choices. Answer any direct clarification request.\nUnless the shopper asks for a reason, structured justification is optional. If you supply it, use only field/value claims supported by view or compare of the final product and its current price/stock. Specification claims need raw product facts, not title guesses. Do not include summary or evidence free text.",
+  "family": "recovery",
+  "phase": "RACE",
+  "outcome": "completed",
+  "passed": true,
+  "paid_reward": 1.0,
+  "step_count": 15,
+  "tool_call_count": 15,
+  "search_call_count": 2,
+  "termination_code": "placed_order",
+  "interaction": [
+    {
+      "step_index": 0,
+      "turn": 1,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-1-1",
+          "tool_name": "search",
+          "args": {
+            "query": "SMARTPHONEF9 smartphone"
+          },
+          "observation": {
+            "action": "search",
+            "results": [
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2599.0,
+                "product_id": "1931697434437580655",
+                "sku": "3633594336-4",
+                "title": "Smartphone F9 256gb/8gb ram Original(CASH ON DELIVERY-ONHAND)"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2439.0,
+                "product_id": "8311715752667914182",
+                "sku": "4591684320-1",
+                "title": "HTRC 20A 12V/24V 10A Smart Battery Charger for Car Battery Pulse Repair Auto Moto Lead Acid AGM GEL PB Lithium LiFePo4 Battery"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 40.0,
+                "product_id": "6711541964737746126",
+                "sku": "5025700233-1",
+                "title": "Timy #   Long Neck One Touch Car Mount Cellphone Holder"
+              },
+              {
+                "brand": "Hol",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 46.0,
+                "product_id": "5057982734852455042",
+                "sku": "4862924457-1",
+                "title": "Dashboard Car Phone Holder 360º Rotation Universal Cell Phone Car Clip Mount Stand 360 Degree Car Navigation Bracket"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 866.46,
+                "product_id": "5551700715425810732",
+                "sku": "4547722712-2",
+                "title": "For DJI RS4 Organizer Bag Shoulder Crossbody Bag for RS4 Portable Bag Handbag Accessories"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 177.0,
+                "product_id": "1397048659777351126",
+                "sku": "4898289396-4",
+                "title": "DSFG Scope-Cover Protective Case Anti-Scratch Dustproof Scope-Cover For Scope-Sights 507K 507C"
+              },
+              {
+                "brand": "Manfrotto",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 472.0,
+                "product_id": "6809406705950940016",
+                "sku": "112408163-1",
+                "title": "MANFROTTO MCLAMP SMARTPHONE CLAMP"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 295.0,
+                "product_id": "3857349912195658393",
+                "sku": "4849237374-default",
+                "title": "X3 BluetoothController For Smartphone PC wireless play"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 60.0,
+                "product_id": "315359734237939192",
+                "sku": "272780161-1",
+                "title": "Portable Gamepad 3 in 1 Joystick Controller Phone Holder"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 208.0,
+                "product_id": "2076554043665574627",
+                "sku": "2715813084-1",
+                "title": "M.2 Solid State Drive Storage Box NVMe Mobile Hard Disk Protective Case Shockproof Anti-Fall Pressure Resistant Bag Digital Accessories"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 1,
+      "turn": 2,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-2-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "1931697434437580655"
+          },
+          "observation": {
+            "brand": null,
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "50000mah",
+              "condition": "new",
+              "device_operating_system": "android",
+              "display": "hd+",
+              "model": "smartphonef9",
+              "operating_system": "android",
+              "ram": "8gb",
+              "size": "6.3; 6.3 inches",
+              "warranty_duration": "6 months",
+              "warranty_type": "local supplier warranty"
+            },
+            "product_id": "1931697434437580655",
+            "title": "Smartphone F9 256gb/8gb ram Original(CASH ON DELIVERY-ONHAND)",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "blue",
+                "price": 2599.0,
+                "sku": "3633594336-4"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 2,
+      "turn": 3,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-3-1",
+          "tool_name": "search",
+          "args": {
+            "query": "SMARTPHONEF9 black"
+          },
+          "observation": {
+            "action": "search",
+            "results": [
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2599.0,
+                "product_id": "8489786193027102373",
+                "sku": "3633594336-2",
+                "title": "Smartphone F9 256gb/8gb ram Original(CASH ON DELIVERY-ONHAND)"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 148.12,
+                "product_id": "3028717839227381977",
+                "sku": "4489247177-2",
+                "title": "Large Mouse Pad Baal Raiden Shogun Desk Mouse Pad Cute HD Desk Pad Extended Gaming Keyboard Mats XXL 900x400mmm Gamer Mousepad"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 388.0,
+                "product_id": "1142683645504237488",
+                "sku": "4852383326-1",
+                "title": "Half Life Large Gaming Mouse Pad XXL Computer Mousepad PC Gamer Mouse Mat Laptop Mausepad Mouse Carpet Keyboard Mat Desk Pad"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 388.0,
+                "product_id": "2967188401899021935",
+                "sku": "4964021980-1",
+                "title": "Limbus Company Mouse Pad Large Gaming Pad XXL Desk Mat Non Slip Double Sided PU Game Mouse Computer Leather Keyboard Mat"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 388.0,
+                "product_id": "110514193953461794",
+                "sku": "4852335850-5",
+                "title": "Apothecary Diaries Anime Gamer XL Computer HD Home Mousepad XXL Mouse Mat Natural Rubber Non-Slip Carpet Table Mat Mouse Mat"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 343.0,
+                "product_id": "212588090431866501",
+                "sku": "4962010256-7",
+                "title": "Zenless Zone Zero Mouse Pad Cartoon rubber Small mouse pad desktop computer office keyboard e-sports ROGs game"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 388.0,
+                "product_id": "1952689101729499750",
+                "sku": "4950889621-4",
+                "title": "Academia Deku Anime My Hero Mouse Pad Gaming XL New Custom Large Mousepad XXL Mouse Mat Office Anti Slip Carpet Mice Pad"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2599.0,
+                "product_id": "1931697434437580655",
+                "sku": "3633594336-4",
+                "title": "Smartphone F9 256gb/8gb ram Original(CASH ON DELIVERY-ONHAND)"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 2599.0,
+                "product_id": "3377254434920343883",
+                "sku": "3633594336-1",
+                "title": "Smartphone F9 256gb/8gb ram Original(CASH ON DELIVERY-ONHAND)"
+              },
+              {
+                "brand": "OEM",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 148.12,
+                "product_id": "3150570228217212228",
+                "sku": "4489247177-1",
+                "title": "Large Mouse Pad Baal Raiden Shogun Desk Mouse Pad Cute HD Desk Pad Extended Gaming Keyboard Mats XXL 900x400mmm Gamer Mousepad"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 3,
+      "turn": 4,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-4-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "8489786193027102373"
+          },
+          "observation": {
+            "brand": null,
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "50000mah",
+              "condition": "new",
+              "device_operating_system": "android",
+              "display": "hd+",
+              "model": "smartphonef9",
+              "operating_system": "android",
+              "ram": "8gb",
+              "size": "6.3; 6.3 inches",
+              "warranty_duration": "6 months",
+              "warranty_type": "local supplier warranty"
+            },
+            "product_id": "8489786193027102373",
+            "title": "Smartphone F9 256gb/8gb ram Original(CASH ON DELIVERY-ONHAND)",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "black",
+                "price": 2599.0,
+                "sku": "3633594336-2"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 4,
+      "turn": 5,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-5-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "8489786193027102373",
+            "sku": "3633594336-2"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 2599.0,
+            "product_id": "8489786193027102373",
+            "sku": "3633594336-2"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 5,
+      "turn": 6,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-6-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "8489786193027102373",
+            "sku": "3633594336-2"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": false,
+              "price": 2599.0,
+              "product_id": "8489786193027102373",
+              "sku": "3633594336-2"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 2599.0,
+                "in_stock": false,
+                "price_at_add": 2599.0,
+                "product_id": "8489786193027102373",
+                "sku": "3633594336-2"
+              }
+            ],
+            "market_event": {
+              "contract_version": "oro_event_v3",
+              "currency": "PHP",
+              "in_stock_after": false,
+              "in_stock_before": true,
+              "kind": "stockout",
+              "new_price": null,
+              "old_price": 2599.0,
+              "target": {
+                "product_id": "8489786193027102373",
+                "sku": "3633594336-2"
+              }
+            }
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 6,
+      "turn": 7,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-7-1",
+          "tool_name": "remove_from_cart",
+          "args": {
+            "product_id": "8489786193027102373",
+            "sku": "3633594336-2"
+          },
+          "observation": {
+            "cart": []
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": "wait, is that still available?",
+      "message": null
+    },
+    {
+      "step_index": 7,
+      "turn": 8,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-8-1",
+          "tool_name": "message",
+          "args": {
+            "content": "The black SMARTPHONEF9 just went out of stock. I'm getting you the same model in blue instead: 1931697434437580655::3633594336-4."
+          },
+          "observation": {
+            "sent": true
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 8,
+      "turn": 9,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-9-1",
+          "tool_name": "inspect_cart",
+          "args": {},
+          "observation": {
+            "cart": []
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 9,
+      "turn": 10,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-10-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "1931697434437580655"
+          },
+          "observation": {
+            "brand": null,
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "50000mah",
+              "condition": "new",
+              "device_operating_system": "android",
+              "display": "hd+",
+              "model": "smartphonef9",
+              "operating_system": "android",
+              "ram": "8gb",
+              "size": "6.3; 6.3 inches",
+              "warranty_duration": "6 months",
+              "warranty_type": "local supplier warranty"
+            },
+            "product_id": "1931697434437580655",
+            "title": "Smartphone F9 256gb/8gb ram Original(CASH ON DELIVERY-ONHAND)",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "blue",
+                "price": 2599.0,
+                "sku": "3633594336-4"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 10,
+      "turn": 11,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-11-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "1931697434437580655",
+            "sku": "3633594336-4"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 2599.0,
+            "product_id": "1931697434437580655",
+            "sku": "3633594336-4"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 11,
+      "turn": 12,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-12-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "1931697434437580655",
+            "sku": "3633594336-4"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": true,
+              "price": 2599.0,
+              "product_id": "1931697434437580655",
+              "sku": "3633594336-4"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 2599.0,
+                "in_stock": true,
+                "price_at_add": 2599.0,
+                "product_id": "1931697434437580655",
+                "sku": "3633594336-4"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 12,
+      "turn": 13,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-13-1",
+          "tool_name": "inspect_cart",
+          "args": {},
+          "observation": {
+            "cart": [
+              {
+                "currency": "PHP",
+                "price_at_add": 2599.0,
+                "product_id": "1931697434437580655",
+                "sku": "3633594336-4"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 13,
+      "turn": 14,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-14-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "1931697434437580655",
+            "sku": "3633594336-4"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 2599.0,
+            "product_id": "1931697434437580655",
+            "sku": "3633594336-4"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 14,
+      "turn": 15,
+      "calls": [
+        {
+          "call_id": "52aef2372b604328b14e709e17e3d273-turn-15-1",
+          "tool_name": "place_test_order",
+          "args": {
+            "product_id": "1931697434437580655",
+            "sku": "3633594336-4"
+          },
+          "observation": {
+            "order": {
+              "currency": "PHP",
+              "in_stock_at_order": true,
+              "price_at_order": 2599.0,
+              "target": {
+                "product_id": "1931697434437580655",
+                "sku": "3633594336-4"
+              }
+            },
+            "status": "placed"
+          },
+          "done": true,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    }
+  ],
+  "observable_issues": [],
+  "diagnostics_state": "available",
+  "failure_category": null,
+  "end_reason": null
+}

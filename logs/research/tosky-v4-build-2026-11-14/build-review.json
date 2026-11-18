@@ -1,0 +1,277 @@
+{
+  "source": "agents/Tosky_v4.py",
+  "source_sha256": "1b0cf66b4d0cd03b3aad4b904bab908023f4a516c28d3f089313d17b16e032c8",
+  "source_bytes": 428441,
+  "source_lines": 6762,
+  "original_sources_preserved": {
+    "champions/PIRATE_v1_06af6030-67a0-754e-8000-beacfd741adb/agent.py": "ea169847a7c61efc9957d1190e8751e134b6c7bbfb30089284facb979cc22e27",
+    "agents/Tosky_v3.py": "3b8b73ca3a2675b60fbbac5e86145af3fd3ece52ad69b69557305475b3dc5b50",
+    "agents/TOSKY.py": "31b083e8ac95bc6863a4a01f9768a61879914fed4eb9116ea0f27b394d825a18"
+  },
+  "checkpoints": {
+    "00_pirate.py": "ea169847a7c61efc9957d1190e8751e134b6c7bbfb30089284facb979cc22e27",
+    "01_budget.py": "3f02bc362f812840b4afb622f2c8411d4974b246ebf59307b62c15febb8155c6",
+    "02_procedures.py": "5822b57c30b75d8615418e5bfa1e04b0f8cf4cf4ea92d111e916cf4b8699ab7c",
+    "03_changes.py": "15648c99b84d4d4d8150b939d7316ab0ab95a2cb37ed1f5e8651e24835a9ed34",
+    "04_evidence.py": "a4b0bf2590ce942429d8c6bd55292042717ff0f175295cd6abd843905098efea",
+    "05_interview.py": "488fcafeed8a055bc255b34ead08eaf9451d9214be650a45b36b897621f7929d",
+    "06_final.py": "1b0cf66b4d0cd03b3aad4b904bab908023f4a516c28d3f089313d17b16e032c8"
+  },
+  "changed_controller_methods": [
+    "__init__",
+    "absorb",
+    "act",
+    "call_model",
+    "check_key",
+    "direct_order",
+    "finish",
+    "fit_ask",
+    "gate",
+    "gate_due",
+    "hear",
+    "judges",
+    "late_question",
+    "link_mismatch",
+    "list_now",
+    "next_ask",
+    "plan_lanes",
+    "read_request",
+    "replacements",
+    "run_calls",
+    "send",
+    "take_note",
+    "think",
+    "turns"
+  ],
+  "added_controller_methods": [
+    "focus_question",
+    "procedure_gate",
+    "procedure_key",
+    "quote_inference",
+    "refresh_availability"
+  ],
+  "removed_controller_methods": [
+    "scaled_same"
+  ],
+  "unchanged_controller_methods": 217,
+  "new_methods_statically_reachable_from_run": [
+    "focus_question",
+    "procedure_gate",
+    "procedure_key",
+    "quote_inference",
+    "refresh_availability"
+  ],
+  "local_preflight": {
+    "passed": true,
+    "parse_compile_seconds": 0.15815932800069277,
+    "proxy_endpoints": [
+      "/environment/call",
+      "/inference/chat/completions"
+    ],
+    "not_a_platform_acceptance_certificate": true
+  },
+  "scripted_comparison": {
+    "PIRATE": [
+      {
+        "scenario": "ordinary",
+        "finished": true,
+        "fixture_contract_satisfied": true,
+        "environment_actions": 4,
+        "scripted_model_requests": 4,
+        "diagnostic_counts": {
+          "brief": 1,
+          "turn": 2,
+          "reread": 1,
+          "check": 1,
+          "end": 1
+        }
+      },
+      {
+        "scenario": "explanation",
+        "finished": true,
+        "fixture_contract_satisfied": false,
+        "environment_actions": 5,
+        "scripted_model_requests": 8,
+        "diagnostic_counts": {
+          "brief": 1,
+          "keys_first": 1,
+          "plan": 1,
+          "ask": 1,
+          "turn": 2,
+          "reread": 1,
+          "check": 1,
+          "gate": 1,
+          "end": 1
+        }
+      },
+      {
+        "scenario": "stockout",
+        "finished": true,
+        "fixture_contract_satisfied": true,
+        "environment_actions": 9,
+        "scripted_model_requests": 10,
+        "diagnostic_counts": {
+          "brief": 1,
+          "turn": 5,
+          "reread": 2,
+          "check": 2,
+          "swap": 1,
+          "end": 1
+        }
+      },
+      {
+        "scenario": "decline_renamed_tools",
+        "finished": true,
+        "fixture_contract_satisfied": true,
+        "environment_actions": 7,
+        "scripted_model_requests": 8,
+        "diagnostic_counts": {
+          "brief": 1,
+          "turn": 4,
+          "need_search": 1,
+          "decline_ok": 4,
+          "shape": 1,
+          "hunt_fits": 1,
+          "audit": 1,
+          "decline_pushed": 2,
+          "end": 1
+        }
+      },
+      {
+        "scenario": "preferences_and_explanation",
+        "finished": true,
+        "fixture_contract_satisfied": true,
+        "environment_actions": 8,
+        "scripted_model_requests": 11,
+        "diagnostic_counts": {
+          "brief": 1,
+          "plan": 1,
+          "ask": 3,
+          "list_settled": 1,
+          "shape": 1,
+          "value_search": 1,
+          "turn": 2,
+          "reread": 1,
+          "check": 1,
+          "gate": 2,
+          "end": 1
+        }
+      }
+    ],
+    "Tosky_v4": [
+      {
+        "scenario": "ordinary",
+        "finished": true,
+        "fixture_contract_satisfied": true,
+        "environment_actions": 4,
+        "scripted_model_requests": 4,
+        "diagnostic_counts": {
+          "inference_budget": 4,
+          "brief": 1,
+          "turn": 2,
+          "reread": 1,
+          "check": 1,
+          "end": 1
+        }
+      },
+      {
+        "scenario": "explanation",
+        "finished": true,
+        "fixture_contract_satisfied": true,
+        "environment_actions": 5,
+        "scripted_model_requests": 6,
+        "diagnostic_counts": {
+          "inference_budget": 6,
+          "brief": 1,
+          "turn": 2,
+          "reread": 1,
+          "check": 1,
+          "gate": 2,
+          "ask": 1,
+          "procedure_complete": 1,
+          "end": 1
+        }
+      },
+      {
+        "scenario": "stockout",
+        "finished": true,
+        "fixture_contract_satisfied": true,
+        "environment_actions": 9,
+        "scripted_model_requests": 10,
+        "diagnostic_counts": {
+          "inference_budget": 10,
+          "brief": 1,
+          "turn": 5,
+          "reread": 2,
+          "check": 2,
+          "stockout_scope": 1,
+          "swap": 1,
+          "end": 1
+        }
+      },
+      {
+        "scenario": "decline_renamed_tools",
+        "finished": true,
+        "fixture_contract_satisfied": true,
+        "environment_actions": 7,
+        "scripted_model_requests": 8,
+        "diagnostic_counts": {
+          "inference_budget": 8,
+          "brief": 1,
+          "turn": 4,
+          "need_search": 1,
+          "decline_ok": 4,
+          "shape": 1,
+          "hunt_fits": 1,
+          "audit": 1,
+          "decline_pushed": 2,
+          "end": 1
+        }
+      },
+      {
+        "scenario": "preferences_and_explanation",
+        "finished": true,
+        "fixture_contract_satisfied": true,
+        "environment_actions": 9,
+        "scripted_model_requests": 11,
+        "diagnostic_counts": {
+          "inference_budget": 11,
+          "brief": 1,
+          "plan": 1,
+          "ask": 4,
+          "question_focus": 1,
+          "quiet_reply": 1,
+          "shape": 1,
+          "value_search": 1,
+          "turn": 2,
+          "reread": 1,
+          "check": 1,
+          "gate": 2,
+          "procedure_complete": 1,
+          "end": 1
+        }
+      }
+    ]
+  },
+  "tests": {
+    "command": "python3 -m unittest discover -s agents/tests -p test_tosky_v4.py -v",
+    "passed": 50,
+    "evidence": "06-integrated-final.txt"
+  },
+  "paid_tests": 0,
+  "paid_inference_requests": 0,
+  "observed_qualifier_accuracy_change": null,
+  "observed_hidden_race_accuracy_change": null,
+  "budget": {
+    "episode_envelope_usd": 0.05,
+    "thirty_invocations_allocation_usd": 1.5,
+    "ninety_invocations_allocation_usd": 4.5,
+    "caveat": "Estimated admission, not a certified routed-price bound; scoped key remains authoritative. Extra task reruns can consume further credit."
+  },
+  "limitations": [
+    "Scripted fixture outcomes and request counts are not ORO scores, inference bills or latency estimates.",
+    "No live model outputs were generated; question-selection accuracy still needs controlled paid evaluation.",
+    "No private platform AST or plagiarism service was invoked.",
+    "Optional Tosky_v3 typed-review adjudication was not imported."
+  ]
+}

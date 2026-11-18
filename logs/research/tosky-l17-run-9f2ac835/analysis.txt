@@ -1,0 +1,188 @@
+Tosky_l17: repeated-question correction
+Reviewed 2026-11-17. No paid inference or new environment evaluation was run.
+
+Evidence and scope
+
+The supplied local-9f2ac835e808440197a18a9a65313580 artifacts contain
+30 completed practice episodes, 22 successful finishes, and 8 failed finishes.
+The tested agent SHA256 is
+929ab3a86af2b0669db18e9d44f13c8d6742db3ff3f2a55d985731684a0bb834,
+which matches the source saved before this correction.
+
+This is a practice delivery, not evidence about the hidden race score. The
+failure labels are six request-not-met, one needs-not-found, and one
+changes-missed. They do not disclose each exact sealed failed criterion.
+
+There were 89 customer-reply interpretation calls: 84 recognized indifference
+and 5 supplied firm requirements. All 55 actual follow-up questions immediately
+after an indifferent interpretation repeated at least one exact topic from the
+preceding question (377 repeated topic mentions). Thus repeated questioning is
+a confirmed control-flow defect. Its frequency does not prove it caused most of
+the eight failed scores: it also occurred in successful episodes.
+
+Actual provider usage totals are 577 successful LLM calls, zero failed LLM
+calls, and $0.34363575. The totals use one final usage record per problem, not
+the cumulative inference_stats snapshots. Prompt tokens: 5,480,839; cached
+prompt tokens: 4,261,160; completion tokens: 320,252. Median sandbox execution
+time was 81.743 seconds, range 45.149 to 137.909 seconds. The episode-level
+wall_seconds field repeats the whole-run time and is not per-agent latency.
+
+Root cause
+
+1. The model often already classified a reply as indifferent. The controller
+   nevertheless settled a property only if the customer's raw reply literally
+   contained all the property's stemmed words. An ordinary answer such as
+   "Anything is fine" necessarily failed that test.
+2. The next-question algorithm rotated the previous list in reverse order and
+   added a few new properties. Unsettled topics therefore reappeared, commonly
+   seven of the eight topics in a question.
+3. The reply contract did not explicitly distinguish question-scoped, named,
+   product-wide, and order-wide indifference. Generic answers could be mapped
+   to a guessed first property or even a nonexistent property named "any".
+4. Indifference lived only in the current interview object. Rebuilding that
+   object could forget it. Newly disclosed requirements were also absent from
+   the rebuilt object's initial stated requirements.
+5. A single-topic question was marked done when sent, before knowing whether
+   the customer had understood it. This is the opposite error: confusion could
+   be counted as an answer.
+
+Applicable guidance from the supplied book
+
+AI_Agents_in_Depth_Bojie_Li_latest_en.pdf, Chapter 2:
+- Section 2.4.3, printed page 62: organize a prompt as an ordered procedure.
+- Section 2.4.4, printed pages 63-64: turn vague policies into executable
+  decision rules rather than leaving business-policy choices to the model.
+- Section 2.6, especially 2.6.2-2.6.4, printed pages 75-77: expose current task
+  state near generation, retaining a stable system prefix.
+
+These support an explicit answer-state transition and a computed status field.
+They do not establish that any proposed shopping policy improves a benchmark.
+Accordingly the correction changes both the reply instructions and their
+controller consumer, with offline tests, rather than adding a prompt alone.
+
+Implemented answer policy
+
+- Unqualified indifference: settle all optional topics in the current question.
+  Do not require the shopper to repeat the property names.
+- Named indifference: settle only the named topic. Other topics remain open.
+- Explicit product/order-wide opt-out: close optional preference interviewing
+  in that scope; require supporting text quoted from the actual reply. Product
+  scope uses uniquely matched supplied names, not a fuzzy cross-product guess.
+- Firm answer: keep it as a requirement and stop asking about that topic.
+- Mixed firm answer and indifference: preserve the firm value and settle only
+  the remaining optional preferences in scope.
+- Confusion, too many subjects, empty reply, or failed interpretation: do not
+  reinterpret these as indifference. Keep the topic unresolved and use the
+  existing narrower/reworded-question mechanism when allowed.
+- A later explicit firm requirement overrides earlier optional flexibility.
+- A general no-preference answer never erases the original firm requirements,
+  budget, quantity, product category, or required approval procedure.
+- Distinct parts remain distinct (for example body color versus handle color).
+  Equivalent punctuation, camel case and simple plural spellings do not reopen
+  the same topic. No product-specific synonym dictionary was introduced.
+
+The existing initial question coverage is retained. In the recorded data,
+useful disclosures occurred at the second or third topic of a list; changing
+every message to a single topic would be an untested separate tradeoff.
+After settled topics are removed, further questions may cover genuinely new
+topics. The message limit is a ceiling, not a quota that must be exhausted.
+
+Related mixed-reply safeguard
+
+One recorded indifferent reply also lowered the customer's budget from 765 to
+660 in the request's unit. The original reply contract excluded budgets from
+product requirements but supplied no independent budget output, losing the
+change. The new contract has independent budget and exact budget_quote fields.
+The consumer validates a finite positive number and an actual source quote,
+then updates the existing budget ledger and invalidates decision caches.
+This is covered offline. The old saved model reply lacks those new fields, so
+recorded-response replay cannot demonstrate new budget extraction. In that
+episode the selected item cost 68, below either cap; the missed budget update
+is not evidence for why that particular score was zero.
+
+Verification performed in order
+
+1. Saved the exact pre-correction source and matched it to the paid run.
+2. Added fictional regression cases reproducing the state-transition defects.
+3. Applied the changes only to interview state, its reply interpretation, the
+   persistent item state and the computed current-status fields.
+4. Ran the final 16 interview regression cases against the previous source:
+   4 passed and 12 failed. No test errored.
+5. Ran the updated source's full offline suite: all 64 tests passed, including
+   all 16 interview cases and the prior 48 context, budget, transport and
+   synthetic shopping-workflow checks.
+6. Replayed all 89 saved reply interpretations independently through both
+   controllers. For the 83 question-scoped indifferent cases, no settled topic
+   or spelling alias appeared in the updated next question. All five firm
+   disclosures produced exactly the same requirements before and after.
+7. One saved mixed answer is treated as named indifference by the compatibility
+   path because its old model output has no scope field and the raw reply names
+   another property. Other topics remain open in this conservative case. The
+   new prompt requests explicit scope; its model accuracy is not tested by this
+   replay. This is not an 84/84 claim or a new full-run benchmark score.
+8. Compared source ASTs: imports, budget constants, model choices, synchronous
+   entrypoint, tool transport and schema-handling functions are unchanged.
+   Compiled the source. Original Miyagi_v2 and Cairn_v2 archives retain their
+   original hashes. No external ORO submission/AST service was invoked.
+
+The reply prompt has more input state and output fields but uses the existing
+single interpretation call, without a new LLM stage. Fewer repeated questions
+can save messages, steps, latency and inference calls. Some freed messages may
+be used for new topics, so a lower total cost is not guaranteed. The unchanged
+per-task $0.05 admission allocation is $4.50 across 90 tasks; live provider
+behavior and hidden-world token usage remain unmeasured by these offline tests.
+
+Other failures observed, deliberately not bundled into this correction
+
+The broader failed traces contain independent issues. Relevant evidence by
+episode, with the limits of what is known:
+
+- t-350bf2a022: conflicting material evidence between an unqualified field and
+  a clothing-specific field; successive stock losses; remaining alternatives
+  not exhausted. The visible evidence supports a review/evidence-precedence
+  problem but does not reveal the grader's exact failed condition.
+- t-559c052a99: the original request named a wedding occasion, but the brief
+  extracted no firm requirements and the final item was casual. This omission
+  is independent of the budget-update loss described above.
+- t-86888552db: an initial category mismatch was repaired; later stock losses
+  led to another choice with long-sleeve length and kimono sleeve style. The
+  hidden criterion cannot be inferred conclusively from that conflict alone.
+- t-9ab5c575f5: a request allowing pants OR jeans was repeatedly held by an
+  internal check demanding a combined category. The agent described this as a
+  store refusal even before sending checkout. The delay consumed opportunities
+  to recover from a later stock loss. This is a separate category-OR bug.
+- t-9fc67ee841: the brief shortened the expressly named Fall/Winter Clothing
+  category to clothing and the agent selected another department. Category
+  fidelity is a separate issue from asking.
+- t-a6d85e34f3: three indifferent answers did not reveal the withheld need;
+  later checkout feedback included a requirement revision. An actual hidden
+  property cannot be invented from the failure label.
+- t-abf1c45838: prolonged cheaper-item searching, internal inference admission
+  refusals despite money remaining, and repeated checkout of the same cart
+  after a stock error. A reasoning-setting change affecting conservative token
+  accounting is a hypothesis requiring isolated reproduction before a fix.
+- t-b516252b9f: repeated ineffective searches, incomplete pagination, and a
+  decline assessment made before later listings were opened. A title suggesting
+  a match is not conclusive proof of the sealed answer; audit freshness and
+  evidence use need separate investigation.
+
+These remain separate from the proven repeated-question mechanism. This patch
+does not claim to resolve all eight scored failures or guarantee an improved
+race score. A new paid verification is the user's next measurement step.
+
+Artifacts
+
+- offline-tests.txt: 64 passing offline tests.
+- before-indifference-tests.txt: 16 targeted tests against the old source.
+- reply-replay-summary.json: counts, firm disclosure preservation, usage totals.
+- reply-replay-cases.json: per-reply independent state transitions.
+- replay_replies.py: offline replay method; accepts the saved baseline path as
+  its first argument, defaulting to baseline-source.txt beside the script.
+- baseline-source.txt: exact source matched to the supplied paid run, archived
+  only for reproducibility; this is not a new agent submission version.
+- static-review.json: hashes, unchanged interfaces and changed functions.
+- failure-index.json: supplied local failure evidence, without repeated
+  extra_info payloads.
+
+Research artifacts are git-ignored. Agent source and tests use no task-specific
+answer tables, hidden task material, or fixed product identifiers.

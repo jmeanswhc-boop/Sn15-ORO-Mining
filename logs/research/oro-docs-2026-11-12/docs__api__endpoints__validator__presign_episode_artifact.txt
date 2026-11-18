@@ -1,0 +1,74 @@
+Validator
+Get an upload URL for an environment episode artifact
+Return a content-addressed upload target for an evaluation owned by the caller.
+Server URLloading...POST/v1/validator/episode-artifacts/presignSendAuthorizationBody
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Request Body
+application/json
+TypeScript Definitions
+Use the request body type in TypeScript.Copy
+Response Body
+200
+application/json
+401
+application/json
+403
+application/json
+404
+application/json
+413
+application/json
+422
+application/json
+429
+application/json
+500
+application/json
+503
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/validator/episode-artifacts/presign" \  -H "Content-Type: application/json" \  -d '{    "eval_run_id": "8022d801-acb6-4836-b536-3cd4138b6ae0",    "env_pack_sha256": "stringstringstringstringstringstringstringstringstringstringstri",    "artifact_sha256": "stringstringstringstringstringstringstringstringstringstringstri",    "content_length": 1  }'200401403404413422429500503
+{
+  "upload_url": "string",
+  "artifact_uri": "string",
+  "artifact_sha256": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+{
+  "detail": "string"
+}
+Extend lease
+Heartbeat to extend lease and mark run as RUNNING.
+Get upload URL
+Get a presigned URL for uploading per-problem evaluation logs.

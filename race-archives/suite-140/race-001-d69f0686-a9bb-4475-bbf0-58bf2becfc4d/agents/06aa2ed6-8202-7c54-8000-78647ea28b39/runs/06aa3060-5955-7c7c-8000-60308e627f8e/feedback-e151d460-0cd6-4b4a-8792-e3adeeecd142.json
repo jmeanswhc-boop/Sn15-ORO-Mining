@@ -1,0 +1,522 @@
+{
+  "schema_version": "oro.episode_feedback.v1",
+  "episode_result_id": "e151d460-0cd6-4b4a-8792-e3adeeecd142",
+  "task_id": "TF3-constraint_satisfaction-300062",
+  "query": "I need a Blackview smartphone, at or under 7999.00 PHP, in stock. There is one firm requirement on the spec that I will tell you if you ask.\n\nTask rules:\nYou are a shopping agent. The user gives firm, non-negotiable requirements: a category, a brand when specified, a specific hardware spec (amount of RAM, screen size, resolution, or refresh rate), a budget, and in-stock availability. EVERY requirement must hold for the EXACT variant you order - a product often sells the right spec and the wrong spec under the same title, so check the specific SKU's option, price, and stock before ordering. Resolution names here denote pixel classes, using the longer and shorter sides regardless of orientation: HD starts at 1280 by 720, Full HD at 1920 by 1080, QHD at 2560 by 1440, and 4K/UHD at 3840 by 2160. Use the highest class whose two thresholds are met; for example, 2560 by 1600 is QHD-class. Lowercase qHD means quarter HD, not QHD. Conflicting resolution classes without a clear selected-variant value are unresolved. Stock can change while you shop; if the variant you wanted sells out, do NOT settle for a different variant of the same product that misses a requirement - find another product that meets all of them. When you need input or want to recommend something, send a short message to the user. Finish by placing the order for a valid, in-stock item that meets every requirement within budget. Once verified, place the order - do not wait for permission or further confirmation. For a smartphone, the title or raw phone/device type must explicitly say smartphone, or its device OS must identify Android, iOS, BlackBerry OS, Windows Phone, Symbian, HarmonyOS, HyperOS, Sailfish, Ubuntu Touch, or Tizen. Category labels alone are insufficient. Reject conflicting tablet, feature/basic-phone, mystery-box, or accessory evidence. View and compare expose raw phone/device type, device OS, and short description type/OS statements, including conflicts. A keypad, QWERTY keyboard, or flip design alone does not disqualify a smartphone. Bundled extras and explicitly negated types are not the device identity; OS compatibility is not an installed OS. Missing positive evidence or marked truncated device facts are unresolved. Check the selected SKU's options: an explicitly screen-only or replacement-screen option is not a complete smartphone, regardless of the parent listing's title.\nThe catalog category_path is available in view and compare. Check that classification against the required category; a phone-like title alone does not establish that a listing is in Smartphones. Also reject accessories and non-device listings when a device is requested.\nRead shopper messages returned after cart actions before placing an order. The shopper may clarify requirements or tighten the budget; once stated, those updates apply to later choices. Answer any direct clarification request.\nUnless the shopper asks for a reason, structured justification is optional. If you supply it, use only field/value claims supported by view or compare of the final product and its current price/stock. Specification claims need raw product facts, not title guesses. Do not include summary or evidence free text.",
+  "family": "constraint_satisfaction",
+  "phase": "RACE",
+  "outcome": "completed",
+  "passed": true,
+  "paid_reward": 1.0,
+  "step_count": 13,
+  "tool_call_count": 13,
+  "search_call_count": 0,
+  "termination_code": "placed_order",
+  "interaction": [
+    {
+      "step_index": 0,
+      "turn": 1,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-1-1",
+          "tool_name": "message",
+          "args": {
+            "content": "What is the firm hardware spec requirement (e.g., RAM, screen size, resolution, or refresh rate)?"
+          },
+          "observation": {
+            "sent": true
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": "my budget is at most 7999.00 PHP. the required catalog category is Smartphones. the required brand is Blackview. a Blackview smartphone in stock, at or under 7999.00 PHP a 6.67-inch screen on the exact variant you buy",
+      "message": null
+    },
+    {
+      "step_index": 1,
+      "turn": 2,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-2-1",
+          "tool_name": "filter",
+          "args": {
+            "brand": "Blackview",
+            "category": "Smartphones",
+            "in_stock": true,
+            "k": 10,
+            "max_price": 7999
+          },
+          "observation": {
+            "action": "filter",
+            "results": [
+              {
+                "brand": "Blackview",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 4400.0,
+                "product_id": "2335658159954089407",
+                "sku": "4678424227-1",
+                "title": "Blackview A95 l  8+128GB"
+              },
+              {
+                "brand": "Blackview",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 3900.0,
+                "product_id": "2424351092443195257",
+                "sku": "4690706873-4",
+                "title": "Blackview A100 6GB + 128GB"
+              },
+              {
+                "brand": "Blackview",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 5699.0,
+                "product_id": "2467121037219339450",
+                "sku": "4563394385-1",
+                "title": "Blackview OSCAL TIGER 12 Smartphone NFC 6.78 120Hz 2.4K Display 256GB 64MP 5000mAh Battery MTK Helio G99 Android 13"
+              },
+              {
+                "brand": "Blackview",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 7099.0,
+                "product_id": "2887316197137066699",
+                "sku": "4885842928-2",
+                "title": "Blackview SHARK 9 Smartphone 50MP Main Camera 6.67 HD+IPS 90Hz Display Octa-core 5G 5000mAh Mega Battery Android 14 Mobile Phone GPS"
+              },
+              {
+                "brand": "Blackview",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 4199.0,
+                "product_id": "2904589291338083375",
+                "sku": "5053374214-2",
+                "title": "Blackview WAVE 8 Smartphone 6.56HD+ IPS 90Hz Display Android 14 Unisoc T606 5000mAh 13MP Camera GPS Face Unlock CellPhone"
+              },
+              {
+                "brand": "Blackview",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 7099.0,
+                "product_id": "367951304679905089",
+                "sku": "4885842928-1",
+                "title": "Blackview SHARK 9 Smartphone 50MP Main Camera 6.67 HD+IPS 90Hz Display Octa-core 5G 5000mAh Mega Battery Android 14 Mobile Phone GPS"
+              },
+              {
+                "brand": "Blackview",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 7299.0,
+                "product_id": "3730890032576590590",
+                "sku": "5047089585-1",
+                "title": "Blackview BV6200 Plus Rugged Phone 6.56-inch HD+ Display 3W Ultra-loud Stereo Speaker 11000mAh NFC Android 14 Cellphone"
+              },
+              {
+                "brand": "Blackview",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 3900.0,
+                "product_id": "3864645570859137746",
+                "sku": "4690706873-1",
+                "title": "Blackview A100 6GB + 128GB"
+              },
+              {
+                "brand": "Blackview",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 4999.0,
+                "product_id": "3948001096497079569",
+                "sku": "5106542663-1",
+                "title": "Blackview Oscal MARINE 1 Rugged Phone 6.56 inch HD+ 90Hz Display Ultra-thin Gemini Al 2.0 Android 15 5100mAh IP68 Cellphone"
+              },
+              {
+                "brand": "Blackview",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 4999.0,
+                "product_id": "4042562102634473836",
+                "sku": "5106542663-4",
+                "title": "Blackview Oscal MARINE 1 Rugged Phone 6.56 inch HD+ 90Hz Display Ultra-thin Gemini Al 2.0 Android 15 5100mAh IP68 Cellphone"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 2,
+      "turn": 3,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-3-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "2887316197137066699"
+          },
+          "observation": {
+            "brand": "Blackview",
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "5000",
+              "device_operating_system": "android",
+              "display": "720x1604",
+              "model": "blackview shark 9",
+              "operating_system": "android",
+              "size": "6.67; 6.67 inches"
+            },
+            "product_id": "2887316197137066699",
+            "title": "Blackview SHARK 9 Smartphone 50MP Main Camera 6.67 HD+IPS 90Hz Display Octa-core 5G 5000mAh Mega Battery Android 14 Mobile Phone GPS",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "black",
+                "price": 7099.0,
+                "sku": "4885842928-2"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 3,
+      "turn": 4,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-4-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "2887316197137066699",
+            "sku": "4885842928-2"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 7099.0,
+            "product_id": "2887316197137066699",
+            "sku": "4885842928-2"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": "hold on, i just checked my balance. i can only go up to 3900.00 PHP now, sorry. still needs a 6.67-inch screen, in stock.",
+      "message": null
+    },
+    {
+      "step_index": 4,
+      "turn": 5,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-5-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "2424351092443195257"
+          },
+          "observation": {
+            "brand": "Blackview",
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "5000 mah",
+              "condition": "new",
+              "device_operating_system": "android 11.0",
+              "display": "1080*2400; 1080p",
+              "model": "a100",
+              "operating_system": "android 11.0",
+              "size": "6.67 inches"
+            },
+            "product_id": "2424351092443195257",
+            "title": "Blackview A100 6GB + 128GB",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "galaxy blue",
+                "price": 3900.0,
+                "sku": "4690706873-4"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 5,
+      "turn": 6,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-6-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "2424351092443195257",
+            "sku": "4690706873-4"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 3900.0,
+            "product_id": "2424351092443195257",
+            "sku": "4690706873-4"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 6,
+      "turn": 7,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-7-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "2424351092443195257",
+            "sku": "4690706873-4"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": false,
+              "price": 3900.0,
+              "product_id": "2424351092443195257",
+              "sku": "4690706873-4"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 3900.0,
+                "in_stock": false,
+                "price_at_add": 3900.0,
+                "product_id": "2424351092443195257",
+                "sku": "4690706873-4"
+              }
+            ],
+            "market_event": {
+              "contract_version": "oro_event_v3",
+              "currency": "PHP",
+              "in_stock_after": false,
+              "in_stock_before": true,
+              "kind": "stockout",
+              "new_price": null,
+              "old_price": 3900.0,
+              "target": {
+                "product_id": "2424351092443195257",
+                "sku": "4690706873-4"
+              }
+            }
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 7,
+      "turn": 8,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-8-1",
+          "tool_name": "remove_from_cart",
+          "args": {
+            "product_id": "2424351092443195257",
+            "sku": "4690706873-4"
+          },
+          "observation": {
+            "cart": []
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": "wait, is that still available?",
+      "message": null
+    },
+    {
+      "step_index": 8,
+      "turn": 9,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-9-1",
+          "tool_name": "message",
+          "args": {
+            "content": "That item went out of stock when I added it to cart. I'm now selecting another in-stock option that still matches your firm budget and category requirements."
+          },
+          "observation": {
+            "sent": true
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 9,
+      "turn": 10,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-10-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "3864645570859137746",
+            "sku": "4690706873-1"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 3900.0,
+            "product_id": "3864645570859137746",
+            "sku": "4690706873-1"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 10,
+      "turn": 11,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-11-1",
+          "tool_name": "view",
+          "args": {
+            "product_id": "3864645570859137746"
+          },
+          "observation": {
+            "brand": "Blackview",
+            "category_path": [
+              "Mobiles & Tablets",
+              "Smartphones"
+            ],
+            "facts": {
+              "battery": "5000 mah",
+              "condition": "new",
+              "device_operating_system": "android 11.0",
+              "display": "1080*2400; 1080p",
+              "model": "a100",
+              "operating_system": "android 11.0",
+              "size": "6.67 inches"
+            },
+            "product_id": "3864645570859137746",
+            "title": "Blackview A100 6GB + 128GB",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": "dream pink",
+                "price": 3900.0,
+                "sku": "4690706873-1"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 11,
+      "turn": 12,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-12-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "3864645570859137746",
+            "sku": "4690706873-1"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": true,
+              "price": 3900.0,
+              "product_id": "3864645570859137746",
+              "sku": "4690706873-1"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 3900.0,
+                "in_stock": true,
+                "price_at_add": 3900.0,
+                "product_id": "3864645570859137746",
+                "sku": "4690706873-1"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 12,
+      "turn": 13,
+      "calls": [
+        {
+          "call_id": "08eb6aaa18a44cb1b099e3873abcd3d4-turn-13-1",
+          "tool_name": "place_test_order",
+          "args": {
+            "product_id": "3864645570859137746",
+            "sku": "4690706873-1"
+          },
+          "observation": {
+            "order": {
+              "currency": "PHP",
+              "in_stock_at_order": true,
+              "price_at_order": 3900.0,
+              "target": {
+                "product_id": "3864645570859137746",
+                "sku": "4690706873-1"
+              }
+            },
+            "status": "placed"
+          },
+          "done": true,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    }
+  ],
+  "observable_issues": [],
+  "diagnostics_state": "available",
+  "failure_category": null,
+  "end_reason": null
+}

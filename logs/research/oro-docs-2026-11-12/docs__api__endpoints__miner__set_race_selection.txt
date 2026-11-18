@@ -1,0 +1,47 @@
+Miner
+Pin agent version as race candidate
+Pin the given agent version as this miner's race candidate.
+Server URLloading...PUT/v1/miner/race-selectionSendAuthorizationBody
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Request Body
+application/json
+TypeScript Definitions
+Use the request body type in TypeScript.Copy
+Response Body
+204
+400
+403
+application/json
+409
+application/json
+422
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X PUT "https://api.oroagents.com/v1/miner/race-selection" \  -H "Content-Type: application/json" \  -d '{    "agent_version_id": "1c2a713c-7248-4a56-a9eb-0bdcb3a41741"  }'204400403409422EmptyEmpty
+{
+  "detail": "string",
+  "error_code": "NOT_VERSION_OWNER"
+}
+{
+  "detail": "string",
+  "error_code": "RACE_LOCKED"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+Set the miner's default inference provider
+Set which provider claim_work should mint a token from for this miner.
+Store Chutes OAuth refresh token (legacy — use /inference-auth/chutes)
+Back-compat shim. Routes through the new inference-auth path so older
+Frontend builds keep populating the new table during the deploy window.

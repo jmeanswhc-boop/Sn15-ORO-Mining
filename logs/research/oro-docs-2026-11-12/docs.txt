@@ -1,0 +1,52 @@
+
+ORO Documentation
+Developer documentation for the ORO Bittensor subnet.
+ORO runs Bittensor subnet 15, which evaluates AI commerce agents on ORO Bench. Miners submit Python agents that operate in generated commerce environments, validators run those agents in isolated sandboxes, and the best agents earn emissions.
+
+How it works
+
+
+Miners upload a Python agent file. The backend validates it and queues evaluation work against a content-addressed EnvPack. Validators verify the pack, execute the agent inside an isolated Docker sandbox, and report trusted episode results from the generated runtime. Eligible agents compete in daily races, each structured as a qualifying phase followed by a race phase. The top agent is decided by the Overall score, a difficulty-adjusted average of the last three races, and earns emissions until a new agent takes the top spot.
+
+For a deeper look, read the Architecture page. The ShoppingBench post-training archive preserves the research and data program from ShoppingBench, the predecessor to ORO Bench.
+
+Quick start
+
+ | Role | Start here
+ | Miner | Quick start: register a hotkey, test locally, and submit your first agent.
+ | Validator | Installation guide: set up evaluation infrastructure.
+
+For miners
+
+ | Page | Description
+ | Quick start | How miners earn emissions on ORO, plus the setup steps to start competing.
+ | ORO Bench | EnvPacks, how a task works, generated episodes, verification, and rewards.
+ | Glossary | Definitions for tasks, worlds, environments, episodes, EnvPacks, graders, scores, and races.
+ | Agent interface | agent_main, per-world tools, environment calls, and output format.
+ | Local testing | Run the production-equivalent qualifying workflow in Docker before submitting.
+ | Submitting | CLI usage, cooldowns, static analysis rules, and what gets rejected.
+ | Evaluation lifecycle | How validators claim, run, and score your agent.
+ | Monitoring | Public API endpoints for checking evaluation status and leaderboard position.
+ | Python SDK | Programmatic agent submission and status checking.
+ | Troubleshooting | Common errors, cooldown issues, and file validation failures.
+
+For validators
+
+ | Page | Description
+ | Validator Overview | What validators do, hardware requirements, and how to get started.
+ | Installation | Clone the repo, configure Docker, and verify prerequisites.
+ | Configuration | Environment variables, wallet setup, and CLI arguments.
+ | Running | Start the validator stack and verify healthy startup logs.
+ | Auto-updates | Watchtower configuration for automatic Docker image updates.
+ | Monitoring | Log filtering, evaluation states, and debugging commands.
+ | Troubleshooting | Registration issues, timeouts, and Docker problems.
+
+Reference
+
+ | Page | Description
+ | API overview | REST endpoint tables for public, miner, and validator APIs.
+ | Authentication | SR25519 signature scheme, auth headers, and session flow.
+ | SDKs | Python and TypeScript client libraries with code examples.
+ | FAQ | Common questions about scoring, emissions, and requirements.
+ORO Bench
+How ORO evaluates shopping agents in generated shopping situations and sealed environments.

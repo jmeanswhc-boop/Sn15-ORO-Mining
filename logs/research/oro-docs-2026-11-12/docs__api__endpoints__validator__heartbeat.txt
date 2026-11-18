@@ -1,0 +1,56 @@
+Validator
+Extend lease
+Heartbeat to extend lease and mark run as RUNNING.
+Server URLloading...POST/v1/validator/evaluation-runs/{eval_run_id}/heartbeatSendAuthorizationPathBody
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Path Parameterseval_run_id*string
+Evaluation run IDFormatuuid
+Request Body
+application/json
+TypeScript Definitions
+Use the request body type in TypeScript.CopyHeartbeatRequestnull
+Response Body
+200
+application/json
+404
+application/json
+409
+application/json
+422
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/validator/evaluation-runs/497f6eca-6276-4993-bfeb-53cbbbba6f08/heartbeat" \  -H "Content-Type: application/json" \  -d '{}'200404409422
+{
+  "lease_expires_at": "2019-08-24T14:15:22Z"
+}
+{
+  "detail": "string",
+  "error_code": "EVAL_RUN_NOT_FOUND"
+}
+{
+  "detail": "string",
+  "error_code": "LEASE_EXPIRED"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+Get Weight Salt
+Per-epoch base standings for the weight setter.
+
+Serves the epoch-pinned base standings (top designation + finisher tail)
+snapshotted once per epoch, so every honest validator in the epoch builds the
+identical base vector regardless of tick phase. (The watermark
+decoy-overlay was removed — we rely on the chain's anti-copy features.)
+Get an upload URL for an environment episode artifact
+Return a content-addressed upload target for an evaluation owned by the caller.

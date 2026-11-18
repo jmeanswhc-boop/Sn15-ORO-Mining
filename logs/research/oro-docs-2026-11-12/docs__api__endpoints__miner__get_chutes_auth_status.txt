@@ -1,0 +1,26 @@
+Miner
+Check Chutes auth status (legacy — use /inference-auth/chutes)
+Back-compat shim. Reads from the new MinerInferenceAuth table.
+Server URLloading...GET/v1/miner/chutes-auth/statusSendAuthorization
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Response Body
+200
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X GET "https://api.oroagents.com/v1/miner/chutes-auth/status"200
+{
+  "connected": true,
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+Exchange Chutes PKCE auth code for a refresh token (server-side)
+Complete the Chutes OAuth code exchange on behalf of the SDK CLI.
+
+Chutes' OAuth app is registered as a Confidential client (requires
+``client_secret`` at /idp/token). The SDK, distributed via PyPI, can't
+safely hold a secret. So the SDK runs the browser PKCE leg locally
+(preserves auth-code interception protection) and then hands the
+resulting authorization code + ``code_verifier`` here. Backend holds
+the ``client_secret`` and completes the exchange.
+Check inference auth status for a single provider
+Check whether the miner has a stored credential for the given provider.

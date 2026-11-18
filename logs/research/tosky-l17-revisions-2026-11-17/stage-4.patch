@@ -1,0 +1,203 @@
+--- before
++++ after
+@@ -2376,6 +2376,8 @@
+         self.note_named = False
+         self.cart_lines: dict[str, int] = {}
+         self.checked: set[str] = set()
++        self.review_blocks: dict[str, str] = {}
++        self.refused_cart = ''
+         self.audited = False
+         self.offer_seen: dict[str, int] = {}
+         self.gone: dict[str, int] = {}
+@@ -5509,15 +5511,46 @@
+         return done
+ 
+     def check_key(self, ids: list[str]) -> str:
+-        return '|'.join(sorted(ids)) + f'#{self.version}'
++        lines = [[ident, self.held_units(ident), self.sold_out(ident),
++                  self.rows.get(ident), self.full.get(ident)] for ident in sorted(ids)]
++        return _dump([self.version, self.budget, self.needs_now(),
++                      [[it.name, it.shelf, it.qty] for it in self.items], lines])
++
++    def checkout_hold(self) -> str:
++        ids = self.cart_ids()
++        if not ids:
++            return 'The cart is empty; choose and add the requested items first.'
++        lost = [ident for ident in ids if self.sold_out(ident)]
++        if lost:
++            return 'Replace unavailable cart lines before checkout: ' + ', '.join(lost)
++        key = self.check_key(ids)
++        if self.verdicts.get(key) is False:
++            return self.review_blocks.get(key) or 'The current cart has a negative review; repair it or obtain new evidence.'
++        if self.refused_cart == self.cart_mark() and self.verdicts.get(key) is not True:
++            return 'The last checkout was refused; apply its observation and revalidate the cart before retrying.'
++        if self.gate_due('order'):
++            return 'Complete the required order procedure before checkout.'
++        return ''
++
++    def note_checkout(self, reply: dict[str, Any]) -> None:
++        self.buys += 1
++        if not reply.get('finished'):
++            key = self.check_key(self.cart_ids())
++            self.checked.discard(key)
++            self.verdicts.pop(key, None)
++            self.review_blocks.pop(key, None)
++            self.refused_at = self.step
++            self.refused_cart = self.cart_mark()
++            self.version += 1
+ 
+     def check_cart(self, ids: list[str] | None=None, limit: float=SPEND_SOFT) -> str:
+         lead = ids is not None
+         ids = ids if lead else self.cart_ids()
+         key = self.check_key(ids)
+-        if key in self.checked or not self.judges(limit) or (not ids):
+-            return ''
+-        self.checked.add(key)
++        if key in self.checked:
++            return self.review_blocks.get(key, 'Repair the rejected cart before checkout.') if self.verdicts.get(key) is False else ''
++        if not self.judges(limit) or (not ids):
++            return ''
+         data = {'shopper_request': self.request, 'current_ledger': self.ledger()}
+         if lead:
+             data['cart'] = {'planned_listings': ids,
+@@ -5537,8 +5570,11 @@
+         if judges and not self.no_credit:
+             got = self.ask_json(prompt, judges, 3000) or got
+         self.trace.append({'kind': 'check', 'cart': ids, 'got': got})
+-        self.verdicts[key] = bool(got) and got.get('ok') is not False
+-        if not got or got.get('ok') is not False:
++        if not isinstance(got, dict) or not isinstance(got.get('ok'), bool):
++            return ''
++        self.checked.add(key)
++        self.verdicts[key] = got['ok']
++        if got['ok']:
+             return ''
+         self.leads = [i for i in self.leads if i not in ids]
+         problems = [str(p) for p in _items(got.get('problems'))][:5]
+@@ -5546,7 +5582,9 @@
+         text = 'A careful review says this cart is not right yet: ' + '; '.join(problems or ['see the requirements'])
+         if better:
+             text += '. Listings that look better: ' + ', '.join(better)
+-        return text + '. Fix the cart (or show the review is wrong by re-reading the records), then check out.'
++        text += '. Fix the cart (or show the review is wrong by re-reading the records), then check out.'
++        self.review_blocks[key] = text
++        return text
+ 
+     def refuse_trail(self) -> str:
+         live = {need for _, need in self.needs_now()}
+@@ -6133,13 +6171,13 @@
+                 replies.append(said)
+             if not go:
+                 break
++            if self.checkout_hold():
++                break
+             reply = self.act(buy, args)
+             self.trace.append({'kind': 'completed', 'lines': lines, 'drop': drop, 'reply': _clip(reply, 200)})
+             if reply is None:
+                 break
+-            self.buys += 1
+-            if not reply.get('finished'):
+-                self.refused_at = self.step
++            self.note_checkout(reply)
+             self.observe(buy, reply.get('observation'))
+             replies.append(self.show(reply.get('observation')))
+             if self.finished or reply.get('finished'):
+@@ -6237,16 +6275,19 @@
+         if faults or self.left() < 1:
+             return False
+         if self.left() >= 2:
+-            self.gate('order')  # G22
++            go, _ = self.gate('order')
++            if not go:
++                return False
+         if self.finished or self.left() < 1:
+             return bool(self.finished)
++        if self.checkout_hold():
++            return False
+         reply = self.act(buy, args)
+         self.trace.append({'kind': 'salvage', 'why': why, 'lines': lines, 'drop': drop, 'reply': _clip(reply, 200)})
+         if reply is None:
+             return False
+-        self.buys += 1
++        self.note_checkout(reply)
+         if not reply.get('finished'):
+-            self.refused_at = self.step
+             self.observe(buy, reply.get('observation'))
+             self.salvage_said = self.show(reply.get('observation'))  # G14: refused: the episode goes on
+         return bool(self.finished or reply.get('finished'))
+@@ -6687,6 +6728,11 @@
+                     trimmed = '\n[Cairn] ' + said + trimmed
+             if ending and self.is_buy(name, args) and self.left() == 2 and not self.anchor_done:
+                 self.anchor_view()  # C
++            if self.is_buy(name, args):
++                blocked = self.checkout_hold()
++                if blocked:
++                    out.append((cid, 'Not run (no step used): ' + blocked))
++                    continue
+             reply = self.act(name, args)
+             if reply is None:
+                 out.append((cid, 'The call failed (network or server). You may try again.'))
+@@ -6752,9 +6798,7 @@
+                 self.cart_view = observation
+                 self.cart_seen_at = self.step
+             if self.is_buy(name, args):
+-                self.buys += 1
+-                if not reply.get('finished'):
+-                    self.refused_at = self.step
++                self.note_checkout(reply)
+             text = ('The exact store response is in store_observations for ' + name + ' at step '
+                     + str(reply.get('step', self.step)) + '.') + paged + trimmed
+             if name not in plain and (not ending):
+@@ -6827,19 +6871,27 @@
+             faults: list[str] = []
+             args = _shape(dict(self.brief.get('buy_args') or {}), self.schemas.get(buy), 'args', faults)
+             if not faults:
++                go, said = (not self.gate_due('order'), '')
+                 if self.left() >= 2:
+-                    self.gate('order')
++                    go, said = self.gate('order')
+                 if self.finished or self.left() <= 0:
+                     return ''
+-                reply = self.act(buy, args)
+-                self.trace.append({'kind': 'forced_buy', 'reply': _clip(reply, 200)})
+-                if self.finished or self.left() <= 0:
+-                    return ''
+-                if reply is not None and again:
+-                    self.buys += 1
+-                    self.refused_at = self.step
+-                    self.observe(buy, reply.get('observation'))
+-                    return 'the checkout was refused: ' + self.show(reply.get('observation'))
++                blocked = self.checkout_hold() or (said if not go else '')
++                if not go or blocked:
++                    self.trace.append({'kind': 'checkout_hold', 'reason': blocked or 'Required order procedure is incomplete.'})
++                    if again:
++                        return blocked or 'Required order procedure is incomplete.'
++                else:
++                    reply = self.act(buy, args)
++                    self.trace.append({'kind': 'forced_buy', 'reply': _clip(reply, 200)})
++                    if reply is not None:
++                        self.note_checkout(reply)
++                    if self.finished or self.left() <= 0:
++                        return ''
++                    if reply is not None:
++                        self.observe(buy, reply.get('observation'))
++                        if again:
++                            return 'the checkout was refused: ' + self.show(reply.get('observation'))
+         if not self.finished and self.left() >= 2 and self.salvage('forced end'):  # G5
+             return ''
+         if self.finished or self.left() <= 0:
+@@ -6851,10 +6903,13 @@
+             faults = []
+             args = _shape(self.quiet(refuse, dict(self.brief.get('refuse_args') or {})), self.schemas.get(refuse), 'args', faults)
+             if not faults:
++                go, said = (not self.gate_due('end'), '')
+                 if self.left() >= 2:
+-                    self.gate('end')
++                    go, said = self.gate('end')
+                 if self.finished or self.left() <= 0:
+                     return ''
++                if not go:
++                    return said or 'Required ending procedure is incomplete.'
+                 reply = self.act(refuse, args)
+                 self.trace.append({'kind': 'forced_refuse', 'reply': _clip(reply, 200)})
+                 if reply is not None and (not self.finished):

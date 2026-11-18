@@ -1,0 +1,14 @@
+ICDI CHIDORI v2 budget-only correction
+
+Created agents/ICDI_chidori_v2_budget.py from agents/ICDI_chidori_v1_budget.py. The v1 budget file, full v1, full v2 and released CHIDORI source retain their recorded SHA-256 hashes.
+
+Only BudgetControls.budget_post changes: the mandatory unauthenticated catalog GET is replaced with the same reviewed model-pricing configuration already used by full v2. The configuration covers maximum published rates across context tiers in the retained pricing snapshot. No SDK update or direct network import is introduced. All other existing class methods, shopping/procedure prompts and the method-resolution order are unchanged. The separate ProcedureControls implementation from full v2 is not included.
+
+32 offline checks passed: 20 inherited budget checks, 3 scope/preflight checks and 9 transport/configuration regressions. The transport regressions exercise the actual ProxyClient with requests.get/post mocked underneath it and real outbound requests blocked. They reproduce the budget-only v1 startup failure and verify authenticated POST use without the catalog GET after correction. All 30 inputs from local-d357453886534e12a9b57e574b2f8a73 can begin their exact initial briefing request under these offline conditions. This is a startup/admission check, not a score or accuracy measurement.
+
+Budget settings remain $0.035 per task, including a $0.010 protected procedure allowance. Token/framing estimates, routed price uncertainty and unobserved shared simulator costs still prevent an unconditional $5 full-run guarantee. Pricing settings need review when provider rates change. No paid model tests, qualifying submissions or races were launched. Local static checks do not certify ORO's private submission acceptance.
+
+Reproduce from the repository root:
+python3 -m unittest discover -s agents/tests -p test_chidori_v2_budget.py -v
+
+Review verification.json, offline-verification.log, and v1-budget-to-v2-budget.diff for hashes, outcomes and exact changes.

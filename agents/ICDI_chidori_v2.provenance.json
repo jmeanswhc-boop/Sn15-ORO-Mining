@@ -1,0 +1,58 @@
+{
+  "name": "ICDI_chidori",
+  "version": 2,
+  "status": "startup compatibility corrected and verified offline; scored performance unverified",
+  "candidate": {
+    "path": "agents/ICDI_chidori_v2.py",
+    "sha256": "3d40d11553e4bf2ea6d67d90305030cee98ca85d9ec397e070e468c1bfa3cdc9",
+    "bytes": 508099
+  },
+  "base_v1": {
+    "path": "agents/ICDI_chidori_v1.py",
+    "sha256": "295f290c70a2fc71035052f23f78e40bd8c6e23782c6d457829454e7473baaf3",
+    "unchanged": true
+  },
+  "original_chidori_sha256": "b32f88b0ef42100f10d9ad29e3019a54dd79dfaefe8ded2b72a88772f9247bf2",
+  "failed_run": "local-d357453886534e12a9b57e574b2f8a73",
+  "diagnosis": {
+    "all_tasks": 30,
+    "score": 0.0,
+    "unauthorized_catalog_gets": 30,
+    "model_calls": 0,
+    "environment_calls": 0,
+    "cause": "v1 mandatory pricing lookup used ProxyClient.get, which omits Authorization; missing pricing immediately stopped inference",
+    "test_gap": "FakeClient.get bypassed actual ProxyClient request headers",
+    "secondary_gap": "v1 parser rejected catalog pricing overrides arrays and positive 1-hour-cache fields"
+  },
+  "fix": {
+    "existing_method_changed_from_v1": "BudgetControls.budget_post",
+    "strategy_or_procedure_changes": false,
+    "runtime_sdk_changes": false,
+    "catalog_get_removed": true,
+    "pricing": "Reviewed model configuration uses maximum published context-tier rates; settings must be refreshed before release",
+    "pricing_reference": "https://openrouter.ai/api/v1/models",
+    "pricing_observed_at_utc": "2026-11-12 11:45:58 UTC"
+  },
+  "verification": {
+    "full_offline_suite_passed": 148,
+    "v2_targeted_checks_passed": 65,
+    "real_proxy_client_fake_http_regressions": 9,
+    "recorded_inputs_admitted_for_first_briefing": 30,
+    "recorded_inputs_were_scored": false,
+    "ast_parse_seconds": 0.26438517899805447,
+    "local_static_preflight_passed": true,
+    "paid_inference_calls": 0,
+    "live_authenticated_calls": 0,
+    "original_and_v1_unchanged": true
+  },
+  "budget_limits": {
+    "agent_allowance_usd_per_task": 0.035,
+    "protected_procedure_allowance_usd": 0.01,
+    "full_run_5_usd_guaranteed": false,
+    "limitations": [
+      "pricing configuration can become stale or differ from routed prices",
+      "token/framing reservations remain estimates",
+      "shared simulator spending remains unobserved"
+    ]
+  }
+}

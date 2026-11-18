@@ -1,0 +1,180 @@
+{
+  "run": "local-9f2ac835e808440197a18a9a65313580",
+  "updated_agent": "agents/Tosky_l17.py",
+  "baseline_source": "baseline-source.txt",
+  "scope": "Customer interview state and mixed-reply consumption",
+  "offline_tests": {
+    "total": 64,
+    "passed": 64,
+    "prior_tests_preserved": 48,
+    "interview_regressions": 16
+  },
+  "interview_tests_against_baseline": {
+    "total": 16,
+    "passed": 4,
+    "failures": 12,
+    "errors": 0
+  },
+  "replay": {
+    "method": "Independent transitions under recorded model interpretations; no new inference, shopper replies or score.",
+    "before_sha256": "929ab3a86af2b0669db18e9d44f13c8d6742db3ff3f2a55d985731684a0bb834",
+    "after_sha256": "41c2c8363002f5bade4bc49c9ad890b6a979758559e7092c2cadd4f0cf62c526",
+    "counts": {
+      "interpretations": 89,
+      "indifferent": 84,
+      "old_next_repeats_answered_question": 84,
+      "new_next_repeats_answered_question": 1,
+      "told": 5,
+      "named_indifference_cases": 1,
+      "question_scope_indifference_cases": 83,
+      "settled_topic_repetition_in_question_scope_cases": 0
+    },
+    "firm_disclosures": [
+      {
+        "problem_id": "ea26205498de435e811ce629684787ff",
+        "told": [
+          {
+            "product": "skirts",
+            "property": "pattern",
+            "value": "stripe",
+            "points": false
+          }
+        ],
+        "preserved": true
+      },
+      {
+        "problem_id": "2343a919ce3e4183a67289e5c32735ab",
+        "told": [
+          {
+            "product": "watch",
+            "property": "gender",
+            "value": "female",
+            "points": false
+          }
+        ],
+        "preserved": true
+      },
+      {
+        "problem_id": "2343a919ce3e4183a67289e5c32735ab",
+        "told": [
+          {
+            "product": "watch",
+            "property": "case diameter",
+            "value": "at most 30 mm",
+            "points": false
+          }
+        ],
+        "preserved": true
+      },
+      {
+        "problem_id": "618435d6b4d14fa9be31c7d630de7767",
+        "told": [
+          {
+            "product": "hoodie or sweatshirt",
+            "property": "material",
+            "value": "nylon",
+            "points": false
+          }
+        ],
+        "preserved": true
+      },
+      {
+        "problem_id": "60cd0bab6c664e9898c545e8e0e6da6d",
+        "told": [
+          {
+            "product": "watch",
+            "property": "case.shape",
+            "value": "rectangle",
+            "points": false
+          }
+        ],
+        "preserved": true
+      }
+    ],
+    "actual_indifference_followups": {
+      "pairs": 55,
+      "pairs_with_exact_topic_repetition": 55,
+      "repeated_topic_mentions": 377
+    },
+    "budget_replies": [
+      {
+        "problem_id": "3f387b625d4948a28b1fe66559cf844b",
+        "reply": "Never thought about it, and I truly don't mind which way you go. Money got tighter after my rent went up, so I'm working with 660 cts (yes, every penny counts for me). now (the couch cushions have been thoroughly searched).",
+        "recorded_interpretation": {
+          "kind": "indifferent",
+          "about": null,
+          "told": [],
+          "indifferent": [
+            {
+              "product": "mules",
+              "property": "heel type"
+            }
+          ]
+        },
+        "budget_before": 765,
+        "budget_after": 765
+      }
+    ],
+    "recorded_run_totals": {
+      "inference_total": 577,
+      "inference_failed": 0,
+      "inference_cost_usd": 0.3436357500000001,
+      "prompt_tokens": 5480839,
+      "cached_tokens": 4261160,
+      "completion_tokens": 320252
+    },
+    "execution_seconds": {
+      "min": 45.14938306808472,
+      "median": 81.74326181411743,
+      "max": 137.9086034297943
+    },
+    "limits": [
+      "Question policy and model prompt change require a new paid run to measure accuracy.",
+      "Old model replies do not contain the new independent budget field; replay cannot validate new extraction.",
+      "Original questions are replayed separately; this is not a hypothetical full conversation or benchmark score."
+    ]
+  },
+  "static_review": {
+    "imports_unchanged": true,
+    "changed_functions": [
+      "AskItem.__init__",
+      "AskItem.open_props",
+      "BodyAsk.brief",
+      "BodyAsk.hear",
+      "BodyAsk.send_one",
+      "Cairn.status",
+      "Item.__init__",
+      "SendoAsk.again_list",
+      "SendoAsk.hear",
+      "SendoAsk.rank"
+    ],
+    "new_functions": [
+      "_sd_same_topic",
+      "BodyAsk.reply_context",
+      "SendoAsk.reply_context"
+    ],
+    "changed_top_level_constants": [
+      "HEAR_PROMPT"
+    ],
+    "budget_constants_unchanged": true,
+    "synchronous_entrypoint_unchanged": true,
+    "champion_sources_preserved": {
+      "champions/Miyagi_v2_06af7499-f202-7cf9-8000-3c856a5cf41f/agent.py": "69cbf616848f99b0d6dda0e57c44af39b7f4a11e7a347a825cd5b4da69a59b70",
+      "champions/Cairn_v2_06aef3d7-bf0f-779c-8000-ee9b2a46ce76/agent.py": "2344dcf9218708f75d4ff0dac8f37ea30c3d191a3df71daf1174c08b215ba500"
+    },
+    "source_bytes": 383965,
+    "source_sha256": "41c2c8363002f5bade4bc49c9ad890b6a979758559e7092c2cadd4f0cf62c526",
+    "syntax_compilation": "passed",
+    "external_ORO_AST_validation": "not run",
+    "tool_transport_and_schema_functions_unchanged": true
+  },
+  "paid_tests_run": false,
+  "new_benchmark_score": null,
+  "scope_limits": [
+    "No claim that repeated questions caused all eight failed scores.",
+    "No new model-generated interpretations were evaluated.",
+    "Independent replay does not simulate changed full conversations.",
+    "Scope classification for mixed answers still needs new live evaluation.",
+    "No external ORO submission/AST service was invoked."
+  ]
+}

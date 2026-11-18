@@ -1,0 +1,76 @@
+{
+  "name": "ICDI_chidori",
+  "version": 1,
+  "status": "offline-verified; paid/scored evaluation not performed",
+  "source": {
+    "name": "CHIDORI v11",
+    "public_agent_version_id": "06af2157-d650-7d40-8000-519949f07ca0",
+    "path": "logs/research/champion-lineage-2026-11-12/source-06af2157-d650-7d40-8000-519949f07ca0.py",
+    "sha256": "b32f88b0ef42100f10d9ad29e3019a54dd79dfaefe8ded2b72a88772f9247bf2",
+    "unchanged": true
+  },
+  "candidate": {
+    "path": "agents/ICDI_chidori_v1.py",
+    "sha256": "295f290c70a2fc71035052f23f78e40bd8c6e23782c6d457829454e7473baaf3",
+    "bytes": 507166
+  },
+  "budget_checkpoint": {
+    "path": "agents/ICDI_chidori_v1_budget.py",
+    "sha256": "7a8e0d8da12870e9b5af9f59ccae03166cec723d70f9ae31f4e10795871e533c"
+  },
+  "changes": {
+    "existing_methods": [
+      "E1.one_call",
+      "G6B.dispatch",
+      "G6B.finish",
+      "G6A.complete_cart"
+    ],
+    "existing_prompt": "BRIEF_PROMPT process schema only",
+    "new_controls": [
+      "InferenceBudget",
+      "BudgetControls",
+      "ProcedureControls"
+    ],
+    "other_existing_method_asts_unchanged": true
+  },
+  "budget": {
+    "per_task_agent_allowance_usd": 0.035,
+    "protected_procedure_allowance_usd": 0.01,
+    "minimum_completion_cap": 512,
+    "currency_storage": "integer nanodollars",
+    "pricing_source": "GET /inference/models through ProxyClient",
+    "request_reservation": "UTF-8 byte estimate plus framing allowance; max applicable input/cache rate, output/reasoning rate and request fee; 25 percent margin",
+    "estimated_not_certified_token_or_routed_price_bound": true,
+    "unknown_charge_policy": "retain full reservation",
+    "envelope_breach_policy": "record actual charge and stop further inference",
+    "402_policy": "no retry or fallback",
+    "whole_run_5_usd_guarantee": false,
+    "unresolved_dependencies": [
+      "runtime simulator spending on shared key",
+      "supported maximum roster size",
+      "exact tokenizer and routed billing envelope"
+    ]
+  },
+  "verification": {
+    "offline_tests_passed": 83,
+    "failures": 0,
+    "errors": 0,
+    "budget_only_checks": 20,
+    "procedure_state_checks": 17,
+    "combined_checks": 39,
+    "local_source_preflight_checks": 7,
+    "full_agent_main_mock_flow_passed": true,
+    "ast_parse_seconds": 0.21998259900101402,
+    "mixed_90_task_billing_mock": {
+      "tasks": 90,
+      "physical_attempts": 4716,
+      "mock_accounted_agent_usd": 2.070619308,
+      "assumed_simulator_and_uncertainty_reserve_usd": 0.85,
+      "is_paid_or_race_measurement": false
+    },
+    "paid_inference_calls": 0,
+    "private_server_policy_acceptance": "not tested",
+    "measured_accuracy_gain": "not established",
+    "log": "logs/research/chidori-update-plan-2026-11-12/offline-verification.log"
+  }
+}

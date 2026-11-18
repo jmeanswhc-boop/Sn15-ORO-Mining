@@ -1,0 +1,55 @@
+ICDI CHIDORI v1 - implementation and offline verification
+
+Created agents/ICDI_chidori_v1.py from released CHIDORI v11. The released original is unchanged and its SHA-256 was checked. agents/ICDI_chidori_v1_budget.py retains an independently tested budget-only checkpoint. No paid, qualifying, race or live model tests were run.
+
+IMPLEMENTATION ORDER
+
+1. Budget-only admission and accounting were implemented and tested before procedure changes. The final budget-only suite has 20 passing checks. It covers charged malformed output, uncertainty after timeouts/missing cost, physical retries, compatibility retries, immediate stopping on 402, output-cap affordability, monetary and physical-attempt reservations for required procedures, and 90 isolated allocations.
+
+2. Procedure state was implemented and checked before connecting it to checkout. All 17 state checks passed. Completion requires coverage of every local duty ID and actual recorded evidence. Missing/malformed decisions remain pending. Supporting public instruction spans are required. Independent duties reserve separate messages, mutually exclusive branches use the larger reserve, and cart-dependent proof expires after relevant changes.
+
+3. The environment boundary and normal/forced finishing paths were connected. The final combined suite has 39 passing checks, including a repeat of the 20 budget checks against the integrated agent. The checks cover direct checkout with one step left, forced purchase/decline, choose-stage scheduling, ordinary required reads, rejected tool results, shared finishing-tool modes, message reservations and no calls after finished=true. A full mocked agent_main execution completes a required message before declining.
+
+4. A recovery-path check exposed a misleading inherited response: complete_cart could claim it had placed an order when the procedure gate had blocked it. The active helper now returns the blocking explanation when no order call ran. Its dedicated test passes.
+
+5. Seven local source/preflight checks passed. The file is below 1 MB, has one synchronous entry point, imports permitted standard-library/proxy modules, uses only the supported proxy routes, performs no direct file writes or dynamic execution, and includes no concrete task/product IDs. Effective method selection is checked so the new controls are actually reached. Local checks cannot certify ORO's private similarity/integrity decision or its full static-analysis runtime.
+
+83 offline checks passed in total. During final tests, outbound HTTP was mocked and additionally blocked. Full details: offline-verification.log and implementation-verification.json.
+
+SCOPE
+
+Existing changed methods are E1.one_call, G6B.dispatch, G6B.finish, and the blocked-response branch of G6A.complete_cart. The existing BRIEF_PROMPT process schema is extended. InferenceBudget, BudgetControls and ProcedureControls provide the new behavior. AST comparison confirms that every other existing class method retains its original implementation, including product matching, search, ranking, compatibility and product review. The no-duty regression fixture produces the same environment-call trace as the original and adds no procedure review call.
+
+BUDGET POLICY AND LIMITS
+
+The provisional agent allocation is $0.035 per task, with $0.010 protected for procedure work while the procedure parse is unknown or duties exist. These are development settings, not a calibrated production recommendation. The complete per-task allocation applies to recovery as well as the main loop. Legacy SOFT/HARD values still guide existing scheduling; they cannot bypass the new request-admission point.
+
+Prices are requested once per episode through the supported GET /inference/models proxy route. Missing, malformed or unsupported prices block inference. Reservations use a conservative UTF-8-byte input estimate plus framing, the maximum applicable input/cache price, output/reasoning prices, a request fee and a 25 percent margin. Cache-write prices are alternative input prices, not an added second charge for the same input tokens. The estimate does not assume a cache hit. A cached request also allows for the documented default cache-write premium when that premium is omitted from model metadata.
+
+Every physical attempt is reserved before its POST. Returned numeric charges count even when output parsing fails. Missing or invalid charges retain their reservation. A reported cost or token count above the reservation envelope stops further inference. An already completed call cannot be undone, so one such billing deviation can exceed the local allocation. The input estimate and catalog prices are not certified tokenizer or maximum routed-price bounds. These facts are recorded rather than presented as a hard financial guarantee.
+
+A 90-task mixed billing mock exercised 4,716 physical attempts, including missing cost, malformed output, timeout and rate-limit paths. Its accounted agent charge was $2.070619308 under explicitly synthetic prices and responses. This is an accounting stress test, not a forecast of actual cost. A separate allocation-exhaustion mock confirms that 90 compliant local allocations total no more than $3.15 under the tested reservation assumptions. Adding an assumed $0.85 for simulator and uncertainty reserves gives the planned $4 envelope. The $0.85 assumption has not been measured or established as a bound.
+
+The agent still has no supported shared-run remaining-balance endpoint, roster-size input or access to simulator billing. Consequently this candidate cannot yet be certified to finish every full race safely within $5. The shared simulator component, actual prices/token counts and scoring behavior require later validation. The narrower allocation can reduce expensive model calls and may change accuracy; no score improvement or absence of regressions on real tasks is claimed.
+
+PROCEDURE LIMITS
+
+Structural checks now prevent the reproduced empty/missing-response passes and finishing-path bypasses. Semantic interpretation of instructions and shopper replies still depends on the model. A model can omit a procedure during parsing or misunderstand a reply. The fixtures establish control-flow behavior, not a hidden grader, a perfect semantic oracle or hidden-race accuracy.
+
+REPRODUCE OFFLINE CHECKS
+
+From the repository root:
+python3 -m unittest discover -s agents/tests -p 'test_chidori_*.py' -v
+
+The tests use mocked inference and environment responses and block real requests. The four test files are test_chidori_budget.py, test_chidori_procedures.py, test_chidori_integration.py and test_chidori_preflight.py under agents/tests/.
+
+REVIEW ARTIFACTS
+
+agents/ICDI_chidori_v1.provenance.json contains source hashes, scope, configuration and verification limits.
+ICDI_chidori_v1.diff contains the complete source diff.
+The stage-1 and stage-2 records preserve intermediate verification checkpoints; stage-1-budget-final.json records the revised budget checkpoint after the cache-price feasibility correction.
+
+Primary rules/pricing references inspected during development:
+https://oroagents.com/docs/miners/code-requirements
+https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties
+https://openrouter.ai/docs/guides/best-practices/prompt-caching

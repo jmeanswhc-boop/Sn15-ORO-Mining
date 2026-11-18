@@ -1,0 +1,41 @@
+test_retired_requirements_and_exact_update_reach_specialist_context (agents.tests.test_tosky_l17.PromptContracts) ... FAIL
+test_requirement_retirement_keeps_product_scopes_separate (agents.tests.test_tosky_l17.PromptContracts) ... FAIL
+test_normal_store_information_is_not_repeated_as_a_requirement_update (agents.tests.test_tosky_l17.PromptContracts) ... ERROR
+test_mixed_reply_keeps_its_budget_source_in_the_shared_ledger (agents.tests.test_tosky_l17.PromptContracts) ... FAIL
+
+======================================================================
+ERROR: test_normal_store_information_is_not_repeated_as_a_requirement_update (agents.tests.test_tosky_l17.PromptContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 198, in test_normal_store_information_is_not_repeated_as_a_requirement_update
+    self.assertEqual(e.requirement_updates, [])
+AttributeError: 'Cairn' object has no attribute 'requirement_updates'
+
+======================================================================
+FAIL: test_retired_requirements_and_exact_update_reach_specialist_context (agents.tests.test_tosky_l17.PromptContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 180, in test_retired_requirements_and_exact_update_reach_specialist_context
+    self.assertIn("retired requirements", ledger)
+AssertionError: 'retired requirements' not found in '- item: sample (store label: Samples), quantity 1; requirements: finish: glossy\n- budget: at most 100 in total\n- pick: any listing that fits everything\n- in stock only'
+
+======================================================================
+FAIL: test_requirement_retirement_keeps_product_scopes_separate (agents.tests.test_tosky_l17.PromptContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 192, in test_requirement_retirement_keeps_product_scopes_separate
+    self.assertIn("retired requirements", e.ledger())
+AssertionError: 'retired requirements' not found in '- item 1: sample (store label: Samples), quantity 1; requirements: finish: matte\n- item 2: other sample (store label: Other samples), quantity 1; requirements: none beyond the kind of product\n- budget: at most 100 in total\n- pick: any listing that fits everything\n- in stock only'
+
+======================================================================
+FAIL: test_mixed_reply_keeps_its_budget_source_in_the_shared_ledger (agents.tests.test_tosky_l17.PromptContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_l17.py", line 213, in test_mixed_reply_keeps_its_budget_source_in_the_shared_ledger
+    self.assertIn(reply, e.ledger())
+AssertionError: 'Any texture is fine. The total budget is now 30.' not found in '- item: sample (store label: Samples), quantity 1; requirements: finish: matte\n- budget: at most 30 in total\n- pick: any listing that fits everything\n- in stock only'
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.588s
+
+FAILED (failures=3, errors=1)

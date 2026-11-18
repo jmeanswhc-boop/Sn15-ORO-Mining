@@ -1,0 +1,53 @@
+FFFFF
+======================================================================
+FAIL: test_empty_stale_cart_finishes_without_buying (agents.tests.test_tosky_v6.ReviewAndFinishContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 191, in test_empty_stale_cart_finishes_without_buying
+    self.assertEqual(calls, ['decline'])
+AssertionError: Lists differ: ['order'] != ['decline']
+
+First differing element 0:
+'order'
+'decline'
+
+- ['order']
++ ['decline']
+
+======================================================================
+FAIL: test_malformed_and_missing_reviews_never_become_approval (agents.tests.test_tosky_v6.ReviewAndFinishContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 160, in test_malformed_and_missing_reviews_never_become_approval
+    self.assertTrue(e.check_cart(), response)
+AssertionError: '' is not true
+
+======================================================================
+FAIL: test_rejected_review_survives_retry_until_evidence_changes (agents.tests.test_tosky_v6.ReviewAndFinishContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 147, in test_rejected_review_survives_retry_until_evidence_changes
+    self.assertEqual(e.check_cart(), first)
+AssertionError: '' != 'A careful review says this cart is not ri[109 chars]out.'
++ A careful review says this cart is not right yet: Evidence conflict. Fix the cart (or show the review is wrong by re-reading the records), then check out.
+
+======================================================================
+FAIL: test_requirement_and_budget_changes_invalidate_approval (agents.tests.test_tosky_v6.ReviewAndFinishContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 169, in test_requirement_and_budget_changes_invalidate_approval
+    self.assertNotEqual(old, e.check_key(['a']))
+AssertionError: '[["a",1,{"id":"a","category":"Widgets","price":20,"stock":true},{"id":"a","category":"Widgets","price":20,"stock":true,"attributes":{"finish":"matte","material":"metal"}},false,false]]#0' == '[["a",1,{"id":"a","category":"Widgets","price":20,"stock":true},{"id":"a","category":"Widgets","price":20,"stock":true,"attributes":{"finish":"matte","material":"metal"}},false,false]]#0'
+
+======================================================================
+FAIL: test_sold_out_cart_gets_repair_chance_then_legal_decline (agents.tests.test_tosky_v6.ReviewAndFinishContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 207, in test_sold_out_cart_gets_repair_chance_then_legal_decline
+    self.assertFalse(calls)
+AssertionError: ['order'] is not false
+
+----------------------------------------------------------------------
+Ran 5 tests in 1.193s
+
+FAILED (failures=5)

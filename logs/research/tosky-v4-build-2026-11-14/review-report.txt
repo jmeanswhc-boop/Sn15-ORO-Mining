@@ -1,0 +1,221 @@
+Tosky_v4 implementation and review record
+2026-11-14
+
+DELIVERABLE
+
+Agent: agents/Tosky_v4.py
+SHA-256: 1b0cf66b4d0cd03b3aad4b904bab908023f4a516c28d3f089313d17b16e032c8
+Size: 428,441 bytes; 6,762 lines.
+Public foundation: PIRATE v1, SHA-256
+ea169847a7c61efc9957d1190e8751e134b6c7bbfb30089284facb979cc22e27.
+PIRATE, Tosky_v3 and TOSKY.py remain byte-for-byte unchanged.
+
+The implementation is complete as an offline-validated candidate. There is no
+new measured ORO qualifying or hidden-race accuracy, inference bill, or runtime.
+No paid inference, paid verification, submission, or external message was sent.
+Only public documentation and provider pricing were fetched over the network.
+
+REVIEW METHOD
+
+The development followed seven saved source checkpoints: unchanged PIRATE,
+budget accounting, procedures, changing state, reference evidence, interview,
+and final integration. Every checkpoint's SHA is in build-review.json.
+Tests first reproduced the relevant inherited failures and then verified the
+correction plus negative controls. Later integrated review uncovered additional
+interactions, which were corrected before finalizing.
+
+The final suite has 50 passing test methods, some with multiple scenarios.
+These are software checks with scripted observations/model responses, not 50
+benchmark successes. The suite exercises the real agent_main entry point and
+the real ProxyClient at a mocked HTTP boundary. No real network is permitted
+through those test transports.
+
+Command:
+python3 -m unittest discover -s agents/tests -p test_tosky_v4.py -v
+
+Final output: 06-integrated-final.txt.
+Reproducible source audit and fixture comparison:
+python3 logs/research/tosky-v4-build-2026-11-14/build_review.py
+
+STAGE 1: BUDGET ACCOUNTING
+
+Before: PIRATE counted a logical inference operation once even when it retried
+the physical request. A persistent 402 triggered four requests and 34 nominal
+seconds of waits in the inherited isolated probe. A missing usage.cost was
+treated as zero recorded cost. Thresholds were checked after expenditure.
+
+Change: reserve estimated cost before each physical request; count each retry
+and fallback; reconcile actual reported charges; retain the reservation when
+billing is unknown. Invalid, negative, boolean, NaN or infinite costs cannot
+become free credit. Stop immediately on 402 or an observed reservation breach.
+Local admission denial exits unproductive planning and brief-retry loops.
+Ordinary admitted model/prompt/output settings remain unchanged.
+
+Review: successful response, timeout, malformed/missing cost, 429/503 retry,
+402, physical-call limit, long-context tier, output admission and exhausted
+budget cases pass. The real ProxyClient confirms one HTTP attempt on 402 and
+preserves its supplied authorization. A scripted 90-invocation missing-billing
+stress check stays within the allocated $4.50 envelope.
+
+Financial settings use the public OpenRouter model catalog fetched this turn.
+The episode allowance is $0.050; $0.004 of it is protected while a stated
+procedure remains due. Protection is not an additional allowance. It can be
+used by procedure execution and ceases to apply when no procedure is due.
+Estimates include prompt framing, output limits, cache-write rates, published
+context tiers and a 25% margin. They are not certified maximum routed prices.
+The run's scoped key remains the authoritative spending limit. Additional task
+reruns and unexpected provider charges can consume the margin; no local fixed
+episode envelope can guarantee completion under arbitrary external failures.
+
+STAGE 2: PROCEDURE COMPLETION
+
+Before: direct_order and finish ignored a rejected gate; an unavailable or
+incomplete review could become permission. The fallback paths could therefore
+finish with a procedurally invalid order.
+
+Change: all terminal paths honor the gate, with a final check at act. The gate
+requires an explicit result for each applicable duty and a real recorded action.
+General explanations can be supported by earlier evidence; cart-dependent
+approval requires evidence after the relevant cart change. Empty/missing model
+responses are unresolved, not permission. Holds identify the outstanding duty.
+Unchanged failed reviews are bounded; a distinct completed repair can permit
+verification. Repeated planning without a world action is stopped.
+
+Review: no-duty checkout remains model-free; completed duties reuse their
+decision; missing/empty/partial proofs, failed-action lines and stale cart
+approval do not pass. Both fallback order paths respect rejection. Informing
+can complete without inventing an approval requirement. Combined terminal tools
+are distinguished using their declared fixed arguments.
+
+STAGE 3: CHANGES, AVAILABILITY AND REPLACEMENT
+
+Before: an unnamed stockout could leave availability unchanged outside the
+normal repair path; review identity ignored changes to selected records and
+quantity. Any true-to-false product flag could mark the item unavailable.
+Replacement ordering could trust a model's quoted price instead of an observed
+price. Final checkout refusal could be followed by decline without processing
+the returned change.
+
+Change: attach an unnamed checkout stockout to the cart and exact action step
+that produced it. Invalidate a single affected item; mark ambiguous multi-item
+availability unresolved until a fresh offer identifies the state. Never infer
+that every line is sold out. Guard unavailable/unresolved selections at every
+purchase dispatch. An older attempt cannot capture an unrelated later notice.
+Only the learned stock field affects availability from boolean transitions.
+Review keys include selected evidence, quantity and availability. Unrelated
+reads preserve them. Replacement ordering prefers observed prices. Checkout
+refusals are observed before another decision is made.
+
+Review: single-line and ambiguous notices, stale/fresh offers, wrong-tool reads,
+unrelated boolean changes, irrelevant notes, selected-price/quantity changes,
+unrelated product reads, observed-price ranking and final-step order guards pass.
+The full entry point completes a scripted stockout replacement successfully.
+
+STAGE 4: REFERENCE EVIDENCE
+
+Before: a negative reference review could be overridden merely because numbers
+in different units had the same significant digits. The reference-review cache
+also survived changes to the actual reference page.
+
+Change: remove scaled_same and its automatic override. Preserve the existing
+semantic reference review and same-unit numerical checks. A review now belongs
+to the actual reference contents. No unit registry or conversion table is added.
+
+Review: the 1000 mAh / 10 V counterexample no longer suppresses a negative
+review. A semantically confirmed conversion still needs only the existing
+review, not an extra judge. Unchanged reference contents stay cached; changed
+contents are reconsidered. Numerical edge and ambiguous-range behavior is
+preserved in the exercised controls. This does not prove all model-based unit
+interpretation correct.
+
+STAGE 5: FOCUSED QUESTIONS
+
+Before: one-item questions could grow into long property lists. A firmly named
+reply property absent from the observed key set could be discarded.
+
+Change: ask one property per item question. Preserve the initial planner
+priority. After an unproductive answer, choose among remaining proposed fields
+using observed coverage and value discrimination. Preserve explicit ask-first
+instructions and model-supplied hints. Multi-item grouping remains available
+when message scarcity requires covering several items in one message.
+The answer parser can retain an explicitly quoted property named in the reply,
+even when it differs from the question or is not yet in the observed catalog.
+The quote must actually occur in the reply and match the claimed property.
+No fixed attribute priorities, product answers, or additional compulsory model
+call are introduced.
+
+Review: first-question preservation, explicit priorities, observation-based
+follow-up, narrow wording, an explicitly named new property, and a fabricated
+quote are checked. A full entry-point fixture activates the new question
+selection, discovers the preference, and preserves a later procedure message.
+This remains the main accuracy experiment requiring a paid evaluation. The
+fixtures establish its execution and protocol behavior, not its score benefit.
+
+FINAL REVIEW FOUND AND CORRECTED TWO INTERACTIONS
+
+1. Ordinary environment actions were not consistently present in the history
+   reviewed by the procedure gate. Action history is now recorded at dispatch;
+   gate repair no longer duplicates those records. Failed actions cannot serve
+   as completion evidence.
+
+2. The late-question path could spend the sole message reserved for explaining
+   something before purchase. The first integrated fixture was too permissive:
+   it treated any shopper message as satisfying the explanation. The improved
+   fixture distinguishes a preference question from that actual duty and
+   reproduced the failure. Both send and late_question now honor reservations.
+
+This is a concrete reason to review test assumptions as well as agent code.
+The final suite uses the corrected fixture, not the earlier permissive one.
+
+INTEGRATED COMPARISON WITH THE FROZEN PIRATE SOURCE
+
+These five scenarios use a scripted model and a small synthetic environment.
+They are not ORO problems or scores. Counts below are fixture requests/actions,
+not measured inference cost or runtime.
+
+Scenario                    PIRATE contract  v4 contract  Model requests old/new
+Ordinary order              satisfied        satisfied    4 / 4
+Required explanation        violated         satisfied    8 / 6
+Stockout replacement        satisfied        satisfied   10 / 10
+Correct decline, new names  satisfied        satisfied    8 / 8
+Preference plus explanation satisfied        satisfied   11 / 11
+
+All four scenarios PIRATE already satisfies remain satisfied. The explanation
+scenario is repaired with two fewer scripted model requests. The combined
+preference/explanation fixture takes one additional environment action (8 to 9)
+because the questions are separate; there is no additional model request in
+that fixture. This tradeoff is recorded, not described as a universal speedup.
+
+SOURCE AND SUBMISSION REVIEW
+
+217 existing controller methods retain identical ASTs. Twenty-four are changed,
+five helpers are added, and scaled_same is removed. All five added helpers are
+statically reachable from run, which agent_main invokes. No new controller
+stack, parallel master ledger or universal completeness certificate is added.
+The optional Tosky_v3 typed-review adjudicator was not imported because its
+incremental benefit had not been established.
+
+Local checks pass for syntax, synchronous single entry point, permitted imports,
+only supplied inference/environment proxy endpoints, absence of prohibited
+dynamic execution/file writes, and absence of recognized benchmark task,
+product or world identifier literals. Source parsing/compilation took about
+0.16 seconds locally. This is not the platform's static-analysis runtime and
+does not certify acceptance by its private integrity/plagiarism checks.
+
+Official references checked:
+https://oroagents.com/docs/miners/code-requirements
+https://openrouter.ai/api/v1/models
+
+WHAT THE NEXT EVALUATION MUST ESTABLISH
+
+Run the frozen baseline and this exact candidate under matched available pack,
+provider and selection conditions, using the full task set. Report paired gains
+and losses, actual calls/cost, denials, correct declines, procedure failures,
+unfinished episodes and runtime. Any loss needs trace analysis before another
+patch. Repeated executions of one task are not independent new tasks, and the
+public practice world does not predict hidden-race accuracy.
+
+Proposed nominal allocations: $1.50 for 30 invocations and $4.50 for 90.
+Actual compliance, model behavior and score improvement still need measurement.
+There is no claim here of a champion-level score, guaranteed submission
+acceptance, or complete elimination of every possible hidden-world failure.

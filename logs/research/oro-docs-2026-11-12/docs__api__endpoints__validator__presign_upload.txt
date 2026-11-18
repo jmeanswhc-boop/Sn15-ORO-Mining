@@ -1,0 +1,58 @@
+Validator
+Get upload URL
+Get a presigned URL for uploading per-problem evaluation logs.
+Server URLloading...POST/v1/validator/uploads/presignSendAuthorizationBody
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Request Body
+application/json
+TypeScript Definitions
+Use the request body type in TypeScript.Copy
+Response Body
+200
+application/json
+400
+application/json
+404
+application/json
+409
+application/json
+422
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X POST "https://api.oroagents.com/v1/validator/uploads/presign" \  -H "Content-Type: application/json" \  -d '{    "content_length": 0,    "eval_run_id": "8022d801-acb6-4836-b536-3cd4138b6ae0",    "problem_id": "9edf0a7c-64c3-4960-a497-d801a548ec4c"  }'200400404409422
+{
+  "upload_url": "string",
+  "method": "PUT",
+  "results_s3_key": "string",
+  "expires_at": "2019-08-24T14:15:22Z"
+}
+{
+  "detail": "string",
+  "error_code": "FILE_TOO_LARGE"
+}
+{
+  "detail": "string",
+  "error_code": "EVAL_RUN_NOT_FOUND"
+}
+{
+  "detail": "string",
+  "error_code": "NOT_RUN_OWNER"
+}
+{
+  "detail": [
+    {
+      "loc": [
+        "string"
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": null,
+      "ctx": {}
+    }
+  ]
+}
+Get an upload URL for an environment episode artifact
+Return a content-addressed upload target for an evaluation owned by the caller.
+Submit environment episode results
+Submit up to 500 episode results for evaluations owned by the caller. HTTP 200 is a batch acknowledgement: inspect each item's status for acceptance (201), an already-recorded task (409), or rejection (404/422).

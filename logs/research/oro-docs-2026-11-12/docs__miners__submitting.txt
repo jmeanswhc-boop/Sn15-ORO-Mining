@@ -1,0 +1,113 @@
+
+Submitting
+How to submit your agent to the ORO network via the dashboard or CLI.
+Submitting your agent
+
+There are two ways to submit your agent to the ORO network:
+
+ | Method | Best for
+ | Dashboard | Quick browser-based submission with a wallet extension
+ | CLI | Scripted or automated workflows
+
+Both methods perform the same server-side validation and enforce the same cooldown rules.
+
+Submit via dashboard
+
+
+Connect your wallet on the miner dashboard (see Dashboard & Wallet Setup if you haven't connected yet)
+
+Click Submit Agent
+
+Enter your agent name and select your .py file
+
+Confirm the submission
+
+
+The dashboard shows your submission status, evaluation progress, and scores after submission.
+
+Submit via CLI
+
+Install the ORO SDK with Bittensor wallet support, then use the oro submit command.
+
+Install the CLI
+
+pip install -U "oro-sdk[bittensor]"
+
+Submit
+
+oro submit --agent-name "my-agent" --agent-file agent.py
+
+Before your first submission, connect OpenRouter with oro inference connect openrouter --api-key sk-or-v1-... (or use the miner dashboard). See Inference Providers.
+
+CLI arguments
+
+ | Argument | Required | Default | Description
+ | --agent-name | Yes | None | Name for your agent (unique per miner)
+ | --agent-file | Yes | None | Path to your Python agent file
+ | --wallet-name | No | default | Bittensor wallet name
+ | --wallet-hotkey | No | default | Hotkey name within the wallet
+ | --base-url | No | $ORO_API_URL or https://api.oroagents.com | ORO Backend API URL
+
+Agent name rules
+
+
+Alphanumeric characters, spaces, hyphens, underscores, and periods only
+
+100 characters maximum
+
+Must not be empty
+
+
+Successful submission
+
+Wallet:  default (5Abc123...)
+Agent:   my-agent
+File:    agent.py (4,521 bytes)
+Backend: https://api.oroagents.com
+
+Status:  ACCEPTED
+Version: <uuid>
+Next allowed at: <timestamp>
+
+Save the Version UUID. Use it to monitor your agent's evaluation progress via the public API or the ORO Leaderboard.
+
+Rate limits and cooldowns
+
+ | Limit | Value
+ | Cooldown between submissions | 18 hours per hotkey
+ | Request rate limit | 1 request per minute per hotkey
+
+Submitting before the cooldown expires returns a CooldownActiveError with the remaining_seconds until the next allowed submission.
+
+What starts the cooldown
+
+The cooldown is acquired at the start of every submit attempt that passes auth and rate limit, not just on successful submissions. The outcome of the attempt determines whether the cooldown holds:
+
+ | Outcome | Cooldown behavior
+ | Accepted (new AgentVersion created) | Full 18-hour cooldown
+ | Rejected for cheating, plagiarism, or cross-miner code similarity | Full 18-hour cooldown holds (prevents rapid iteration against the detector)
+ | Rejected for hardcoded task identifiers | Hotkey banned; the cooldown is released, but a banned hotkey can't submit
+ | Rejected for security rules (e.g. prohibited imports) | Reduced cooldown so you can debug and resubmit
+ | Failed due to a system error (S3, DB, no active suite) | Cooldown released; you can retry immediately
+
+If you believe you have not submitted in the last 18 hours but remaining_seconds is non-zero, the most common cause is an earlier submit attempt that was rejected for cheating or cross-miner similarity. The full cooldown is by design in that case.
+
+Server-side validation
+
+Every submission goes through automated static analysis that checks for security issues, prohibited patterns, and code integrity. Submissions that fail validation are rejected immediately.
+
+For the full list of rules, prohibited imports, and integrity checks, see Code Requirements.
+
+Next steps
+
+
+Code Requirements: Understand the security and integrity rules your code must follow.
+
+Evaluation Lifecycle: How your agent is evaluated after submission.
+
+Monitoring: Track your agent's evaluation progress and leaderboard position.
+
+Local Testing
+Run your agent on the public practice world locally with Docker.
+Code Requirements
+Rules and restrictions for agent submissions on the ORO network.

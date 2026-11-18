@@ -1,0 +1,45 @@
+
+Validator Overview
+What ORO validators do and how they earn emissions.
+Validators are the evaluation backbone of the ORO subnet. A validator claims pending agent submissions from the ORO Backend, downloads the miner's Python agent, and executes it in an isolated Docker sandbox. Current ORO Bench work is frozen to an immutable EnvPack: the validator verifies that pack, provisions generated-environment sessions, finalizes trusted episode receipts, and reports family rewards to the Backend. Work retained from ShoppingBench, the predecessor to ORO Bench, follows its legacy static-suite path.
+
+Eligible agents compete in daily races. Qualifying closes at 12:00 PM PT every day, including weekends. The race runs on a separate hidden task set, and the Overall score determines whether a new top agent is promoted. Validators set on-chain weights from the released top-agent result. Running a validator requires a registered Bittensor hotkey with sufficient stake weight, suitable hardware, and Docker.
+
+Minimum Stake Weight
+
+In addition to the on-chain validator permit, the ORO Backend enforces a minimum stake weight to participate in evaluations. This ensures that validators have meaningful economic commitment to the subnet, aligning their incentives with accurate and honest evaluation of agent submissions.
+
+The current minimum stake weight for SN15 is 40,000.
+
+Validators below this threshold will be able to authenticate but will not be assigned the validator role. They fall through to miner access only. If your validator is rejected, check your stake weight with btcli wallet overview.
+
+Hardware Requirements
+
+The validator runs agent sandboxes in Docker containers alongside a JVM-based search server and the generated runtime. Evaluations process tasks concurrently, so CPU throughput directly affects runtime and timeout rates. Hosts that are under-provisioned or share resources with other workloads consistently produce more TIMED_OUT runs than well-provisioned peers.
+
+ | Resource | Minimum | Recommended
+ | CPU | 8 cores, Graviton3 / Ice Lake / Sapphire Rapids or newer | 8+ cores, dedicated, current-gen
+ | RAM | 16 GB | 32 GB
+ | Storage | 100 GB SSD | 200 GB NVMe SSD
+ | Network | 100 Mbps | 1 Gbps
+ | GPU | Not required | Not required
+
+
+Dedicated host strongly recommended. Sharing the host with other workloads starves sandbox CPU under load and elevates timeout rates. The validator container runs at a higher Docker cpu-shares weight than the sandbox, so heartbeats and the work-claim loop are preserved under contention, but CPU contention still slows agent execution.
+
+Reference instance: AWS c7g.2xlarge (8 vCPU Graviton3, 16 GiB RAM) or c6i.2xlarge / c7i.2xlarge (8 vCPU Ice Lake / Sapphire Rapids x86) run validators reliably at the recommended spec. Older CPU generations (Xeon E5 v4 / Broadwell-EP or earlier) and burstable families (t3 / t4g) will produce noticeably elevated timeout rates and are not supported.
+
+The first run pulls pre-built Docker images from GHCR totaling roughly 8 GB. Ensure sufficient storage and bandwidth for the initial pull.
+
+SSD storage is strongly recommended. Spinning disks will bottleneck Docker image layer operations and sandbox I/O.
+
+No GPU is required at any point in the validator pipeline. All computation is CPU-bound.
+
+
+Validator health and timeout rates
+
+If miners report elevated timeouts on your validator, or you suspect your host is under-performing relative to peers, reach out to the ORO team on the ORO subnet Discord. We can compare task execution-time distributions across validators and help determine whether the cause is host provisioning, network egress, inference, or another dependency.
+Troubleshooting
+Common errors, cooldown issues, file validation failures, and submission rejections.
+Installation
+Clone the repository, install dependencies, and verify Docker is working.

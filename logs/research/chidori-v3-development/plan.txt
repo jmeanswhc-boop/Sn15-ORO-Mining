@@ -1,0 +1,20 @@
+ICDI CHIDORI v3 development plan
+
+Targets: agents/ICDI_chidori_v3.py and agents/ICDI_chidori_v3_budget.py. Preserve all earlier files and source hashes. No paid tests or submissions.
+
+Engineering shortcomings and countermeasures:
+- Mocking the complete client concealed an authentication defect. Exercise the actual ProxyClient through a mocked HTTP boundary, and block every real network request in tests.
+- Tests treated broad shutdown as correct and missed cheaper recovery. Reproduce expensive-request denial followed by an affordable correction, using the 19 recorded stopped states as controls.
+- Completion/cache flags were set before successful interpretation. Keep observations pending until a valid response is applied; verify rejected and missing responses separately.
+- Budget caps were tested arithmetically, not against usable responses and actual traces. Replay recorded requests/usage through admission and check context tiers, unchanged output capacity when affordable, and model-output failures.
+- A passing offline suite was given too much practical weight. Report control-flow evidence separately from live accuracy and total shared billing. Do not claim a score gain without a scored comparison.
+
+Sequential checkpoints:
+A. Per-request denial: distinguish a rejected prompt/model request from globally unavailable credit. Preserve 402, uncertain-charge accounting, hard admission and retry limits. Avoid outage waits for a local refusal. Verify before proceeding.
+B. Recovery: keep failed notice reads pending, preserve valid negative reviews during failed escalation, and prevent known-bad or unprocessed-change blind terminal retries. Reuse the existing shopping and review logic. Verify before proceeding.
+C. Pricing: use applicable published context-tier rates under the existing conservative input estimate and margin. Validate boundaries and recorded billing before combining. Keep the $0.035 agent allocation; do not increase it to mask the control defect.
+D. Integrated checks: both variants, real-client authentication, recorded passing controls, late stockout/withdrawal/negative-review cases, 90-task accounting stress, original hashes and local submission-policy preflight. Save exact diffs and evidence.
+
+Financial release condition: agent + simulator + uncertain/in-flight charges <= $5 over all 90 problems; operating target $4 with $1 headroom. At $0.035/task the configured agent allocation is $3.15. Shared simulator billing and price/token estimate uncertainty remain unverified; the local ledger alone cannot certify the complete race bill.
+
+Do not add task-specific wording, product or task identifiers, grader logic, phase routing, broad model changes or a new search architecture. Keep the full variant's existing procedure controller and the budget variant's baseline procedure behavior distinct.

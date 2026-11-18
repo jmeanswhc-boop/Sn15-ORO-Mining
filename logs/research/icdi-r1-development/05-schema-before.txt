@@ -1,0 +1,23 @@
+FE
+======================================================================
+ERROR: test_malformed_procedure_identifier_is_not_permission (agents.tests.test_icdi_r1.ReviewRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 313, in test_malformed_procedure_identifier_is_not_permission
+    self.assertFalse(e.gate('order')[0])
+  File "/home/vboxuser/Documents/oro/agents/ICDI_r1.py", line 1676, in gate
+    covered.add(entry.get("step"))
+TypeError: unhashable type: 'list'
+
+======================================================================
+FAIL: test_malformed_changes_are_rejected_without_crashing (agents.tests.test_icdi_r1.StateRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_icdi_r1.py", line 167, in test_malformed_changes_are_rejected_without_crashing
+    self.assertFalse(e.valid_update({'kind': 'change', **delta}, 'source'), delta)
+AssertionError: True is not false : {'unclear': [{'item': 1, 'question': [], 'quote': 'source'}]}
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.123s
+
+FAILED (failures=1, errors=1)

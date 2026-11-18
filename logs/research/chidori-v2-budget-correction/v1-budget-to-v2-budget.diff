@@ -1,0 +1,48 @@
+--- ICDI_chidori_v1_budget.py
++++ ICDI_chidori_v2_budget.py
+@@ -1,4 +1,4 @@
+-# ICDI CHIDORI v1: independently verified budget-only checkpoint.
++# ICDI CHIDORI v2: budget-only checkpoint with self-contained pricing admission.
+ import json
+ from decimal import Decimal, InvalidOperation, ROUND_CEILING
+ import random
+@@ -10142,7 +10142,25 @@
+         best = max(cands, key=lambda k: (len(set(figs[k])), len(figs[k]), -order.index(k)))
+         return best if len(set(figs[best])) >= 3 else None
+ 
+-# Monetary amounts are integral nanodollars; prices are read through the proxy.
++# Monetary amounts are integral nanodollars; reviewed rates are configured below.
++# Reuse the reviewed maximum context-tier rates from the full v2 configuration.
++# Refresh pricing before release; these settings are not a guaranteed routed-price bound.
++BUDGET_PRICE_CONFIG = {"data": [
++    {"id": LIGHT, "context_length": 1000000,
++     "top_provider": {"max_completion_tokens": 128000},
++     "pricing": {"prompt": "0.0000005", "completion": "0.0000025",
++                 "input_cache_read": "0.00000005", "input_cache_write": "0.000000625", "request": "0"}},
++    {"id": HEAVY, "context_length": 1000000,
++     "top_provider": {"max_completion_tokens": 128000},
++     "pricing": {"prompt": "0.000002", "completion": "0.00001",
++                 "input_cache_read": "0.0000001", "input_cache_write": "0.0000025", "request": "0"}},
++    {"id": SPARE, "context_length": 1050000,
++     "top_provider": {"max_completion_tokens": 128000},
++     "pricing": {"prompt": "0.0000002", "completion": "0.00000075",
++                 "input_cache_read": "0.00000002", "input_cache_write": "0.00000025", "request": "0"}},
++]}
++
++
+ AGENT_USD_LIMIT = "0.035"
+ PROCEDURE_USD_RESERVE = "0.010"
+ MIN_REPLY_TOKENS = 512
+@@ -10291,11 +10309,7 @@
+             self.last_budget_denial = "inference_stopped"
+             return BudgetReply(self.last_budget_denial)
+         if budget.prices is None:
+-            try:
+-                catalog = model_client(min(10, self.room())).get("/inference/models")
+-            except Exception:
+-                catalog = None
+-            budget.load_prices(catalog)
++            budget.load_prices(BUDGET_PRICE_CONFIG)
+         protected = 0
+         if self.budget_mode != "procedure" and (not self.brief_read or self.duties or not getattr(self, "procedures_valid", True)):
+             protected = budget.protected

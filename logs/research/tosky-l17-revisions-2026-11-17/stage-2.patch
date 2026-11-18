@@ -1,0 +1,152 @@
+--- before
++++ after
+@@ -729,7 +729,7 @@
+ <procedure>
+ 1. Read question, asked_topics, shopper_reply, product_names and the current task state.
+ 2. Classify whether it states a requirement, indifference, confusion or too many questions.
+-3. Resolve the scope of any no-preference answer using the actual asked topics.
++3. Resolve no-preference scope using question_focus; other mentioned topics are optional invitations.
+ 4. Extract complete requirement values, listing references and any independent budget update.
+ 5. Return the reply interpretation contract.
+ </procedure>
+@@ -739,9 +739,11 @@
+ kind: told = the reply states a requirement; indifferent = any is fine / no preference; lost = they did not
+ understand and want it reworded; crowded = they want fewer questions per message.
+ A new total budget or spending limit is not a product requirement: leave it out of "told".
+-An unqualified no-preference reply answers the current question's listed topics even when
+-the shopper repeats none of their names. Use question scope. A reply naming only one
+-property uses named scope and leaves the other topics unresolved. Use product or order
++An unqualified no-preference reply settles question_focus even
++when the shopper does not repeat its name. Use question scope for that one focus. A vague
++answer to a compound question does not settle each topic; use null scope unless the reply
++identifies a topic or explicitly covers all of them. A reply naming one property uses
++named scope and leaves other topics unresolved. Use product or order
+ scope only when the reply explicitly makes all remaining optional details flexible in
+ that scope; quote the exact supporting words. Do not infer broad scope from a generic
+ answer to one question. Confusion and an unread answer are not indifference.
+@@ -762,7 +764,7 @@
+ Return one compact JSON object only. No Markdown fences or commentary.
+ - kind: one of "told", "indifferent", "lost", "crowded", "other".
+ - told: array with product, property and value (strings), and points (boolean).
+-- indifferent: array with product and property (strings).
++- indifferent: only explicitly named flexible properties, with product and property strings; empty for question scope.
+ - about: the asked property the answer concerns, or null.
+ - indifference_scope: "question", "named", "product", "order", or null.
+ - scope_products: exact supplied product names for an explicit product-wide scope, otherwise an empty array.
+@@ -1621,7 +1623,8 @@
+ # from the request and the product first (a 0-5 score per property), and how many of the product's listings carry
+ # the property second (ties). A crowded reply (the shopper wants fewer subjects per message) switches to single properties. The same
+ # product asked again uses only topics not settled by the reply. Unqualified indifference settles the listed
+-# topics; named indifference stays narrow, while an explicit broader opt-out closes that product or order.
++# focus; other mentioned topics remain open. Named indifference stays narrow, while an explicit broader
++# opt-out closes that product or order.
+ #
+ # Everything outside is injected (SendoAsk(request, io)): io.llm(model, messages, max_tokens, timeout) -> text,
+ # io.search(query, page) -> {"rows", "next"}, io.browse(category) -> {"rows", "next"} or None, io.categories,
+@@ -1969,32 +1972,31 @@
+         live = [it for it in self.items if it.open_props()]
+         if left <= 0 or not live:
+             return None
+-        if self.crowded:
+-            # singles: products with nothing told first, then the model's odds, the fewest singles so far
+-            it = sorted(live, key=lambda it: (bool(it.told), it.singles, -it.odds, it.idx))[0]
+-            return {"kind": "single", "parts": [(it, it.open_props()[:1])]}
+         fresh = [it for it in live if not it.questions]
+-        if fresh:
+-            # one product per message, the model's likeliest first
+-            it = fresh[0]
+-            return {"kind": "list", "parts": [(it, _sd_distinct(it.open_props(), SD_LIST_LEN))]}
+-        # every product asked: the same product again, nothing-told first
+-        it = sorted(live, key=lambda it: (bool(it.told), it.lost > 0, -it.odds, it.idx))[0]
+-        return {"kind": "again", "parts": [(it, self.again_list(it))]}
++        it = fresh[0] if fresh else sorted(live, key=lambda it: (bool(it.told), it.lost > 0, -it.odds, it.idx))[0]
++        if it.last_kind == 'lost' and it.lost == 1 and it.last and it.last[0] in it.open_props():
++            return {'kind': 'reword', 'parts': [(it, it.last[:1])], 'focus': (it, it.last[0])}
++        props = _sd_distinct(it.open_props(), SD_LIST_LEN) if fresh else self.again_list(it)
++        return {'kind': 'list' if fresh else 'again', 'parts': [(it, props)], 'focus': (it, props[0])}
+ 
+     def again_list(self, it):
+-        """Follow up only on unresolved topics; never rotate a settled answer back in."""
+         allowed = set(it.open_props())
+-        fresh = [k for k in it.open_props() if k not in it.last]
+-        rest = [k for k in it.last[1:] if k in allowed]
++        fresh = [key for key in it.open_props() if key not in it.last]
++        rest = [key for key in it.last[1:] if key in allowed]
+         if it.answered_at is not None:
+-            out = [k for k in it.last[it.answered_at + 1:] if k in allowed] + fresh
+-        elif it.last_kind == "lost":
++            out = [key for key in it.last[it.answered_at + 1:] if key in allowed] + fresh
++        elif it.last_kind == 'lost':
+             out = fresh + rest
+         else:
+             out = list(reversed(rest)) + fresh
+-        out = _sd_distinct(out, SD_LIST_LEN)
+-        return out or _sd_distinct(it.open_props(), SD_LIST_LEN)
++        return _sd_distinct(out, SD_LIST_LEN) or _sd_distinct(it.open_props(), SD_LIST_LEN)
++
++    @staticmethod
++    def focus_parts(msg):
++        focus = msg.get('focus')
++        if focus and any(it is focus[0] and focus[1] in props for it, props in msg['parts']):
++            return [(focus[0], [focus[1]])]
++        return msg['parts'] if sum(len(props) for _, props in msg['parts']) == 1 else []
+ 
+     @staticmethod
+     def _join(props):
+@@ -2007,6 +2009,11 @@
+         parts = msg["parts"]
+         if len(parts) == 1:
+             it, props = parts[0]
++            if msg['kind'] == 'reword':
++                return 'For the %s, is %s important, or may I choose any value for it?' % (it.label, props[0])
++            if msg.get('focus') and len(props) > 1:
++                return ('What %s do you need for the %s? You may also mention firm requirements for %s.'
++                        % (msg['focus'][1], it.label, self._join(props[1:])))
+             return "What %s do you need for the %s?" % (self._join(props), it.label)
+         first, rest = parts[0], parts[1:]
+         text = "What %s do you need for the %s" % (self._join(first[1]), first[0].label)
+@@ -2026,6 +2033,7 @@
+         if self.elapsed() < self.by_hear and reply.strip():
+             got = self.think((self.HEAR, {**self.reply_context(), "question": question, "shopper_reply": reply,
+                              "product_names": it_names,
++                             "question_focus": [{'product': it.label, 'property': props[0]} for it, props in self.focus_parts(msg)],
+                              "asked_topics": [{'product': it.label, 'properties': list(props)} for it, props in msg['parts']]}),
+                              [LIGHT, HEAVY], 1500, self.by_hear + 25, "kind")
+         if got is None:
+@@ -2095,6 +2103,9 @@
+         supported = bool(quote) and ' '.join(quote.split()) in ' '.join(reply.split())
+         if scope in ('product', 'order') and not supported:
+             scope = 'question' if kind == 'indifferent' else 'named'
++        if scope == 'question' and not self.focus_parts(msg):
++            named = [(it, key) for it, key in named if _sd_stems(key) and _sd_stems(key) <= said]
++            scope = 'named' if named else None
+         targets = []
+         if scope == 'order':
+             targets = list(self.items)
+@@ -2119,7 +2130,7 @@
+             for it, key in named:
+                 settle(it, key)
+         elif scope == 'question':
+-            for it, props in parts:
++            for it, props in self.focus_parts(msg):
+                 for key in props:
+                     settle(it, key)
+         if scope in ('product', 'order'):
+@@ -2193,7 +2204,7 @@
+         return max(0, self.agent.msgs_free())
+ 
+     def reply_context(self):
+-        return {'shopper_request': self.request, 'current_ledger': self.agent.ledger(),
++        return {'current_ledger': self.agent.ledger(),
+                 'current_budget': {'amount': self.agent.budget, 'unit': self.agent.brief.get('budget_unit')}}
+ 
+     # ---- the engine's steps, on the agent's own reading of the task ----
+@@ -2283,7 +2294,7 @@
+             it.answered_at = None
+             it.last_kind = None
+             it.asked += [k for k in props if k not in it.asked]
+-            if msg['kind'] == 'single':
++            if msg['kind'] in ('single', 'reword'):
+                 it.singles += 1
+         got = self.hear(msg, text, str(reply or ''))
+         self.trace['messages'].append({'kind': msg['kind'], 'q': text, 'a': _sd_clip(reply, 300),

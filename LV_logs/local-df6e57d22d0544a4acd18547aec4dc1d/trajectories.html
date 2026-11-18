@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>ORO Trajectory Room</title>
+    <style>
+/* ORO brand tokens. See Frontend/BRAND.md; this file is the offline mirror of
+   that palette, so keep the hex values in step with it. The report opens from
+   file:// with no network, so the brand fonts are requested from the system and
+   fall back to the platform sans when they are not installed locally. */
+:root {
+  --forest: #0a3815;
+  --cloud: #fcfcfa;
+  --snowcap: #fcfaf2;
+  --sand: #f3f1e7;
+  --mist: #cce9ff;
+  --gold: #edd03a;
+  --amber: #ff9138;
+  --sierra: #956825;
+
+  --line: #e2dbc9;
+  --line-strong: rgb(10 56 21 / 25%);
+  --muted: rgb(10 56 21 / 62%);
+  --shadow: 3px 3px 6px 0 rgb(149 104 37 / 8%);
+
+  --radius-card: 20px;
+  --radius-inner: 12px;
+  --radius-small: 15px;
+  --radius-pill: 100px;
+  --radius-tag: 115px;
+
+  --aura: linear-gradient(90deg, #fdf9ee, var(--gold), var(--amber), var(--forest));
+  --track: linear-gradient(90deg, var(--mist), var(--gold), var(--amber), var(--sierra));
+
+  --font-heading: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Google Sans Flex", "Google Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: .01em;
+  color: var(--forest);
+  background: var(--cloud);
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+html { min-width: 320px; scroll-behavior: smooth; }
+body { margin: 0; min-height: 100vh; background: var(--cloud); }
+button, input { font: inherit; }
+button { color: inherit; }
+button, summary, .file-button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--sierra); outline-offset: 3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 800; line-height: .9; letter-spacing: -.02em; }
+
+/* Masthead ---------------------------------------------------------------- */
+.masthead {
+  position: relative;
+  min-height: 104px;
+  padding: 22px 28px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  color: var(--snowcap);
+  background: var(--forest);
+}
+/* oro Aura: the brand line, carrying the masthead. */
+.masthead::after { content: ""; position: absolute; left: 28px; right: 28px; bottom: 10px; height: 4px; border-radius: var(--radius-pill); background: var(--aura); }
+.masthead h1 { margin: 2px 0 0; font-size: clamp(1.8rem, 3vw, 3rem); }
+.kicker, .eyebrow { margin: 0; font: 600 .7rem/1.05 var(--font-heading); letter-spacing: .02em; text-transform: uppercase; }
+.kicker { color: var(--mist); }
+.masthead__actions { display: flex; align-items: center; gap: 14px; }
+.load-status { max-width: 300px; color: rgb(252 250 242 / 72%); font-size: .78rem; }
+.file-button { padding: 11px 22px; border: 1px solid var(--snowcap); border-radius: var(--radius-pill); background: transparent; color: var(--snowcap); font-family: var(--font-heading); font-weight: 600; letter-spacing: .02em; transition: background 140ms ease, color 140ms ease; }
+.file-button:hover { color: var(--forest); background: var(--snowcap); }
+#file-input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+/* Workspace --------------------------------------------------------------- */
+.workspace { display: grid; grid-template-columns: minmax(230px, 300px) minmax(460px, 1fr) minmax(260px, 340px); min-height: calc(100vh - 104px); }
+.episode-panel, .evidence-panel { min-width: 0; background: var(--sand); }
+.episode-panel { padding: 24px 18px; border-right: 1px solid var(--line); }
+.evidence-panel { border-left: 1px solid var(--line); }
+.trajectory-panel { min-width: 0; background: var(--cloud); }
+.panel-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 16px; }
+.panel-heading h2, .evidence-section h3 { margin: 3px 0 0; }
+.count-badge { display: grid; place-items: center; min-width: 34px; height: 34px; padding: 0 10px; color: var(--snowcap); background: var(--forest); border-radius: var(--radius-tag); font: 600 .75rem var(--font-heading); }
+
+.search-field input { width: 100%; padding: 11px 16px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--snowcap); color: var(--forest); }
+.search-field input::placeholder { color: var(--muted); }
+.status-filters { display: flex; gap: 6px; margin: 10px 0 16px; }
+.filter { flex: 1; padding: 7px 6px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: transparent; font: 600 .66rem var(--font-heading); letter-spacing: .02em; text-transform: uppercase; color: var(--forest); }
+.filter.is-active { color: var(--snowcap); background: var(--forest); border-color: var(--forest); }
+.episode-list { display: grid; gap: 10px; }
+.episode-card { width: 100%; padding: 14px 16px; text-align: left; border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--snowcap); box-shadow: none; transition: transform 140ms ease, box-shadow 140ms ease; }
+.episode-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+.episode-card.is-selected { border-color: var(--forest); box-shadow: var(--shadow); }
+.episode-card__top, .episode-card__meta { display: flex; justify-content: space-between; gap: 8px; }
+.episode-card strong { display: block; margin: 8px 0; overflow-wrap: anywhere; font-family: var(--font-body); font-weight: 600; font-size: .82rem; line-height: .95; }
+.family-label, .episode-card__meta { color: var(--muted); font: 600 .63rem/1.15 var(--font-heading); letter-spacing: .02em; text-transform: uppercase; }
+.status-chip { padding: 3px 9px; border: 1px solid currentColor; border-radius: var(--radius-tag); font: 600 .58rem var(--font-heading); letter-spacing: .01em; text-transform: uppercase; }
+.status-chip--pass { color: var(--forest); }
+.status-chip--fail { color: var(--sierra); }
+.status-chip--unknown { color: var(--muted); }
+.empty-state { color: var(--muted); font-size: .82rem; }
+
+/* Trajectory header ------------------------------------------------------- */
+/* Deliberately not sticky: the goal and the collapsed rules vary in height, and
+   a tall sticky header covered the first turns of the timeline. */
+.trajectory-header { padding: 26px 28px; background: var(--snowcap); border-bottom: 1px solid var(--line); }
+.trajectory-header h2 { margin: 6px 0 12px; font-size: clamp(1.35rem, 2vw, 2rem); }
+.trajectory-header blockquote { margin: 0; max-width: 78ch; color: var(--forest); font-size: .95rem; font-weight: 300; line-height: 1.2; }
+.task-rules { margin-top: 14px; max-width: 78ch; }
+.task-rules > summary { color: var(--sierra); }
+.task-rules p { margin: 10px 0 0; padding: 14px 16px; max-height: 40vh; overflow: auto; color: var(--muted); background: var(--sand); border: 1px solid var(--line); border-radius: var(--radius-inner); font-size: .82rem; line-height: 1.2; white-space: pre-wrap; }
+.trajectory-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
+.trajectory-meta span { min-width: 0; padding: 5px 12px; overflow-wrap: anywhere; border: 1px solid var(--line); border-radius: var(--radius-tag); background: var(--cloud); font: 400 .66rem var(--font-mono); }
+
+/* Timeline ---------------------------------------------------------------- */
+.timeline { padding: 30px 28px 72px; }
+.turn { position: relative; display: grid; grid-template-columns: 74px minmax(0, 1fr); }
+.turn::before { content: ""; position: absolute; left: 31px; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.turn-marker { position: relative; z-index: 1; padding-top: 3px; }
+.turn-marker span { display: inline-block; padding: 5px 11px; color: var(--snowcap); background: var(--forest); border-radius: var(--radius-tag); font: 600 .58rem var(--font-heading); letter-spacing: .02em; text-transform: uppercase; }
+.turn-body { min-width: 0; padding: 0 0 30px 6px; }
+.message, .tool-pair, .reasoning, .event-card { margin: 0 0 12px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--snowcap); box-shadow: var(--shadow); }
+.message { padding: 16px 18px; }
+.message p, .reasoning p { margin: 7px 0 0; white-space: pre-wrap; font-size: .88rem; line-height: 1.2; }
+.message--assistant { border-left: 4px solid var(--forest); }
+.message--user { border-left: 4px solid var(--sierra); background: var(--mist); }
+.tool-pair { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); overflow: hidden; }
+.tool-action, .tool-observation { min-width: 0; padding: 16px 18px; }
+.tool-action { color: var(--snowcap); background: var(--forest); }
+.tool-observation { border-left: 4px solid var(--forest); }
+.tool-observation.has-error { border-left-color: var(--amber); }
+.tool-pair h4 { margin: 5px 0 9px; font-size: .95rem; font-weight: 600; letter-spacing: 0; }
+details summary { font: 600 .72rem var(--font-heading); letter-spacing: .02em; }
+pre { max-width: 100%; margin: 10px 0 0; padding: 14px; overflow: auto; color: var(--snowcap); background: var(--forest); border-radius: var(--radius-inner); font: .72rem/1.5 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.reasoning { padding: 15px 17px; border-left: 4px solid var(--gold); }
+.event-card { border-left: 4px solid var(--gold); box-shadow: none; }
+.event-card > summary { display: flex; justify-content: space-between; gap: 10px; padding: 12px 16px; list-style-position: inside; }
+.event-card small { color: var(--muted); font-family: var(--font-heading); font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+.event-card pre { margin: 0; border-radius: 0 0 var(--radius-inner) var(--radius-inner); }
+.turn-foot { min-height: 1em; color: var(--muted); font: .64rem var(--font-mono); }
+
+/* Outcome and evidence ---------------------------------------------------- */
+.outcome-hero { position: relative; padding: 26px 24px 30px; color: var(--snowcap); background: var(--forest); }
+/* oro Track: the data line, leading into the verdict figures. */
+.outcome-hero::after { content: ""; position: absolute; left: 24px; right: 24px; bottom: 12px; height: 4px; border-radius: var(--radius-pill); background: var(--track); }
+.outcome-hero > strong { display: block; margin: 8px 0; font-family: var(--font-heading); font-weight: 800; font-size: 2rem; line-height: .9; letter-spacing: -.02em; }
+.outcome-hero p { color: rgb(252 250 242 / 78%); font-size: .84rem; line-height: 1.2; }
+.outcome-numbers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0 10px; }
+.outcome-numbers span { padding: 11px 13px; border: 1px solid rgb(252 250 242 / 28%); border-radius: var(--radius-inner); font: 400 .64rem var(--font-mono); }
+.outcome-numbers b { display: block; margin-top: 5px; color: var(--gold); font-size: .8rem; }
+.evidence-section { padding: 20px 22px; border-bottom: 1px solid var(--line); }
+.evidence-section h3 { margin-bottom: 13px; font-size: 1rem; font-weight: 600; letter-spacing: 0; }
+.evidence-list { display: grid; gap: 8px; }
+.evidence-details { margin-top: 14px; }
+.evidence-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: .75rem; }
+.evidence-row span { color: var(--muted); }
+.evidence-row--stack { display: grid; gap: 3px; }
+.evidence-row code { overflow: hidden; text-overflow: ellipsis; font: .66rem var(--font-mono); white-space: nowrap; }
+.evidence-pass { color: var(--forest); font-weight: 600; }
+.evidence-fail { color: var(--sierra); font-weight: 600; }
+.evidence-unknown { color: var(--muted); }
+.muted { color: var(--muted); font-size: .78rem; }
+.raw-section pre { max-height: 70vh; }
+.empty-workspace { padding: 80px 30px; text-align: center; }
+
+/* Drop overlay ------------------------------------------------------------ */
+.drop-overlay { position: fixed; inset: 16px; z-index: 10; display: none; place-items: center; color: var(--snowcap); background: rgb(10 56 21 / 92%); border: 3px dashed var(--gold); border-radius: var(--radius-card); pointer-events: none; }
+.drop-overlay.is-visible { display: grid; }
+.drop-overlay div { display: grid; gap: 8px; text-align: center; }
+.drop-overlay strong { font-family: var(--font-heading); font-weight: 800; font-size: 1.5rem; letter-spacing: -.02em; }
+.drop-overlay span { color: rgb(252 250 242 / 78%); }
+
+@media (max-width: 1050px) {
+  .workspace { grid-template-columns: 230px minmax(0, 1fr); }
+  .evidence-panel { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--line); border-left: 0; }
+  .outcome-hero { grid-row: span 2; }
+}
+
+@media (max-width: 720px) {
+  .masthead { align-items: flex-start; padding: 18px 18px 24px; }
+  .masthead::after { left: 18px; right: 18px; }
+  .load-status { display: none; }
+  .workspace { display: block; }
+  .episode-panel { border-right: 0; border-bottom: 1px solid var(--line); }
+  .episode-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trajectory-header { padding: 20px 18px; }
+  .timeline { padding: 24px 16px 50px; }
+  .turn { grid-template-columns: 60px minmax(0, 1fr); }
+  .turn::before { left: 24px; }
+  .tool-pair { grid-template-columns: 1fr; }
+  .tool-observation { border-top: 1px solid var(--line); border-left-width: 4px; }
+  .evidence-panel { display: block; }
+}
+
+@media (max-width: 440px) {
+  .masthead h1 { font-size: 1.65rem; }
+  .episode-list { grid-template-columns: 1fr; }
+  .turn { grid-template-columns: 1fr; }
+  .turn::before { display: none; }
+  .turn-marker { margin-bottom: 8px; }
+  .turn-body { padding-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+</style>
+  </head>
+  <body>
+    <header class="masthead">
+      <div>
+        <p class="kicker">ORO / EVALUATION INTELLIGENCE</p>
+        <h1>Trajectory Room</h1>
+      </div>
+      <div class="masthead__actions">
+        <span id="load-status" class="load-status" role="status">Loading</span>
+        <label class="file-button" for="file-input">Open JSON</label>
+        <input id="file-input" type="file" accept="application/json,.json" multiple>
+      </div>
+    </header>
+
+    <main class="workspace" id="drop-zone">
+      <aside class="episode-panel" aria-label="Episodes">
+        <div class="panel-heading">
+          <div><span class="eyebrow">Local run</span><h2>Episodes</h2></div>
+          <span id="episode-count" class="count-badge">0</span>
+        </div>
+        <label class="search-field">
+          <span class="sr-only">Search episodes</span>
+          <input id="episode-search" type="search" placeholder="Search task or query">
+        </label>
+        <div class="status-filters" role="group" aria-label="Filter by result">
+          <button class="filter is-active" data-status="all">All</button>
+          <button class="filter" data-status="pass">Passed</button>
+          <button class="filter" data-status="fail">Failed</button>
+        </div>
+        <div id="episode-list" class="episode-list"></div>
+      </aside>
+
+      <section class="trajectory-panel" aria-label="Selected trajectory">
+        <header id="trajectory-header" class="trajectory-header"></header>
+        <div id="timeline" class="timeline"></div>
+      </section>
+
+      <aside class="evidence-panel" aria-label="Outcome and evidence">
+        <div id="outcome"></div>
+        <section class="evidence-section raw-section">
+          <h3>Source artifact</h3>
+          <details><summary>View raw JSON</summary><pre id="raw-json"></pre></details>
+        </section>
+      </aside>
+    </main>
+
+    <div id="drop-overlay" class="drop-overlay" aria-hidden="true">
+      <div><strong>Drop trajectory JSON</strong><span>ORO episode v1 or ATIF v1.x</span></div>
+    </div>
+    <template id="empty-template">
+      <div class="empty-workspace"><p class="kicker">NO EPISODE SELECTED</p><h2>Open a trajectory to inspect it.</h2></div>
+    </template>
+    <script id="oro-episodes" type="application/json">{"run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","episodes":[{"name":"t-069a67a0c4.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-069a67a0c4","session_id":"49b8c28cdab84b8593ccdd85bed39b31","episode_nonce":"88c5bfe92c514fb5b9e22f98aadcc315","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-069a67a0c4","task_sha256":"b494fbcc54a1460e93ab7c60f4a6db75cf0995754cfd7f30baf0a084f30d40e4","episode_nonce":"88c5bfe92c514fb5b9e22f98aadcc315"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":4},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":17},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":7},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-069a67a0c4","ledger_sha256":"72207bbca3d7109ce0368f38900404e31d938f09b3a49a0aafb4c16b04e8a944","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Hey, I'm after some UHT milk, the ready to drink kind, and it's got to come in cans (I'll check the label myself, don't worry). And it should be something y'all actually have on hand there, not just listed on a website somewhere out past the trailhead. Nothing over 145 cts, because yes, every penny counts for me (student loans ain't gonna pay themselves), so I'm watching the climb on price. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). My cousin asked me to grab some for our Saturday trail breakfast (she's particular, bless her), so I won't guess.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-0bcbf31bfd.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-0bcbf31bfd","session_id":"e51d812bc4dc46d591721444a91a834f","episode_nonce":"2eb1bf159cc94fd093c349599114d569","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-0bcbf31bfd","task_sha256":"c06b0d8fd47be4df2d2e9c1bdcf4a55f132033d940a03d8f98443396fff17742","episode_nonce":"2eb1bf159cc94fd093c349599114d569"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":29},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":3},{"kind":"draw","n":30,"value":27},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":3},{"kind":"draw","n":30,"value":23},{"kind":"draw","n":30,"value":2},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-0bcbf31bfd","ledger_sha256":"57b34075f8ca634611fbe317add5a4953c87e526485151e760f0fc656abab1b7","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"My roommate Dana asked me to grab one for her since mine has held up fine through two winters (don't tell her I said that). So the thing is a hoodie or sweatshirt, and the material's got to say cotton on the tag (I'll be checking that label, don't you worry), none of that mystery blend trail mix. And it ought to be something y'all really have on hand right now, not just a pretty picture on a site somewhere that's gone by the time I get there. Price tops out at 430 cts, not a cent past that (yes, every penny counts for me), y'all (student loans ain't gonna pay themselves). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). I'm a broke student and she's covering the cost, so anything that fits the trail of her request works for me.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-13e82f2c08.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-13e82f2c08","session_id":"688f04861ec64ee694cca6b02eed613f","episode_nonce":"81649567b78443e284a1285609b3a197","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-13e82f2c08","task_sha256":"71fe3f7ca6a2ab8d02d307ab6a6fcdd0fd9a25a87580822683678b516217a1e9","episode_nonce":"81649567b78443e284a1285609b3a197"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":20},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":0},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":3},{"kind":"draw","n":30,"value":27},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":27},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-13e82f2c08","ledger_sha256":"ae5a04039aec4284345391cdf7b2116d3e993221246e3449fbd6f4784a3ef15a","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Do I really need another skirt for class this fall? Pick whichever fitting one costs the least, please. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Only show me something you've actually got on hand, not just listed on a website somewhere (I've been burned before). It's gotta be a skirt, and the style's got to be wrap (I'll double-check, don't you worry). Nothing over 475 cts, y'all (every penny counts when you're climbing out of student loan hill, bless my heart). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). Probably not, but my one good one finally gave out (bless it), and I'd like something new before the semester trail gets steep.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-18396ebe94.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-18396ebe94","session_id":"f703e4a8b2104637b2f4e3da38ddbf6e","episode_nonce":"7a5ce89452d14efda2161ed6af5655b7","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-18396ebe94","task_sha256":"03c4d276ba1db6cc462e6498198e674e1536eed27d2116827c67d153e8124b13","episode_nonce":"7a5ce89452d14efda2161ed6af5655b7"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":23},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":10},{"kind":"draw","n":30,"value":4},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":10},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":21},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-18396ebe94","ledger_sha256":"f5aaf69613b00374f6ff7285faaf6acf56be03220655d9bb6ca150ff0e458377","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Every Sunday I lay the week's outfits on my bed (yes, I'm that organized), mostly thrifted tops and hand-me-down skirts that don't match each other. Mules are the thing, and the heel has to be a wedge (I'll check the listings myself, don't you worry), so don't hand me a block heel or a stiletto and call it close. I reckon how the wedge mules look across the surface will decide whether they fit in with that mess. Nothing over 665 cts, y'all (every penny counts when you're a student, and the loans ain't gonna pay themselves), so anything past that is off the trail for me. And I only want pairs y'all actually have on hand, not ones that just show up on some website and then turn out to be a mirage (a trail that fades out halfway up the ridge). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-31121a0ab9.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-31121a0ab9","session_id":"33c5dafa0f1e4b1697eddfd5fc86d0c5","episode_nonce":"db2dcd69fe444006b74a699b3f5f7709","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-31121a0ab9","task_sha256":"e2f40a8a2c0844bc9242abd6f42ae5c834ba64357aa2e68a3a24aa10ac1cdd47","episode_nonce":"db2dcd69fe444006b74a699b3f5f7709"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":3,"value":1},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":3},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":0},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":2},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":3},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":11},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-31121a0ab9","ledger_sha256":"318764e7e2f1fb9ac248ead210134af8a8ea9fe54482cdb25fcf0de3eb53c412","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Gonna start with skirts, and the waist has to be an elasticated waist (I'll double-check that myself, don't you worry), since a skirt that fights me all day is a steep climb I don't need. I tried a skirt unseen once and it clashed with my whole closet (lesson learned). And it's got to be something y'all really have on hand right now, not just listed on some website way off yonder. Now I need one for class and will squint at every photo's look like a ridge line. Price-wise, nothing over 510 cts (yes, every penny counts for me), y'all (student loans ain't gonna pay themselves). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-350bf2a022.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-350bf2a022","session_id":"0481d63841024e869ac6540adaf506ce","episode_nonce":"c173fa05b90f4f5a8375f1be478808ae","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-350bf2a022","task_sha256":"db6d8aec88c98ce576d89699bab66e6f6e618e5e6a2aef6aebb98f0406c19a06","episode_nonce":"c173fa05b90f4f5a8375f1be478808ae"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":3},{"kind":"draw","n":30,"value":10},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":27},{"kind":"draw","n":30,"value":4},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":14},{"kind":"draw","n":30,"value":3},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":0},{"kind":"draw","n":30,"value":29},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-350bf2a022","ledger_sha256":"907551b022197c39a00b84c2f82ca03cee2f60c9553a6fe375c7196276421457","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Pick whichever fitting one costs the least, please. Y'all got any tops made of chiffon? (I'll check the tag myself, don't worry.) Only count what you actually have on hand, not something that's just listed on a website somewhere. Nothing over 595 cts, y'all, and every penny counts for me, so that's the top of the trail and not one step higher (student loans ain't gonna pay themselves). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-417794db51.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-417794db51","session_id":"b5579c82000a4fd78d6a8dbf9128d5ce","episode_nonce":"c6788b0f3e2e4b36a53671b31ac96abe","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-417794db51","task_sha256":"4f1e119200c7101a1538ce598f41330dd1c4b41e6417453e0011167b2e89b704","episode_nonce":"c6788b0f3e2e4b36a53671b31ac96abe"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":2},{"kind":"draw","n":30,"value":24},{"kind":"draw","n":30,"value":17},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":6},{"kind":"draw","n":30,"value":29},{"kind":"draw","n":30,"value":15},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":0},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-417794db51","ledger_sha256":"ee89b10fc17a35974e92c4e9a0643776b9bb311b5bd1c100122acf4fe6698ed7","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Y'all got any jeans in a slim fit? Fair warning, I'm a skeptic till I see it (I'll double check the fit myself, don't worry), but I'm willing to be proven wrong. And I want a pair y'all actually have on hand, not one that's just listed on a website somewhere (I've chased those trails before, ended up at a dead end). Price ceiling is 1050 cts, nothing over (yes, every penny counts for me), since student loans ain't gonna pay themselves. Snag last time, y'all: the tag number matched mine, but the pair hung all wrong on me (returning them cost gas money). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Not climbing that switchback twice, since I'm a broke student. Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-559c052a99.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-559c052a99","session_id":"4db7e372b71c4ecf9d9bc8c5f5ff9ba5","episode_nonce":"7e3354f68d9445d29b29addbc072f826","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-559c052a99","task_sha256":"00859f14cf13a83b81841efa72e5591808109d5e1c1b4aec63acd3a8dbb080d8","episode_nonce":"7e3354f68d9445d29b29addbc072f826"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":3,"value":0},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":24},{"kind":"draw","n":30,"value":0},{"kind":"draw","n":30,"value":27},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":17},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":7},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-559c052a99","ledger_sha256":"cf5b40db33e06951290689f675ef057ea99a052a4fdd9698354e6e59cb8210eb","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Alright, y'all, I'm hunting for mules, and they're for a wedding (I'll double-check whatever you turn up, don't you worry). Skeptical as I am, I'll give you a fair shot at the trail. My cousin Darlene and her fianc\u00e9 are tying the knot, and my aunt is lending me a dress (I'm a broke student). Now I've been burned before by pretty listings that go nowhere, so it's gotta be something y'all actually have on hand, not just some picture floating around on a website somewhere. Nothing over 765 cts, y'all (yes, every penny counts for me, and student loans ain't gonna pay themselves), so I'm treating that number like the top of the ridge. Photos will go from the church steps to the reception lawn, with my feet in plenty of them. Pick whichever fitting one costs the least, please. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-5a9d1682ae.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-5a9d1682ae","session_id":"22f86402a08549489a34a0e41bd69779","episode_nonce":"70f623a6c787493daf92caad8bf1d2de","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-5a9d1682ae","task_sha256":"52c8b9fab13c89fa3276428d619af3a57b24cef2a97e6642dbee7b25d40e9878","episode_nonce":"70f623a6c787493daf92caad8bf1d2de"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":26},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":2},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":3},{"kind":"draw","n":30,"value":29},{"kind":"draw","n":30,"value":6},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":23},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-5a9d1682ae","ledger_sha256":"a780fc175432774031714ea70881029a2b6c79601eeea97d75dc120bba558eeb","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Snag first: the last jacket I ordered looked nothing like its photo once I unfolded it, and the return postage ate my grocery money. This time it's a military-style bomber, and I'll wear it over whatever's clean (my roommate says my closet is a trail with no markers). Pick whichever fitting one costs the least, please. What the cloth itself looks like up close is where I get skeptical, fair or not. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). Bomber jackets are the trail I'm on, and the style should be military (I'll look it over myself, don't you worry). And it ought to be something y'all actually have sitting on a shelf, not just a listing floating around on some website somewhere. Nothing over 1900 cts, y'all (every penny counts, and student loans ain't gonna pay themselves). Past that number the climb gets too steep for me.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-5ae33c1dde.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-5ae33c1dde","session_id":"b67734aa806b4294ac29efa7e68ea3d2","episode_nonce":"ab3fe0e9ac094564a995b2347157e53b","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-5ae33c1dde","task_sha256":"c95beb577fd758147b09b79fa56e8f6e16843a6d38bafd2d15246bc731b80c66","episode_nonce":"ab3fe0e9ac094564a995b2347157e53b"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":4,"value":2},{"kind":"draw","n":3,"value":0},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":16},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":6},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":27},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":27},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-5ae33c1dde","ledger_sha256":"fb6bdd8eae49f0756b9faac03b88ecf176c62864e452ba95422b887ef4dcab11","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Y'all can leave out whatever has color family multicolor, that's a dead-end trail for me. Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). My three trail-club friends and I drew names for a gift swap, and I pulled someone I've only met twice. (Fair's fair, but I won't guess blind like a hiker without a map.) They'll wear it on our ridge hikes this fall, so I'd rather not embarrass myself. Now, I only want something y'all actually have on hand in the shop, not just a listing floating out there on a website somewhere (I've been burned before). Nothing over 3950 cts, y'all (yes, every penny counts for me, student loans ain't gonna pay themselves), and I'm holding that line like a steep grade I won't go past. So here's the item: a watch in casual & fashion watches, with sapphire glass on the dial (I'll check, don't worry, I don't just take a label on faith).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-6be2dc60b6.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-6be2dc60b6","session_id":"ef1243d1589f41c6bafb8e05a9f2bb4e","episode_nonce":"8864255a4bee495994da1560d3a275ec","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-6be2dc60b6","task_sha256":"f6eca71bea4429d62131bd02ec9e9c577bf31e4ff60932ed9c5df4a9dc22a887","episode_nonce":"8864255a4bee495994da1560d3a275ec"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":0},{"kind":"draw","n":30,"value":27},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":10},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":24},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":27},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-6be2dc60b6","ledger_sha256":"278d4afd2fbf9f72586d99e7a92ac040d7bfafbafa8d81bf2f8cb9e34650ad2b","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Alright, first off, I'm hunting for mules that'd work for a party (I'll check, don't worry). I only want a pair you actually have on hand there, not one sitting on a website somewhere out past the ridgeline. Nothing over 824 cts, y'all, and that's the top of the trail for me (yes, every penny counts, and student loans ain't gonna pay themselves). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-70ef000b3f.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-70ef000b3f","session_id":"320d4ba5b6a64413951cdfed1706cc1f","episode_nonce":"be74c0e9491a434e8fc829cb8c0738e4","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-70ef000b3f","task_sha256":"6da73a8c3bde1cb51e4ca876c5d588e8b5aafaef7d84a7126a46b9cef5ce02b7","episode_nonce":"be74c0e9491a434e8fc829cb8c0738e4"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":3,"value":2},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":10},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":0},{"kind":"draw","n":30,"value":10},{"kind":"draw","n":30,"value":26},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":27},{"kind":"draw","n":30,"value":10},{"kind":"draw","n":30,"value":4},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":12},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-70ef000b3f","ledger_sha256":"0495901163dd95d6ae9f50310fcf7179d5aafec0478c10f809fc091965074d5d","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Alright, I'm wanting a hoodie or sweatshirt, and the style should be youth fashion (I'll check it myself, don't you worry). And I only want something y'all actually have on hand, not just listed on a website somewhere like a trail that's on the map but washed out. Nothing over 660 cts, y'all (student loans ain't gonna pay themselves), because every penny counts for me and that's the top of my climb. Total, you can send me 3 messages and no more than that. My sister asked me to grab her one, and she reads every tag like a trail map (bless her). Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-82a9890683.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-82a9890683","session_id":"0297623b770246bba7a218947e46cb79","episode_nonce":"2bdf8b0c0a5c45d78c280a64342cc7a8","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-82a9890683","task_sha256":"acbcc20e20d0f36ab6e3270e1624bf914944d7ca48dea4c4cb65dfbdad13a017","episode_nonce":"2bdf8b0c0a5c45d78c280a64342cc7a8"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":4,"value":1},{"kind":"draw","n":3,"value":1},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":23},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":27},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":0},{"kind":"draw","n":30,"value":2},{"kind":"draw","n":30,"value":17},{"kind":"draw","n":30,"value":29},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":13},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-82a9890683","ledger_sha256":"c9a87b3a057f9de51e2ed4f74fda008ad4c1d62f1392f9f667c40982a31ec16c","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Up at my Tennessee college, I've got a scholarship banquet where I'll be shaking hands and getting photographed (first time for me, y'all). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Now, I'm skeptical of most of what's out there, but fair is fair: show me luxury & formal watches in the green color family (I'll check the color myself, don't worry). And it's got to be something you actually have on hand, not just a listing sitting on some website way down the trail somewhere. Price tops out at 2750 cts, not a single one over (every penny counts for me, y'all, and student loans ain't gonna pay themselves). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). A green watch ought to look right on my wrist all evening, steady as a well-marked trail.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-86888552db.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-86888552db","session_id":"20bdbda9a0c94df09b8ce6f3a1373456","episode_nonce":"12961b6b714340d6b5221391aa64e772","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-86888552db","task_sha256":"d2c7f294166b0df022906d77626bfca085e2740a1fc285e89019ef0fe3c0d5ae","episode_nonce":"12961b6b714340d6b5221391aa64e772"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":10},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":6},{"kind":"draw","n":30,"value":14},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":14},{"kind":"draw","n":30,"value":26},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-86888552db","ledger_sha256":"3b4dd279374548ba76d34b123beac58e79387b0e8a5b5274a33c23e97c83c32f","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Howdy, I want a top with long sleeves (I'll check, don't worry), and I'll be reading the fine print like a trail map. It's gotta be something y'all actually have on hand, not just a picture on a website somewhere, 'cause I've been burned by trails that look good on the map. Nothing over 730 cts, y'all (yes, every penny counts for me, student loans ain't gonna pay themselves). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-9ab5c575f5.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-9ab5c575f5","session_id":"1ac181779c7143019841cbf567f676f5","episode_nonce":"fa39970248a848d69856f69bbcf287d8","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-9ab5c575f5","task_sha256":"dca6f0a5d8011ff9372de3ce05e72fdbb7b63bea9e54ed5773f2fed9597c1594","episode_nonce":"fa39970248a848d69856f69bbcf287d8"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":3},{"kind":"draw","n":30,"value":26},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":17},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-9ab5c575f5","ledger_sha256":"fab9b38be25a5e101aab3fc022332045574524b087e5de9fd35d3c15b08e37e3","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Every weekday around seven I trudge up the hill to my first lecture, and my one decent pair of pants finally gave out at the knee. Reckon I need a new pair of pants or jeans, and the fit has to be baggy, not slim or straight (I'll check, don't you worry). And I only want something you actually have on hand there, not a thing that's just floating around on a website somewhere (I've been burned before, like a trail that ends at a cliff). Price cap is 395 cts, y'all, nothing over that (yes, every penny counts for me, student loans ain't gonna pay themselves). I'm a student, so I'm not fussy about anything else (honest, I've worn worse). Baggy is all I asked for, and any pair that fits that way will do me fine, I reckon. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-9fc67ee841.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-9fc67ee841","session_id":"dfb620a58e2d40999f1c16e6f1124298","episode_nonce":"c04035c140af4c1ca7937b9d01358d1f","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-9fc67ee841","task_sha256":"cce20d5101212c5a689c9f9cc6ea3bcdc4661670ccfab19f63e75c83c69bda42","episode_nonce":"c04035c140af4c1ca7937b9d01358d1f"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":26},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":20},{"kind":"draw","n":30,"value":16},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":0},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-9fc67ee841","ledger_sha256":"97c77fd42178344416136806d2942e5800f9640258ec33b74d2014b26c9f2e92","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Only show me what y'all actually have on the shelf, not something sitting on a website somewhere (I've chased those before, and it's a long hike to nowhere). I want fall/winter clothing with a logo pattern on it, and I'll check that part myself, so don't fret. Nothing over 1065 cts, y'all (student loans ain't gonna pay themselves, and every penny counts for me). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Y'all can leave out whatever has collar crew neck, that's a dead-end trail for me. Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-a6d85e34f3.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-a6d85e34f3","session_id":"10b1fa15f7094b6b95c12da1d77ea8a4","episode_nonce":"ecfd2196dbf2484f831826099bdbf6f1","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-a6d85e34f3","task_sha256":"147750c90c197c14b575d5491d1c37479d0a75b3b6adc7d94704bbb4bd42c2aa","episode_nonce":"ecfd2196dbf2484f831826099bdbf6f1"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":3,"value":0},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":26},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":23},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":29},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":2},{"kind":"draw","n":30,"value":14},{"kind":"draw","n":30,"value":12},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-a6d85e34f3","ledger_sha256":"7e3be3e8fb5d3ffa0a0c3858296acaf97bf4cca85f5800168f3328c38e699f47","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Well, my old jacket's zipper split clean open on the walk to class Tuesday (the third time that thing's quit on me), so now I'm ordering before the real cold hits. Our first frost is supposed to land around the second week of November, and I'd like it here before then. Fall/winter clothing is the category, and the style has to be a trench coat, nothing else (I'll check the listing myself, don't worry). Only something you've actually got on hand, not just a listing sitting on a website somewhere. Not a cent over 1250 cts, y'all (every penny counts when you're a student, and loans ain't gonna pay themselves). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). I get paid from my campus job on the 1st, so that's when I'm placing the order. Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). Any delivery speed is fine so long as it doesn't turn into a long uphill slog of waiting. The closure can be double breasted or zipper and nothing else, sugar.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-abf1c45838.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-abf1c45838","session_id":"6f3940e5fe5f4920b5401407a80e48c9","episode_nonce":"1ee2d890190441dfa249dbfd456a48de","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-abf1c45838","task_sha256":"46984cc0598d7a6e0ad8626fcbebf2f167cb7b1ad7f446cdb40604e94f7370ab","episode_nonce":"1ee2d890190441dfa249dbfd456a48de"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":16},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":16},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":26},{"kind":"draw","n":30,"value":27},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-abf1c45838","ledger_sha256":"fa5e14478aa801620bf83fce222c5b1c37e08eefd511dbbcf76cca8f546865b3","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Pick whichever fitting one costs the least, please. My roommate Dana asked me to pick up a clock for our hallway, and she's got feelings about what goes on that wall. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). (I figured a clock's a clock, but I'll be fair, she's lived here longer.) That wall is the first thing folks see coming in, like the overlook at the top of a trail, so whatever I pick sets the tone. Only count what you've got on hand in the store, not what's just listed on some website somewhere (I've been burned by that before). It's a clock I'm after, and the shape's got to be square (I'll check it myself, don't worry, I ain't taking anybody's word on faith). Nothing over 725 cts, y'all (student loans ain't gonna pay themselves, and every penny counts for me, like every step on a steep climb). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-ae8834d7fe.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-ae8834d7fe","session_id":"a38d707e5230447e882353b651d84bfc","episode_nonce":"f911128719c74890a4f36714cd364a4a","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-ae8834d7fe","task_sha256":"339ffea6127c8ce7a73547654748d04a3d52ec68b0ccbdad314f2430205efa89","episode_nonce":"f911128719c74890a4f36714cd364a4a"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":6},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":15},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":20},{"kind":"draw","n":30,"value":16},{"kind":"draw","n":30,"value":13},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-ae8834d7fe","ledger_sha256":"4b14aa645763916b0ae0899e2f0afb292921028f652814ab0bb3082901eb9d1d","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Y'all first: I only want something you've actually got on hand, not a listing floating out there like a trail marker to nowhere. I want a skirt, circle style (I'll check the cut myself, don't worry). My roommate Tasha talked me into this, since she swears a skirt like this is the easiest thing to throw on before class. Nothing over 395 cts, y'all (every penny counts, and student loans ain't gonna pay themselves). Pick whichever fitting one costs the least, please. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). I'm a broke college kid, so I'll admit I'm doubtful about most online clothes buying (we'll see if she's right). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). Still, I'm ready to take a fair shot, because my closet's a flat trail right now and could use a little climb.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-b516252b9f.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-b516252b9f","session_id":"59e8813f9905461e83965dc9aa625ce6","episode_nonce":"695c54539cad45e397c8847438db1aa5","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-b516252b9f","task_sha256":"d733eda03e7448769ba16ec4e4df4145ca9800120b6c64c8fadbe64298e39bbf","episode_nonce":"695c54539cad45e397c8847438db1aa5"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":16},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":27},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":6},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":15},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":7},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-b516252b9f","ledger_sha256":"0d1a97ec8c6f4d13dbf68be4ff6897bb3c649c7cdd8c0de9198ac86e76913f9a","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). I want fall/winter clothing, and the material should be knits (I'll check the tag myself, don't worry). It's gotta be something you actually have on hand, not just listed on a website somewhere. Nothing over 490 cts, y'all, that's the top of the trail and I ain't climbing past it (every penny counts for me, and student loans ain't gonna pay themselves). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-b9e9292a88.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-b9e9292a88","session_id":"75dcafee93124d1ba223e16e5389161c","episode_nonce":"91ff82f8f74945a383d9cb1af9c88cc1","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-b9e9292a88","task_sha256":"643508b2275ad8524e67648d66f3dbf80f77f233191facd03fefde75e299eb2e","episode_nonce":"91ff82f8f74945a383d9cb1af9c88cc1"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":20},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":29},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":29},{"kind":"draw","n":30,"value":4},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":17},{"kind":"draw","n":30,"value":7},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-b9e9292a88","ledger_sha256":"8ab4e1d7ba084a5ff80d5e879f1971d0fec43addbb17dc584aa13f2d9f08973a","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"I'm a little leery of these cleansers, since every label on the shelf swears it fixes something different, like trail signs all pointing opposite ways. So here's what I want: a facial cleanser, and the skin benefit has to be acne care (I'll check the label myself, don't worry). Nothing over 435 cts, y'all (yes, every penny counts for me, and student loans ain't gonna pay themselves). Something you actually have on hand, not just on a website somewhere. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). I'm a student, so I can only afford one bottle this semester (no second tries). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). My roommate says I should just grab whatever's popular, but I'd rather the one I pick suit what my face is actually going through.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-b9f98ac0cc.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-b9f98ac0cc","session_id":"2560d971c7a24d1385d358dbe67ca6b6","episode_nonce":"65059bdbf19140e7b932a20c79757e4b","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-b9f98ac0cc","task_sha256":"70b99504bdbc98397b6174457c0ad3bc188c4373929f6ecca2dbec7bd7f9ef0c","episode_nonce":"65059bdbf19140e7b932a20c79757e4b"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":2},{"kind":"draw","n":30,"value":24},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":24},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":29},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":20},{"kind":"draw","n":30,"value":14},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-b9f98ac0cc","ledger_sha256":"c76c524d5ee7d083a8ef6c9e295a28af321c1c252eee4e8754abb7070e47468e","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Every Saturday I walk the ridge trail behind campus before my shift at the diner, and I've started wearing something longer afterward (my roommate swears by them). Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). Ramen budget and all, I figure a tunik is a fair trade for this semester's wardrobe gap. Only count what y'all actually have on hand, not something that's just listed online like a trail marker pointing at nothing. I want a top, and the type of top is a tunik (I'll check the listing myself, don't worry). Nothing over 805 cts, y'all (every penny counts when the student loans ain't gonna pay themselves).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-c72e42f3a9.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-c72e42f3a9","session_id":"69c24b18198e4ad5a5a4a8a3cf87faeb","episode_nonce":"88d352cb97a342aca06e173e3c2b85f0","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-c72e42f3a9","task_sha256":"b996773a499091be10d2939d3de9b54f27b3bc4447ffbc4c219fd3fabfa01d8e","episode_nonce":"88d352cb97a342aca06e173e3c2b85f0"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":24},{"kind":"draw","n":30,"value":20},{"kind":"draw","n":30,"value":4},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":15},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":16},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-c72e42f3a9","ledger_sha256":"dd7a388a768a2413c1fceae5f3af4163f660c69fe016dec178a0a9ff34d605a8","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Alright, I'm hunting for UHT milk, the ready-to-drink kind, and it's gotta come from Australia (I'll check the label myself, don't you worry). Y'all can't go over 390 cts, and I mean that to the penny (student loans ain't gonna pay themselves, and that price is the top of my trail). And I want one you actually have on hand there, not just something listed on a website somewhere out in the fog. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-ca5a4d38dd.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-ca5a4d38dd","session_id":"b11faa2a88b845a68bd82ed94d6b7171","episode_nonce":"92df0824a0064dffa8c90898f74314ed","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-ca5a4d38dd","task_sha256":"d6deeda27db198f9a17e1629bd09113dda2b1c518e7c011150dae99c799f14a2","episode_nonce":"92df0824a0064dffa8c90898f74314ed"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":6},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":24},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":0},{"kind":"draw","n":30,"value":23},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":0},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-ca5a4d38dd","ledger_sha256":"9285102de9504e590863ac82f3eeb82d2ac93335c92aa9fc6bd1076e4901201e","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Now, I only want something y'all actually have on hand, not just sittin' on some website somewhere. It's a clock I want, one where the clock function is color changing (I'll check that myself, don't you worry). Nothing over 805 cts, y'all, 'cause that's the top of the trail for me (student loans ain't gonna pay themselves, and every penny counts). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-ceb23f4007.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-ceb23f4007","session_id":"494c6ee9cf94432e87fd3255dc58c430","episode_nonce":"b8a278959cea44768cc72f15629b6171","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-ceb23f4007","task_sha256":"a8b34799e4cbcda96c010106ed8fe27a53ff5be52db0351d3943b82a55bf93d8","episode_nonce":"b8a278959cea44768cc72f15629b6171"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":15},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":20},{"kind":"draw","n":30,"value":17},{"kind":"draw","n":30,"value":14},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":19},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":15},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":14},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-ceb23f4007","ledger_sha256":"83dd0f6b12a57b26bbfe6a3002b13e10a5afca3e548196fe26bcef97183a4af0","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Got a monitor hunt on my hands, and the resolution has to land on 3440 x 1440 (I'll double-check the listing myself, don't worry). And it's got to be one you've actually got on hand there, not one that only exists on some website somewhere down the trail. Nothing over 18000 cts, y'all (student loans ain't gonna pay themselves, and yes, every penny counts for me). My last order showed up with the wrong cable, so I'm double-checking everything before I spend another dime. This monitor will sit on a desk in my rental room, where I do stats homework, cut video for a class project, and play a few rounds with my cousin on weekends. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). (Yes, I know full well that's a lot of trail for one screen, but it's all I've got.) I'm skeptical of fancy claims, though I'll gladly hear what's honestly worth paying extra for.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-d1822d360a.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-d1822d360a","session_id":"f115606ea1334efe9a574002a8e9d7c0","episode_nonce":"b51f29c886a44148a1fbc15992830d83","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-d1822d360a","task_sha256":"3e236bb91d9d731e030a92263ef94157ece0199b908242aa630b7ce21896e2ce","episode_nonce":"b51f29c886a44148a1fbc15992830d83"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":15},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":26},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":16},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":14},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":17},{"kind":"draw","n":30,"value":16},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-d1822d360a","ledger_sha256":"9c21d80bc46c2d707d19bf035b9a718ad9643e6d22ba72ee02aa4a6abb766406","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Honestly I'm a little wary of ordering anything this pricey online, but my cousin's wedding is three weeks out and I'd like it here well before then (the trail to payday is a steep one, y'all). I reckon I'll start with luxury & formal watches, and the case shape should be round (square ones are a different ridge altogether). Also, it should be one y'all actually have on hand, not just a listing sitting out there like a mirage on the horizon. Price can't go over 2250 cts, since a student wallet runs about as thin as the air up high. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). Whatever round-cased one you've got that fits will do me fine.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-d4e2bc9e66.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-d4e2bc9e66","session_id":"2ad89e22f4c741b893841226c6c3154d","episode_nonce":"c0a399c710b1412fb9b9f0073091eab2","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-d4e2bc9e66","task_sha256":"e788f0f5d43fc65fc57d7576aa02c3cee025c1d1552e1b5f20f80e34dde81895","episode_nonce":"c0a399c710b1412fb9b9f0073091eab2"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":16},{"kind":"draw","n":30,"value":13},{"kind":"draw","n":30,"value":10},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":5},{"kind":"draw","n":30,"value":11},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":4},{"kind":"draw","n":30,"value":23},{"kind":"draw","n":30,"value":26},{"kind":"draw","n":30,"value":8},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-d4e2bc9e66","ledger_sha256":"13c595c9d4000c37eb19c768b466b15cc3231bdfa96dbd808e6d8b16989e508e","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Howdy, I want a skirt in the sweet style. I'll check that myself, so don't fret (I've been burned before). It's gotta be something y'all actually have on hand, not just a listing on a website somewhere. Nothing over 475 cts, y'all (every penny counts when you're a student), 'cause I ain't climbing past that ridge. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-eb5b2c8367.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-eb5b2c8367","session_id":"cd5f5ccbc5bc41278959ca03907818e0","episode_nonce":"3ec484f4be5c4902a6635af3d7816a9f","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-eb5b2c8367","task_sha256":"803532a3ba3df1901f28e46485643c26edab66f7f2433c486643c89a6551dd73","episode_nonce":"3ec484f4be5c4902a6635af3d7816a9f"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":3},{"kind":"draw","n":30,"value":23},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":17},{"kind":"draw","n":30,"value":17},{"kind":"draw","n":30,"value":20},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":26},{"kind":"draw","n":30,"value":25},{"kind":"draw","n":30,"value":12},{"kind":"draw","n":30,"value":4},{"kind":"draw","n":30,"value":7},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-eb5b2c8367","ledger_sha256":"3d5f11549271c9baf7c7a7244d23982ce07b74cc8abb826b4b63f0a0761bea5b","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Got to find a monitor, and the response time's gotta be at least 1 ms (I'll check it myself, don't worry, I'm not taking anybody's word on faith). And it's gotta be something y'all actually have sitting on the shelf, not some listing floating around out there on a website somewhere. Last semester I tried a laptop screen borrowed from my cousin, and it got me along like a steady switchback trail, though I never knew what to check before trusting it. Nothing over 8250 cts, y'all (yes, every penny counts for me, and student loans ain't gonna pay themselves). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Total, you can send me 3 messages and no more than that. This time it's a monitor for my dorm desk, where I do essays, spreadsheets, evening shows (my roommate always drags me into a game or two) and not much else. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). I'm skeptical of most sales pitches, but I'll be fair, since I've had good and bad luck buying from all sorts of sellers. Y'all tell me what's worth asking before I commit my little pile of savings.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-f097c35169.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-f097c35169","session_id":"875ce46dafc14a998307eb66b56ba335","episode_nonce":"2e59cbf34fdb44fa88bbf02fdd409985","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-f097c35169","task_sha256":"47c8ca9ce5d1d1938b0df3e3be9287925961ab68b0e394a439908704e550537f","episode_nonce":"2e59cbf34fdb44fa88bbf02fdd409985"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":1},{"kind":"draw","n":30,"value":22},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":6},{"kind":"draw","n":30,"value":28},{"kind":"draw","n":30,"value":29},{"kind":"draw","n":30,"value":9},{"kind":"draw","n":30,"value":7},{"kind":"draw","n":30,"value":15},{"kind":"draw","n":30,"value":14},{"kind":"draw","n":30,"value":4},{"kind":"draw","n":30,"value":29},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-f097c35169","ledger_sha256":"55f2eb2eb8bd633ca9beff79c5a914b66785906453aa1e4640506f85eae9bc13","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"My sister Kayla and I are splitting one jacket between us, since we're both broke students (she's pickier than a goat on a ridgeline). So first thing, a bomber jacket with a zipper closure (I'll check that myself, don't you worry), and that's the whole starting trail. And it's gotta be something y'all have physically on hand, not a maybe-someday listing floating around on a website somewhere. It's got a zipper, which we agree on. Nothing over 735 cts, y'all (yes, every penny counts for me, and student loans ain't gonna pay themselves). Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks). If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). Our hiking club photos frame us from the shoulders up, so that's the part we'll both scrutinize.","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}},{"name":"t-f3ca299b9f.json","value":{"schema_version":"oro.world_episode.v1","episode":{"task_id":"t-f3ca299b9f","session_id":"b0a5685b2f2744399d6931fb9520d6c1","episode_nonce":"9ceae3080eec408eb1c9ce1e88cec03e","ledger":{"ledger_format":1,"episode":[{"kind":"open","pack_id":"p-84d13032297e","world_id":"w-095308155916","delivery":{"id":"w-095308155916-practice","kind":"practice"},"manifest_sha256":"94fba24152de6d9a41eb4f5682c86871ab718361598ee4bbd16889dddfdf37b9","runtime_contract":8,"task_id":"t-f3ca299b9f","task_sha256":"0c789e2e521b94b684ed5f6eb756094bfd41e8d6275efe7e3da00beae2f3e7bc","episode_nonce":"9ceae3080eec408eb1c9ce1e88cec03e"},{"amount":1,"kind":"cost","meter":"titu","tool":"write_customer"},{"budget":3,"kind":"budget","meter":"titu"},{"kind":"draw","n":2,"value":0},{"kind":"draw","n":30,"value":29},{"kind":"draw","n":30,"value":21},{"kind":"draw","n":30,"value":14},{"kind":"draw","n":30,"value":16},{"kind":"draw","n":30,"value":17},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":1},{"kind":"draw","n":30,"value":10},{"kind":"draw","n":30,"value":8},{"kind":"draw","n":30,"value":18},{"kind":"draw","n":30,"value":27},{"kind":"draw","n":30,"value":22},{"kind":"start","observation":null},{"kind":"finish","reason":"stopped","order":null,"steps":0,"turns":0}],"grading":[]},"verdict":{"verdict_format":1,"pack_id":"p-84d13032297e","task_id":"t-f3ca299b9f","ledger_sha256":"44853333e26912180b24868aca2ec6fa9316e5bc7ec44ae072d76de0f4a4e571","grading_sha256":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","score":0.0,"category":"did not finish","flags":[]},"error":null,"call_trace":[],"steps":0,"step_count":0,"request_text":"Every Sunday night I lay my clothes out for the week on my bed, and right now there's a gap where this piece would go. So I'm hunting a bomber jacket, and it's got to be sleeveless, no sleeves at all (I'll check the listing myself, don't worry). And it should be something you actually have on hand, not just sitting on a website somewhere out of reach. I'm skeptical of anything that looks pricier than it is (tuition's eating me alive, y'all), but I'll give a fair look to whatever you show me. Nothing over 530 cts, y'all (yes, every penny counts for me, and student loans ain't gonna pay themselves). My closet's like a trailhead with no signpost right now. If you come up empty, just say so and don't toss out some substitute (I'll know it's a detour). So I'd be glad of a pointer on which way to head. Total, you can send me 3 messages and no more than that. Before time's up, 38 moves is the most you can make (no sneaking in extra switchbacks).","terminal_reason":"stopped","outcome":"completed","evaluation_run_id":"local-df6e57d22d0544a4acd18547aec4dc1d","agent_version_id":"e0742926f7e10c2423d064924ff836692bf84959385dd55c8856dfea42544cdc","pack_sha256":"deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4","world_id":"w-095308155916","wall_seconds":811.9371594060003}}}]}</script>
+    <script>
+(() => {
+"use strict";
+// ---- adapters/atif.js
+const RELEASED_ATIF_VERSION = /^ATIF-v1\.[0-7]$/;
+
+function requireAtif(input, sourceName) {
+  if (!input || typeof input.schema_version !== "string" || !RELEASED_ATIF_VERSION.test(input.schema_version)) {
+    throw new Error(`${sourceName}: expected a released ATIF version from ATIF-v1.0 through ATIF-v1.7`);
+  }
+  if (!Array.isArray(input.steps)) {
+    throw new Error(`${sourceName}: ATIF trajectory is missing a steps array`);
+  }
+}
+
+function contentForDisplay(content, sourceName, field) {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) {
+    throw new Error(`${sourceName}: ${field} must be a string or ATIF content array`);
+  }
+  return content
+    .map((part, index) => {
+      if (part?.type === "text" && typeof part.text === "string") return part.text;
+      if (part?.type === "image" && typeof part.source?.path === "string") {
+        return `[Image: ${part.source.path}]`;
+      }
+      throw new Error(`${sourceName}: ${field}[${index}] is not a supported ATIF content part`);
+    })
+    .join("\n");
+}
+
+function observationValue(result, sourceName, stepIndex, resultIndex) {
+  const content = result?.content;
+  if (typeof content === "string") {
+    try {
+      return JSON.parse(content);
+    } catch {
+      return content;
+    }
+  }
+  if (Array.isArray(content)) {
+    return contentForDisplay(content, sourceName, `steps[${stepIndex}].observation.results[${resultIndex}].content`);
+  }
+  return null;
+}
+
+function normalizeToolCalls(step, sourceName, stepIndex) {
+  const results = step.observation?.results ?? [];
+  return (step.tool_calls ?? []).map((call) => {
+    const matchingResults = results
+      .map((result, resultIndex) => ({ result, resultIndex }))
+      .filter(({ result }) => result.source_call_id === call.tool_call_id);
+    const values = matchingResults.map(({ result, resultIndex }) =>
+      observationValue(result, sourceName, stepIndex, resultIndex),
+    );
+    const extras = matchingResults.map(({ result }) => result.extra).filter(Boolean);
+    return {
+      id: call.tool_call_id,
+      name: call.function_name,
+      arguments: call.arguments,
+      observation: matchingResults.length
+        ? {
+            value: values.length === 1 ? values[0] : values,
+            error: extras.find((extra) => extra?.error)?.error ?? null,
+            done: extras.some((extra) => extra?.done === true),
+            raw: matchingResults.map(({ result }) => result),
+          }
+        : null,
+    };
+  });
+}
+
+function unmatchedObservationEvents(step, toolCalls, sourceName, stepIndex) {
+  const matchedIds = new Set(toolCalls.map((call) => call.id));
+  return (step.observation?.results ?? [])
+    .map((result, resultIndex) => ({ result, resultIndex }))
+    .filter(({ result }) => !result.source_call_id || !matchedIds.has(result.source_call_id))
+    .map(({ result, resultIndex }) => ({
+      actor: "environment",
+      kind: "observation",
+      payload: {
+        source_call_id: result.source_call_id ?? null,
+        content: observationValue(result, sourceName, stepIndex, resultIndex),
+        extra: result.extra ?? null,
+      },
+    }));
+}
+
+function normalizeAtifTrajectory(input, sourceName = "trajectory.json") {
+  requireAtif(input, sourceName);
+  const timeline = input.steps.map((step, index) => {
+    if (!["system", "user", "agent"].includes(step.source)) {
+      throw new Error(`${sourceName}: steps[${index}].source must be system, user, or agent`);
+    }
+    const toolCalls = normalizeToolCalls(step, sourceName, index);
+    const role = step.source === "agent" ? "assistant" : step.source;
+    return {
+      turn: step.step_id ?? index + 1,
+      messages: step.message == null
+        ? []
+        : [{ role, content: contentForDisplay(step.message, sourceName, `steps[${index}].message`), metadata: {} }],
+      toolCalls,
+      events: unmatchedObservationEvents(step, toolCalls, sourceName, index),
+      reasoning: step.reasoning_content ?? null,
+      metrics: step.metrics ?? {},
+      latencyMs: step.metrics?.extra?.latency_ms ?? null,
+      error: step.extra?.error ?? null,
+      raw: step,
+    };
+  });
+
+  const firstUserMessage = timeline
+    .flatMap((turn) => turn.messages)
+    .find((message) => message.role === "user")?.content;
+  const oroMetadata = input.extra?.oro ?? {};
+  const oroOutcome = input.final_metrics?.extra?.oro ?? {};
+
+  return {
+    id: input.trajectory_id ?? sourceName,
+    sourceName,
+    format: input.schema_version.replace("ATIF-", "ATIF "),
+    task: {
+      id: oroMetadata.task_id ?? input.trajectory_id ?? sourceName,
+      family: oroMetadata.family ?? "ATIF",
+    },
+    query: firstUserMessage ?? "",
+    taskRules: "",
+    correct: typeof oroOutcome.success === "boolean" ? oroOutcome.success : null,
+    reward: oroOutcome.reward ?? null,
+    terminalReason: oroOutcome.termination_reason ?? "completed",
+    timeline,
+    verdict: { ...oroOutcome, atif_metrics: input.final_metrics ?? {} },
+    provenance: {
+      trajectory_id: input.trajectory_id ?? null,
+      session_id: input.session_id ?? null,
+      agent_name: input.agent?.name ?? null,
+      agent_version: input.agent?.version ?? null,
+      schema_version: input.schema_version,
+    },
+    raw: input,
+  };
+}
+
+// ---- adapters/oro.js
+function requireEpisode(input, sourceName) {
+  if (!input || input.schema_version !== "oro.environment_episode.v1" || !input.episode) {
+    throw new Error(`${sourceName}: expected schema_version oro.environment_episode.v1 with an episode object`);
+  }
+  return input.episode;
+}
+
+function messagesForTurn(ledger, turn) {
+  return ledger
+    .filter((entry) => entry.turn === turn && ["model_message", "user_message"].includes(entry.kind))
+    .map((entry) => ({
+      role: entry.kind === "model_message" ? "assistant" : "user",
+      content: entry.payload?.content ?? "",
+      metadata: entry.payload,
+    }))
+    .filter((message) => message.content.trim().length > 0);
+}
+
+function eventsForTurn(ledger, turn) {
+  return ledger
+    .filter(
+      (entry) =>
+        entry.turn === turn &&
+        !["model_action", "model_message", "observation", "user_message"].includes(entry.kind),
+    )
+    .map((entry) => ({
+      actor: entry.actor,
+      kind: entry.kind,
+      payload: entry.payload,
+      sequence: entry.seq,
+      stateHash: entry.state_hash,
+    }));
+}
+
+function pairCalls(trace) {
+  const observations = new Map(
+    (trace.response?.calls ?? []).map((call) => [
+      call.call_id,
+      call.observation
+        ? {
+            value: call.observation.observation ?? null,
+            error: call.observation.error ?? null,
+            done: call.observation.done ?? false,
+          }
+        : null,
+    ]),
+  );
+  return (trace.request?.calls ?? []).map((call) => ({
+    id: call.call_id,
+    name: call.action?.name ?? "unknown",
+    arguments: call.action?.args ?? {},
+    observation: observations.get(call.call_id) ?? null,
+  }));
+}
+
+// The runtime hands the agent one string: the shopper's goal, then a "Task rules"
+// block carrying the family's system prompt. Only the goal belongs in the header.
+function splitQuery(query) {
+  const marker = query.indexOf("\n\nTask rules:");
+  if (marker === -1) return { query, taskRules: "" };
+  return {
+    query: query.slice(0, marker).trim(),
+    taskRules: query.slice(marker + "\n\nTask rules:".length).trim(),
+  };
+}
+
+function normalizeOroEpisode(input, sourceName = "trajectory.json") {
+  const episode = requireEpisode(input, sourceName);
+  const ledger = Array.isArray(episode.ledger) ? episode.ledger : [];
+  const callTrace = Array.isArray(episode.call_trace) ? episode.call_trace : [];
+
+  return {
+    id: episode.evaluation_run_id ? `${episode.evaluation_run_id}:${episode.task_id}` : sourceName,
+    sourceName,
+    format: "ORO episode v1",
+    task: {
+      id: episode.task_id ?? "Unknown task",
+      family: episode.family ?? "unknown",
+    },
+    ...splitQuery(episode.bootstrap?.policy_view?.query ?? ""),
+    correct: typeof episode.verdict?.correct === "boolean" ? episode.verdict.correct : null,
+    reward: episode.verdict?.paid_reward ?? null,
+    terminalReason: episode.terminal_reason ?? episode.outcome ?? "unknown",
+    timeline: callTrace.map((trace, index) => {
+      const turn = trace.request?.turn ?? trace.response?.turn ?? index + 1;
+      const events = eventsForTurn(ledger, turn);
+      if (trace.state_hash_before && trace.state_hash_after && trace.state_hash_before !== trace.state_hash_after) {
+        events.push({
+          actor: "environment",
+          kind: "state_change",
+          payload: { before: trace.state_hash_before, after: trace.state_hash_after },
+        });
+      }
+      return {
+        turn,
+        messages: messagesForTurn(ledger, turn),
+        toolCalls: pairCalls(trace),
+        events,
+        latencyMs: trace.latency_ms ?? trace.timing_ms?.total ?? null,
+        error: trace.error ?? null,
+        stateBefore: trace.state_hash_before ?? null,
+        stateAfter: trace.state_hash_after ?? null,
+        raw: trace,
+      };
+    }),
+    verdict: episode.verdict ?? {},
+    failure: episode.failure ?? null,
+    provenance: {
+      ...(episode.provenance ?? {}),
+      execution_contract_id: input.execution_contract_id ?? null,
+      agent_version_id: episode.agent_version_id ?? null,
+      evaluation_run_id: episode.evaluation_run_id ?? null,
+      session_id: episode.session_id ?? episode.bootstrap?.session_id ?? null,
+    },
+    raw: input,
+  };
+}
+
+// ---- adapters/world.js
+// A world-pack episode (`oro.world_episode.v1`, runtime contract 8): the runtime's ledger records each
+// numbered step's action and observation, the shopper messages and replies, and the finish.
+// Local runs label it oro.world_episode.v1; network artifacts keep the oro.environment_episode.v1 label but carry
+// the same runtime ledger ({ledger_format, episode: [...]}), which is what tells the two formats apart.
+function isWorldLedgerEpisode(input) {
+  return Array.isArray(input?.episode?.ledger?.episode);
+}
+
+function requireWorldEpisode(input, sourceName) {
+  const label = input?.schema_version;
+  if (!(label === "oro.world_episode.v1" || (label === "oro.environment_episode.v1" && isWorldLedgerEpisode(input)))) {
+    throw new Error(`${sourceName}: expected a world-pack episode (oro.world_episode.v1)`);
+  }
+  return input.episode;
+}
+
+// The renderer's outcome contract: failure.primary with failure.categories.
+function worldFailure(episode, verdict) {
+  if (verdict?.category) {
+    const flags = Array.isArray(verdict.flags) ? verdict.flags : [];
+    return { primary: verdict.category, categories: flags.length ? flags : [verdict.category] };
+  }
+  if (!verdict && (episode.error || (episode.outcome && episode.outcome !== "completed"))) {
+    return { primary: episode.outcome ?? "no verdict", categories: [String(episode.error ?? "no verdict")] };
+  }
+  return null;
+}
+
+function worldTimeline(records) {
+  const turns = [];
+  let current = null;
+  for (const record of records) {
+    if (record.kind === "action") {
+      current = {
+        turn: record.step,
+        messages: [],
+        toolCalls: [{ id: String(record.step), name: record.tool ?? "unknown", arguments: record.args ?? {}, observation: null }],
+        events: [],
+        latencyMs: null,
+        error: null,
+        stateBefore: null,
+        stateAfter: null,
+        raw: record,
+      };
+      turns.push(current);
+    } else if (record.kind === "observation" && current && record.step === current.turn) {
+      const value = record.observation ?? null;
+      current.toolCalls[0].observation = { value, error: value?.error ?? null, done: false };
+    } else if ((record.kind === "message" || record.kind === "reply") && current) {
+      const content = typeof record.text === "string" ? record.text : "";
+      if (content.trim()) current.messages.push({ role: record.kind === "message" ? "assistant" : "user", content, metadata: record });
+    } else if (current && !["open", "start", "finish"].includes(record.kind)) {
+      current.events.push({ actor: "environment", kind: record.kind, payload: record, sequence: null, stateHash: null });
+    }
+  }
+  return turns;
+}
+
+function normalizeWorldEpisode(input, sourceName = "trajectory.json") {
+  const episode = requireWorldEpisode(input, sourceName);
+  const records = Array.isArray(episode.ledger?.episode) ? episode.ledger.episode : [];
+  const verdict = episode.verdict ?? null;
+  const finish = records.findLast?.((r) => r.kind === "finish") ?? records.filter((r) => r.kind === "finish").pop();
+  return {
+    id: episode.evaluation_run_id ? `${episode.evaluation_run_id}:${episode.task_id}` : sourceName,
+    sourceName,
+    format: "ORO world episode v1",
+    task: { id: episode.task_id ?? "Unknown task", family: episode.world_id ?? "world" },
+    query: episode.request_text ?? "",
+    taskRules: "",
+    correct: verdict ? verdict.score === 1 : null,
+    reward: verdict?.score ?? null,
+    terminalReason: episode.terminal_reason ?? finish?.reason ?? episode.outcome ?? "unknown",
+    timeline: worldTimeline(records),
+    verdict: verdict ?? {},
+    failure: worldFailure(episode, verdict),
+    provenance: {
+      agent_version_id: episode.agent_version_id ?? null,
+      evaluation_run_id: episode.evaluation_run_id ?? null,
+      session_id: episode.session_id ?? null,
+      pack_sha256: episode.pack_sha256 ?? null,
+    },
+    raw: input,
+  };
+}
+
+// ---- adapters/index.js
+
+function normalizeTrajectory(input, sourceName = "trajectory.json") {
+  if (!input || typeof input !== "object" || !input.schema_version) {
+    throw new Error(`${sourceName}: missing schema_version`);
+  }
+  if (input.schema_version === "oro.world_episode.v1" || isWorldLedgerEpisode(input)) {
+    return normalizeWorldEpisode(input, sourceName);
+  }
+  if (input.schema_version === "oro.environment_episode.v1") {
+    return normalizeOroEpisode(input, sourceName);
+  }
+  if (/^ATIF-v1\.[0-7]$/.test(input.schema_version)) {
+    return normalizeAtifTrajectory(input, sourceName);
+  }
+  throw new Error(`${sourceName}: unsupported schema_version ${input.schema_version}`);
+}
+
+// ---- loading.js
+
+function validateFilename(filename) {
+  if (!filename.toLowerCase().endsWith(".json")) {
+    throw new Error(`${filename}: expected a .json file`);
+  }
+}
+
+function parseTrajectoryText(text, sourceName) {
+  let value;
+  try {
+    value = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`${sourceName}: invalid JSON (${error.message})`);
+  }
+  return normalizeTrajectory(value, sourceName);
+}
+
+function addOrReplaceTrajectory(trajectories, trajectory) {
+  const next = [...trajectories];
+  const existing = next.findIndex((item) => item.id === trajectory.id);
+  if (existing >= 0) next.splice(existing, 1, trajectory);
+  else next.push(trajectory);
+  return next;
+}
+
+// ---- render.js
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function label(value) {
+  return String(value ?? "")
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function json(value) {
+  return escapeHtml(JSON.stringify(value, null, 2));
+}
+
+function statusFor(trajectory) {
+  if (trajectory.correct === true) return { key: "pass", text: "PASSED" };
+  if (trajectory.correct === false) return { key: "fail", text: "FAILED" };
+  return { key: "unknown", text: "UNSCORED" };
+}
+
+function summarizeObservation(value) {
+  if (value == null) return "No observation";
+  if (typeof value !== "object") return String(value);
+  if (Array.isArray(value)) return `${value.length} items`;
+  if (value.error) return `Error: ${value.error}`;
+  if (value.done && value.order_id) return `Order ${value.order_id} completed`;
+  if (value.sent === true) return "Message sent";
+  if (Array.isArray(value.results)) return `${value.returned ?? value.results.length} results`;
+  if (Array.isArray(value.items)) return `${value.items.length} items`;
+  if (value.action) return label(value.action);
+  if (value.status) return label(value.status);
+  const keys = Object.keys(value);
+  return keys.length ? keys.slice(0, 3).map(label).join(" · ") : "Empty response";
+}
+
+function renderEpisodeList(trajectories, selectedId, filters = {}) {
+  const query = (filters.query ?? "").trim().toLowerCase();
+  const status = filters.status ?? "all";
+  const visible = trajectories.filter((trajectory) => {
+    const itemStatus = statusFor(trajectory).key;
+    const haystack = [trajectory.task.id, trajectory.task.family, trajectory.query, trajectory.sourceName]
+      .join(" ")
+      .toLowerCase();
+    return (!query || haystack.includes(query)) && (status === "all" || status === itemStatus);
+  });
+
+  if (!visible.length) {
+    return '<p class="empty-state">No episodes match this view.</p>';
+  }
+
+  return visible
+    .map((trajectory) => {
+      const state = statusFor(trajectory);
+      const selected = trajectory.id === selectedId;
+      return `<button class="episode-card${selected ? " is-selected" : ""}" data-episode-id="${escapeHtml(trajectory.id)}"${selected ? ' aria-current="true"' : ""}>
+        <span class="episode-card__top"><span class="family-label">${escapeHtml(trajectory.task.family)}</span><span class="status-chip status-chip--${state.key}">${state.text}</span></span>
+        <strong>${escapeHtml(trajectory.task.id)}</strong>
+        <span class="episode-card__meta">${trajectory.timeline.length} turns · ${escapeHtml(trajectory.terminalReason)}</span>
+      </button>`;
+    })
+    .join("");
+}
+
+function renderMessage(message) {
+  return `<article class="message message--${escapeHtml(message.role)}">
+    <span class="eyebrow">${escapeHtml(message.role)}</span>
+    <p>${escapeHtml(message.content)}</p>
+  </article>`;
+}
+
+function renderToolCall(call) {
+  const observation = call.observation;
+  return `<article class="tool-pair">
+    <section class="tool-action">
+      <span class="eyebrow">Action</span>
+      <h4>${escapeHtml(call.name)}</h4>
+      <details><summary>Tool arguments</summary><pre>${json(call.arguments)}</pre></details>
+    </section>
+    <section class="tool-observation${observation?.error ? " has-error" : ""}">
+      <span class="eyebrow">Observation</span>
+      <h4>${escapeHtml(summarizeObservation(observation?.value ?? observation?.error ?? null))}</h4>
+      <details><summary>Full observation</summary><pre>${json(observation)}</pre></details>
+    </section>
+  </article>`;
+}
+
+function renderEvent(event) {
+  return `<details class="event-card event-card--${escapeHtml(event.kind)}">
+    <summary><span>${escapeHtml(event.kind)}</span><small>${escapeHtml(event.actor)}</small></summary>
+    <pre>${json(event.payload)}</pre>
+  </details>`;
+}
+
+function renderTimeline(trajectory) {
+  return trajectory.timeline
+    .map(
+      (turn) => `<section class="turn" data-turn="${escapeHtml(turn.turn)}">
+        <div class="turn-marker"><span>TURN ${escapeHtml(String(turn.turn).padStart(2, "0"))}</span></div>
+        <div class="turn-body">
+          ${turn.messages.map(renderMessage).join("")}
+          ${turn.reasoning ? `<details class="reasoning"><summary>Reasoning</summary><p>${escapeHtml(turn.reasoning)}</p></details>` : ""}
+          ${turn.toolCalls.map(renderToolCall).join("")}
+          ${turn.events.map(renderEvent).join("")}
+          <div class="turn-foot">${turn.latencyMs != null ? `${Number(turn.latencyMs).toFixed(1)} ms` : ""}${turn.error ? ` · ${escapeHtml(turn.error)}` : ""}</div>
+        </div>
+      </section>`,
+    )
+    .join("");
+}
+
+function renderChecks(checks) {
+  const entries = Object.entries(checks ?? {});
+  if (!entries.length) return '<p class="muted">No explicit verifier checks recorded.</p>';
+  return `<div class="evidence-list">${entries
+    .map(([key, value]) => {
+      const state = value === true ? "pass" : value === false ? "fail" : "unknown";
+      const text = value === true ? "PASS" : value === false ? "FAIL" : "N/A";
+      return `<div class="evidence-row"><span>${escapeHtml(label(key).toLowerCase())}</span><strong class="evidence-${state}">${text}</strong></div>`;
+    })
+    .join("")}</div>`;
+}
+
+function renderProvenance(provenance) {
+  return `<div class="evidence-list">${Object.entries(provenance ?? {})
+    .filter(([, value]) => value != null)
+    .map(
+      ([key, value]) =>
+        `<div class="evidence-row evidence-row--stack"><span>${escapeHtml(label(key).toLowerCase())}</span><code title="${escapeHtml(value)}">${escapeHtml(value)}</code></div>`,
+    )
+    .join("")}</div>`;
+}
+
+function renderOutcome(trajectory) {
+  const state = statusFor(trajectory);
+  const familyMetrics = trajectory.verdict?.family_metrics ?? {};
+  const booleanFamilyMetrics = Object.fromEntries(
+    Object.entries(familyMetrics).filter(
+      ([key, value]) =>
+        typeof value === "boolean" &&
+        /(success|gate|aligned|uptake|commitment|rerank)$/.test(key),
+    ),
+  );
+  return `<section class="outcome-hero outcome-hero--${state.key}">
+      <span class="eyebrow">Evaluation outcome</span>
+      <strong>${state.text}</strong>
+      <p>${escapeHtml(trajectory.verdict?.explanation ?? trajectory.terminalReason)}</p>
+      ${trajectory.failure?.primary ? `<p>Failure <b>${escapeHtml(trajectory.failure.primary)}</b> (${escapeHtml(trajectory.failure.categories.join(", "))})</p>` : ""}
+      <div class="outcome-numbers"><span>Reward <b>${escapeHtml(trajectory.reward ?? "n/a")}</b></span><span>Terminal <b>${escapeHtml(trajectory.terminalReason)}</b></span></div>
+    </section>
+    <section class="evidence-section"><h3>Verifier checks</h3>${renderChecks(trajectory.verdict?.checks)}</section>
+    <section class="evidence-section"><h3>Family evidence</h3>${renderChecks(booleanFamilyMetrics)}<details class="evidence-details"><summary>View all family metrics</summary><pre>${json(familyMetrics)}</pre></details></section>
+    <section class="evidence-section"><h3>Provenance</h3>${renderProvenance(trajectory.provenance)}</section>`;
+}
+
+// ---- app.js
+
+const state = { trajectories: [], selectedId: null, filters: { query: "", status: "all" } };
+const elements = {
+  count: document.querySelector("#episode-count"),
+  dropOverlay: document.querySelector("#drop-overlay"),
+  fileInput: document.querySelector("#file-input"),
+  header: document.querySelector("#trajectory-header"),
+  list: document.querySelector("#episode-list"),
+  outcome: document.querySelector("#outcome"),
+  raw: document.querySelector("#raw-json"),
+  search: document.querySelector("#episode-search"),
+  status: document.querySelector("#load-status"),
+  timeline: document.querySelector("#timeline"),
+};
+
+function replaceTrajectory(trajectory) {
+  state.trajectories = addOrReplaceTrajectory(state.trajectories, trajectory);
+  if (!state.selectedId) state.selectedId = trajectory.id;
+}
+
+function selectedTrajectory() {
+  return state.trajectories.find((trajectory) => trajectory.id === state.selectedId) ?? null;
+}
+
+function renderHeader(trajectory) {
+  const rules = trajectory.taskRules
+    ? `<details class="task-rules"><summary>Task rules given to the agent</summary><p>${escapeHtml(trajectory.taskRules)}</p></details>`
+    : "";
+  return `<p class="kicker">${escapeHtml(trajectory.format)} / ${escapeHtml(trajectory.task.family)}</p>
+    <h2>${escapeHtml(trajectory.task.id)}</h2>
+    <blockquote>${escapeHtml(trajectory.query)}</blockquote>
+    ${rules}
+    <div class="trajectory-meta"><span>${trajectory.timeline.length} turns</span><span>${escapeHtml(trajectory.sourceName)}</span><span>${escapeHtml(trajectory.terminalReason)}</span></div>`;
+}
+
+function render() {
+  elements.count.textContent = String(state.trajectories.length);
+  elements.list.innerHTML = renderEpisodeList(state.trajectories, state.selectedId, state.filters);
+  for (const button of elements.list.querySelectorAll("[data-episode-id]")) {
+    button.addEventListener("click", () => {
+      state.selectedId = button.dataset.episodeId;
+      render();
+      document.querySelector(".trajectory-panel")?.scrollTo({ top: 0 });
+    });
+  }
+
+  const trajectory = selectedTrajectory();
+  if (!trajectory) {
+    elements.header.innerHTML = "";
+    elements.timeline.innerHTML = document.querySelector("#empty-template").innerHTML;
+    elements.outcome.innerHTML = "";
+    elements.raw.textContent = "";
+    return;
+  }
+  elements.header.innerHTML = renderHeader(trajectory);
+  elements.timeline.innerHTML = renderTimeline(trajectory);
+  elements.outcome.innerHTML = renderOutcome(trajectory);
+  elements.raw.textContent = JSON.stringify(trajectory.raw, null, 2);
+}
+
+async function ingestText(text, sourceName) {
+  replaceTrajectory(parseTrajectoryText(text, sourceName));
+}
+
+async function ingestFiles(files) {
+  const errors = [];
+  for (const file of files) {
+    try {
+      validateFilename(file.name);
+      await ingestText(await file.text(), file.name);
+    } catch (error) {
+      errors.push(error.message);
+    }
+  }
+  elements.status.textContent = loadStatus(files.length - errors.length, "local file", errors);
+  render();
+}
+
+function loadStatus(loaded, noun, errors, suffix = "") {
+  const plural = loaded === 1 ? noun : `${noun}s`;
+  return errors.length
+    ? `${loaded} loaded${suffix}. ${errors.join(" ")}`
+    : `${loaded} ${plural}${suffix}`;
+}
+
+function loadEmbeddedEpisodes() {
+  const node = document.querySelector("#oro-episodes");
+  if (!node) return false;
+  const payload = JSON.parse(node.textContent);
+  const errors = [];
+  for (const entry of payload.episodes ?? []) {
+    try {
+      replaceTrajectory(normalizeTrajectory(entry.value, entry.name));
+    } catch (error) {
+      errors.push(error.message);
+    }
+  }
+  const source = payload.run_id ? ` from ${payload.run_id}` : "";
+  elements.status.textContent = loadStatus(state.trajectories.length, "episode", errors, source);
+  render();
+  return true;
+}
+
+elements.fileInput.addEventListener("change", () => ingestFiles([...elements.fileInput.files]));
+elements.search.addEventListener("input", () => {
+  state.filters.query = elements.search.value;
+  render();
+});
+for (const filter of document.querySelectorAll(".filter")) {
+  filter.addEventListener("click", () => {
+    state.filters.status = filter.dataset.status;
+    for (const button of document.querySelectorAll(".filter")) button.classList.toggle("is-active", button === filter);
+    render();
+  });
+}
+
+let dragDepth = 0;
+document.addEventListener("dragenter", (event) => {
+  event.preventDefault();
+  dragDepth += 1;
+  elements.dropOverlay.classList.add("is-visible");
+});
+document.addEventListener("dragover", (event) => event.preventDefault());
+document.addEventListener("dragleave", (event) => {
+  event.preventDefault();
+  dragDepth -= 1;
+  if (dragDepth <= 0) elements.dropOverlay.classList.remove("is-visible");
+});
+document.addEventListener("drop", (event) => {
+  event.preventDefault();
+  dragDepth = 0;
+  elements.dropOverlay.classList.remove("is-visible");
+  ingestFiles([...event.dataTransfer.files]);
+});
+
+if (!loadEmbeddedEpisodes()) {
+  elements.status.textContent = "Open a trajectory JSON to begin";
+  render();
+}
+
+})();
+    </script>
+  </body>
+</html>

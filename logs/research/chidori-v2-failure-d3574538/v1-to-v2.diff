@@ -1,0 +1,47 @@
+--- ICDI_chidori_v1.py
++++ ICDI_chidori_v2.py
+@@ -1,4 +1,4 @@
+-# ICDI CHIDORI v1: budget admission and required-procedure enforcement.
++# ICDI CHIDORI v2: self-contained pricing admission for the provided POST client.
+ import json
+ from decimal import Decimal, InvalidOperation, ROUND_CEILING
+ import random
+@@ -10145,6 +10145,25 @@
+         return best if len(set(figs[best])) >= 3 else None
+ 
+ # Monetary amounts are integral nanodollars; prices are read through the proxy.
++# Monetary configuration uses the maximum published rate across context tiers.
++# Refresh these settings against the provider catalog before a release.
++# They are estimates for admission, not certified maximum routed prices.
++BUDGET_PRICE_CONFIG = {"data": [
++    {"id": LIGHT, "context_length": 1000000,
++     "top_provider": {"max_completion_tokens": 128000},
++     "pricing": {"prompt": "0.0000005", "completion": "0.0000025",
++                 "input_cache_read": "0.00000005", "input_cache_write": "0.000000625", "request": "0"}},
++    {"id": HEAVY, "context_length": 1000000,
++     "top_provider": {"max_completion_tokens": 128000},
++     "pricing": {"prompt": "0.000002", "completion": "0.00001",
++                 "input_cache_read": "0.0000001", "input_cache_write": "0.0000025", "request": "0"}},
++    {"id": SPARE, "context_length": 1050000,
++     "top_provider": {"max_completion_tokens": 128000},
++     "pricing": {"prompt": "0.0000002", "completion": "0.00000075",
++                 "input_cache_read": "0.00000002", "input_cache_write": "0.00000025", "request": "0"}},
++]}
++
++
+ AGENT_USD_LIMIT = "0.035"
+ PROCEDURE_USD_RESERVE = "0.010"
+ MIN_REPLY_TOKENS = 512
+@@ -10293,11 +10312,7 @@
+             self.last_budget_denial = "inference_stopped"
+             return BudgetReply(self.last_budget_denial)
+         if budget.prices is None:
+-            try:
+-                catalog = model_client(min(10, self.room())).get("/inference/models")
+-            except Exception:
+-                catalog = None
+-            budget.load_prices(catalog)
++            budget.load_prices(BUDGET_PRICE_CONFIG)
+         protected = 0
+         if self.budget_mode != "procedure" and (not self.brief_read or self.duties or not getattr(self, "procedures_valid", True)):
+             protected = budget.protected

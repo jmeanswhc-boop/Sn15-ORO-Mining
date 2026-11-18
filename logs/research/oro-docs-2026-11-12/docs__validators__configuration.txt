@@ -1,0 +1,73 @@
+
+Configuration
+Environment variables, wallet setup, and CLI arguments for the ORO validator.
+Wallet Setup
+
+Register a Bittensor hotkey on the ORO subnet before starting the validator. The hotkey must have a validator permit and meet the minimum stake weight requirement (40,000 on SN15). See Validator Overview for details.
+
+btcli subnet register --netuid 15 --wallet.name my-validator --wallet.hotkey default
+
+Verify registration:
+
+btcli wallet overview --wallet.name my-validator
+
+Environment Variables
+
+Create a .env file in the oro root directory. Copy from .env.example:
+
+cp .env.example .env
+
+Required variables
+
+ | Variable | Description
+ | WALLET_NAME | Bittensor wallet name (passed to validator container)
+ | WALLET_HOTKEY | Bittensor hotkey name (default: default)
+ | SUBTENSOR_NETWORK | Bittensor network (default: finney)
+
+Optional variables
+
+ | Variable | Default | Description
+ | PORT | 5632 | Search server port
+ | PROXY_PORT | 8080 | Proxy service port
+ | SUBTENSOR_CHAIN_ENDPOINT | unset | Optional private subtensor RPC (e.g. wss://my-node.example.com:443). When set, it wins over SUBTENSOR_NETWORK. Leave blank to use the network default.
+ | BACKEND_URL | https://api.oroagents.com | ORO Backend API endpoint
+ | WATCHTOWER_TOKEN | oro-watchtower-token | Shared token for Watchtower HTTP API
+ | VALIDATOR_MEM_LIMIT | 8g | Memory limit for the validator container. Swap is disabled, and Docker restarts the validator if it reaches the limit.
+
+A minimal .env file:
+
+WALLET_NAME=my-validator
+WALLET_HOTKEY=default
+
+All other variables have sensible defaults. Override only what you need.
+
+CLI Arguments
+
+The validator container also accepts CLI arguments passed through Docker Compose:
+
+ | Argument | Default | Description
+ | --netuid | 15 | ORO subnet UID
+ | --wallet.name | default | Bittensor wallet name
+ | --wallet.hotkey | default | Bittensor hotkey name
+ | --workspace-dir | oro root | Path to workspace root
+ | --sandbox-timeout | 1800 | Timeout in seconds for the entire sandbox subprocess (env: SANDBOX_TIMEOUT)
+
+Bittensor adds its own arguments for --subtensor.network, --subtensor.chain_endpoint, and logging options. These are passed through to the underlying Bittensor runtime.
+
+Wallet Credentials at Runtime
+
+The wallet name and subnet UID are passed as environment variables when starting Docker Compose:
+
+WALLET_NAME=my-validator docker compose --profile validator up
+
+See Running the Validator for the full startup command.
+
+Next steps
+
+
+Running the Validator: Start the validator stack and verify it is working.
+
+Installation
+Clone the repository, install dependencies, and verify Docker is working.
+Running the Validator
+Start the validator stack, understand the service architecture, and verify it is working.

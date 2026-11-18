@@ -1,0 +1,14 @@
+--- 03c_action_room.py
++++ 05a_procedure_reuse.py
+@@ -1154,6 +1154,11 @@
+         return seen is False or (seen is None and (self.facts_from.get(self.facts_tool() or '') is True or bool(self.roles.get('offer'))))
+ 
+     def procedure_key(self, stage: str) -> tuple[str, str]:
++        duties = [p for p in self.process if p['when'] == stage]
++        if duties and all(p.get('cart_dependent', stage == 'order') is False for p in duties):
++            # Inventory changes do not revoke an observed general explanation.
++            # Changes to requirements, reference values, budget or duties still do.
++            return (stage, _dump([self.request, duties, self.ledger(), self.ref_values]))
+         return (stage, (self.cart_mark() if stage != 'choose' else '') + f'#{self.version}')
+ 
+     def gate_due(self, stage: str) -> bool:

@@ -1,0 +1,187 @@
+Tosky_l17 revision report — 2026-11-17
+
+Updated in place: agents/Tosky_l17.py
+Updated offline tests: agents/tests/test_tosky_l17.py
+Pre-revision source and tests are preserved beside this report.
+Champion archives are unchanged. No dashboard, submission or paid test was run.
+
+Baseline source SHA256:
+41c2c8363002f5bade4bc49c9ad890b6a979758559e7092c2cadd4f0cf62c526
+Final source SHA256:
+730f29ba5011cf2bf53a3c8ea737e845326ec31968a5a50a3a9be9caf3285f44
+
+The source is 392,152 bytes, below the published 1 MB limit. Its imports, model
+choices, inference pricing envelopes, physical-call limits and financial
+allocations are unchanged. The entrypoint remains synchronous agent_main.
+
+This report records verified behavior changes, not a new benchmark score.
+
+1. Budget admission: 67 tests passed before moving to the next stage.
+
+The optional late reasoning-mode switch can cause the request estimator to
+lose a measured prompt prefix and reject an otherwise affordable planner call.
+The controller now tests the previously measured mode before declaring budget
+exhaustion. It requires an identical prefix and signature for that mode, the
+same full output allowance, an admissible reservation and adequate time room.
+This selection happens before sending the request, so it adds no physical
+attempt. Edited prefixes or tool schemas cannot reuse the measurement.
+
+Tests cover successful fallback, edited data/schema rejection, insufficient
+time and money, physical retries, missing usage, accounting breaches and the
+existing per-task and 90-task allocation bounds.
+
+The internal allocation remains $0.05 per episode, including recovery, or
+$4.50 for 90 episodes. This is not a measurement of hidden-race spending.
+
+2. Answer scope: 72 tests passed before moving to the next stage.
+
+Each message now identifies one primary question and separately invites the
+shopper to volunteer other firm requirements. The model receives explicit
+question_focus metadata. Generic indifference resolves only that focus.
+Optional mentioned topics are not silently marked flexible. An unlabeled
+compound question cannot waive all its topics through a vague answer.
+
+Named indifference stays narrow. Explicit product/order opt-outs keep their
+scope, with a supporting source quote. Firm requirements, budget changes,
+later firm answers and rebuilt interview state remain preserved. Confusion
+gets focused rewording; a crowded reply suppresses optional topic invitations.
+Final review also verified balanced crowded questions across multiple items.
+
+A proposed single-property-only variant was rejected during review: under the
+recorded rankings and three-message limit it covered only three of five
+previously disclosed topics. The accepted version retains the earlier broad
+topic coverage while giving each reply a clear primary scope. A fixed-response
+coverage audit retains mentions and consumption of all five disclosed topics.
+That audit does not demonstrate what a shopper will answer to the new wording.
+
+The interpreter no longer receives a duplicate full original request alongside
+the ledger; it receives the current ledger and budget unit. Its response
+contract leaves the indifferent array empty for ordinary focus-scoped replies,
+instead of redundantly listing every mentioned property. No new LLM stage was
+added. Actual token/cost changes still require measurement.
+
+3. Shared task state: 76 tests passed before moving to the next stage.
+
+The shared ledger explicitly identifies retired requirements as no longer
+binding and retains the exact accepted shopper update with its scope. Every
+specialist already consuming this ledger, including cart review and replacement
+selection, now sees the retirement evidence alongside active requirements.
+Common context instructions specify how later changes supersede original
+values. Ordinary store descriptions are not copied into the update journal.
+
+Tests verify a retired value and its replacement, exact source retention,
+product-specific scope, mixed budget/preference replies, and exclusion of
+ordinary store information from requirement-update history.
+
+This fixes missing context, not the model's ability to interpret it perfectly.
+A reviewer could still make a semantic mistake; no new live review outputs
+were generated in this pass.
+
+4. Review caching and checkout: 84 tests passed before the next stage.
+
+A completed review is distinguished from a passing review. Negative reviews
+retain their concrete blocking message without repeatedly paying for the same
+review. Missing or malformed reviews never become positive verdicts.
+
+Review keys include current task revision, active needs, budget, requested
+items, held quantities, known stock state and selected listing evidence.
+Changed evidence or task/cart quantities permits a new review. This preserves
+an evidence-backed path to correct an erroneous rejection.
+
+All four checkout routes use the same hold checks: the normal controller,
+confirmed-cart completion, salvage and emergency finish. Known unavailable
+lines, current negative reviews and unresolved refusals block checkout.
+Nonterminal checkout invalidates the prior approval and records a pending
+refusal. The unchanged cart requires fresh validation before retrying.
+Legitimate requirement updates can still make that same cart eligible again.
+
+Recovery now honors procedural gate results for ordering and declining. A
+refused checkout is interpreted even in the final recovery pass. Final review
+additionally moved known-invalid-cart checks ahead of approval requests, so
+approval messages are not spent on an already rejected cart.
+
+The three original fictional diagnostic contracts now pass. They previously
+failed against both historical versions: cached rejection becoming permission,
+emergency purchase of a rejected cart, and repeated checkout of a sold-out cart.
+
+5. Original property bindings and OR categories: 92 tests passed.
+
+The main briefing prompt now explicitly preserves property/value assignments
+even when the value is also used as the product name. A small deterministic
+supplement restores a missing binding only for an explicit assignment clause
+in the actual request, whose subject uniquely matches an existing requested
+category and whose value matches the extracted product name.
+
+All property names, subjects and values are read from the request and current
+items. There is no product, attribute, unit or answer table. The supplement
+skips listing-reference tasks and ambiguous shared categories. It does not
+promote background stories or an ordinary product name into extra constraints.
+It is deliberately narrow; the LLM brief remains the general language parser.
+
+In a pure transformation of the supplied tunik trace, the empty requirement
+list now retains the source-derived property binding. This used only recorded
+public input; no world or scorer was contacted.
+
+An OR product request no longer causes fuller_label to invent a required
+combined store category. Explicitly required store labels and AND categories
+remain enforced. A pure transformation of the supplied pants-or-jeans input
+also confirms that the combined-category hold is removed.
+
+The old field-parity test was updated to allow exactly the intentional added
+binding clarification while continuing to compare every other briefing field
+against the archive. It was not removed to hide a change in requirements.
+
+6. Final integration and review: all 95 tests pass.
+
+The suite includes five full synthetic workflows: ordinary structured records,
+text records, a checkout requirement change, required customer approval, and
+stock loss followed by removal/replacement before the next checkout. The world
+fixture verifies binding preservation, sequential steps, final cart contents,
+approval where required and no actions after terminal completion.
+
+Additional final checks verify that a known rejection is checked before asking
+for approval, and that narrowing crowded questions retains balanced coverage
+across products. The pre-existing transport, context encoding, compression,
+source-format and financial checks continue to pass.
+
+Command:
+python3 -m unittest discover -s agents/tests -p test_tosky_l17.py -v
+
+Local static checks passed: syntax, unchanged permitted imports, absence of
+prohibited execution/file-write calls, unchanged financial/model/call limits,
+no known task or product identifiers in string literals, entrypoint and file
+size. Public champion-source hashes remain unchanged.
+
+The published ORO security/integrity requirements were reviewed:
+https://oroagents.com/docs/miners/code-requirements
+No ORO server-side AST, integrity, originality or submission check was invoked;
+local checks do not certify server acceptance.
+
+Limits and remaining measurement
+
+No new benchmark score was produced. Synthetic workflows, recorded reply
+consumption and topic coverage are distinct from a real evaluation with newly
+generated model and shopper responses. The changes deliberately do not infer
+hidden requirements from failure categories or implement a grader.
+
+The detailed investigation left some field-level and hidden-need failures
+unresolved. These revisions address the confirmed mechanisms; they do not
+establish that all nine previous failed tasks now pass. In particular, actual
+elicitation under the revised question wording, interpretation of retirement
+evidence and hidden-race cost/accuracy remain unmeasured.
+
+Review artifacts
+
+- verification.json: aggregate checks and limits.
+- stages.json: accepted stage hashes and test counts.
+- baseline-source.txt and baseline-tests.txt: pre-revision copies.
+- stage-N-source.txt and stage-N.patch: separately accepted changes.
+- all-changes.patch: complete source diff.
+- final-tests.txt: all 95 tests, including integration cases.
+- diagnostic-contracts.json: original checkout diagnostics before/after.
+- stage-2-coverage.json: recorded topic-coverage audit, without a new score.
+- recorded-input-checks.json: pure input transformations for diagnosed cases.
+- static-review.json: final source hash and local static review.
+
+All research artifacts remain git-ignored; no commit, upload or submission was
+made. The file for the user's next verification is agents/Tosky_l17.py.

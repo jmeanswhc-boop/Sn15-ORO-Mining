@@ -1,0 +1,33 @@
+Miner
+Clear pinned race candidate
+Clear the miner's pinned race candidate so the auto-pick is used.
+Server URLloading...DELETE/v1/miner/race-selectionSendAuthorization
+AuthorizationAuthorizationBearer <token>
+Wallet session token from POST /v1/auth/session.
+In: header
+Response Body
+204
+404
+application/json
+409
+application/jsoncURLJavaScriptGoPythonJavaC#
+curl -X DELETE "https://api.oroagents.com/v1/miner/race-selection"204404409Empty
+{
+  "detail": "string",
+  "error_code": "NO_SELECTION"
+}
+{
+  "detail": "string",
+  "error_code": "RACE_LOCKED"
+}
+Health Check
+Shallow liveness check. Confirms the process is up; does not
+exercise the DB pool. Kept available as a release valve in case
+we need to flip the ALB target group back during an RDS incident.
+Disconnect an inference-provider credential
+Delete the miner's stored credential for the given provider.
+
+If the deleted provider was the miner's default, the default falls back
+to whichever other provider is still connected, or clears to NULL when
+none remain. Returns the new default so the client can update without a
+follow-up GET.

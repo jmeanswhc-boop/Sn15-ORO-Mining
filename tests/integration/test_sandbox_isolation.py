@@ -1,0 +1,517 @@
+"""
+Integration tests for sandbox network isolation.
+Tests that sandbox containers are properly isolated and can only communicate through the proxy.
+"""
+
+import http.client
+import json
+import os
+import subprocess
+import time
+from pathlib import Path
+
+import pytest
+import requests
+
+from subnet.sandbox import build_sandbox_command
+from tests.integration.conftest import (
+    PROXY_CONTAINER,
+    PROXY_PORT,
+    SEARCH_SERVER_CONTAINER,
+    SESSION_RUNTIME_CONTAINER,
+    exec_in_container,
+    get_container_health,
+    is_container_running,
+)
+
+
+class TestSandboxIsolation:
+    """Tests for sandbox network isolation."""
+
+    def test_generated_artifact_mounts_are_readonly(self, tmp_path):
+        tmp_path.chmod(0o755)
+        output_dir = tmp_path / "sandbox"
+        output_dir.mkdir(mode=0o777)
+        output_dir.chmod(0o777)
+        inputs = {
+            "problems.jsonl": json.dumps(
+                {"problem_id": "artifact-probe", "query": "Probe artifact mounts"}
+            )
+            + "\n",
+            "environment_sessions.json": '{"sessions": []}\n',
+            "summary.json": '{"status": "running"}\n',
+            "episode_results.jsonl": '{"trusted": true}\n',
+        }
+        for name, content in inputs.items():
+            path = tmp_path / name
+            path.write_text(content)
+            path.chmod(0o666)
+        command = build_sandbox_command(
+            agent_host_path=str(
+                Path("tests/integration/hostile_artifact_agent.py").resolve()
+            ),
+            logs_host_path=str(tmp_path),
+            output_host_path=str(output_dir),
+            problem_file_arg="/app/logs/problems.jsonl",
+            output_path="/app/output/sandbox_output.jsonl",
+            image=os.getenv(
+                "INTEGRATION_SANDBOX_IMAGE", "ghcr.io/oro-ai/oro/sandbox:stable"
+            ),
+            network="none",
+            max_workers=1,
+            timeout=30,
+        )
+        result = subprocess.run(
+            command, capture_output=True, text=True, timeout=60, check=False
+        )
+        assert result.returncode == 0, result.stderr
+        row = json.loads((output_dir / "sandbox_output.jsonl").read_text())
+        assert row["status"] == "SUCCESS"
+        report = row["dialogue"][0]["artifact_isolation"]
+        assert len(report) == 9 and all(report.values()), report
+        assert {name: (tmp_path / name).read_text() for name in inputs} == inputs
+
+    def test_required_containers_running(self):
+        """Test that required containers are running."""
+        required = [SEARCH_SERVER_CONTAINER, PROXY_CONTAINER, SESSION_RUNTIME_CONTAINER]
+        missing = [c for c in required if not is_container_running(c)]
+
+        assert not missing, (
+            f"Required containers are not running: {missing}. "
+            "Please start them with: docker compose up -d search-server proxy"
+        )
+
+    def test_containers_healthy(self):
+        """Test that required containers are healthy."""
+        for container in (
+            SEARCH_SERVER_CONTAINER,
+            PROXY_CONTAINER,
+            SESSION_RUNTIME_CONTAINER,
+        ):
+            health = get_container_health(container)
+            if health != "healthy":
+                pytest.skip(f"{container} may not be healthy yet (status: {health})")
+
+    def test_internet_connectivity_blocked(self, sandbox_container):
+        """Test that sandbox container cannot reach the internet."""
+        result = exec_in_container(
+            sandbox_container,
+            ["curl", "-s", "--max-time", "5", "https://www.google.com"],
+            timeout=10,
+        )
+
+        assert result.returncode != 0, (
+            "Container can reach the internet (should be blocked)"
+        )
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "http://search-server:5632/health",
+            "http://search-server:5632/internal/bm25?q=phone&k=100",
+            "http://search-server:5632/internal/catalog/search?q=phone&k=100",
+            "http://session-runtime:9101/health",
+        ],
+    )
+    def test_direct_service_access_blocked(self, sandbox_container, url):
+        """The sandbox cannot bypass the proxy to reach internal services."""
+        result = exec_in_container(
+            sandbox_container,
+            ["curl", "-s", "--max-time", "5", url],
+            timeout=10,
+        )
+
+        assert result.returncode != 0, f"Container can directly reach {url}"
+
+    def test_proxy_access_allowed(self, sandbox_container):
+        """Test that sandbox container can reach proxy."""
+        result = exec_in_container(
+            sandbox_container,
+            ["curl", "-s", "--max-time", "5", "http://proxy:80/health"],
+            timeout=10,
+        )
+
+        assert result.returncode == 0, f"Container cannot reach proxy: {result.stderr}"
+        assert "healthy" in result.stdout.lower() or result.stdout.strip() == "healthy"
+
+    def test_legacy_search_routes_are_gone(self, sandbox_container):
+        """The ShoppingBench /search/* routes answer 410 and never reach search-server."""
+        result = exec_in_container(
+            sandbox_container,
+            [
+                "curl",
+                "-s",
+                "--max-time",
+                "5",
+                "-o",
+                "/dev/null",
+                "-w",
+                "%{http_code}",
+                "http://proxy:80/search/find_product?q=test&page=1",
+            ],
+            timeout=10,
+        )
+
+        assert result.returncode == 0, f"Container cannot reach proxy: {result.stderr}"
+        assert result.stdout.strip() == "410", (
+            f"Expected 410 for a legacy search route, got: {result.stdout[:200]}"
+        )
+
+    def test_inference_requires_active_grant(self, sandbox_container):
+        """Direct inference HTTP calls cannot pass without an active run key."""
+        result = exec_in_container(
+            sandbox_container,
+            [
+                "curl",
+                "-s",
+                "--max-time",
+                "5",
+                "-w",
+                "\n%{http_code}",
+                "-H",
+                "Content-Type: application/json",
+                "-d",
+                "{}",
+                "http://proxy:80/inference/chat/completions",
+            ],
+            timeout=10,
+        )
+
+        assert result.returncode == 0, result.stderr
+        body, status = result.stdout.rsplit("\n", 1)
+        assert status == "401", (
+            f"Expected the run-key guard to answer, got {status}: {body[:200]}"
+        )
+        assert "active run" in json.loads(body)["error"]
+
+    @pytest.fixture
+    def active_inference_grant(self):
+        proxy = json.loads(
+            subprocess.run(
+                ["docker", "inspect", PROXY_CONTAINER],
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout
+        )[0]
+        assert "ORO_INFERENCE_TEST_PROXY=1" in proxy["Config"]["Env"]
+        assert not any(
+            m["Destination"] == "/run/oro-inference-grants" for m in proxy["Mounts"]
+        )
+
+        def set_grant(grant):
+            response = requests.put(
+                "http://127.0.0.1:19101/_test/inference-grant", json=grant, timeout=5
+            )
+            response.raise_for_status()
+
+        grant = {
+            "run_id": "test-run",
+            "token": "sk-or-expected",
+            "expires_at": time.time() + 600,
+        }
+        set_grant(grant)
+        try:
+            yield set_grant, grant
+        finally:
+            set_grant({})
+
+    def test_inference_uses_active_run_key(self, active_inference_grant):
+        set_grant, grant = active_inference_grant
+        url = f"http://127.0.0.1:{PROXY_PORT}/inference/chat/completions"
+        wrong = requests.post(
+            url, headers={"Authorization": "Bearer sk-or-other"}, json={}, timeout=5
+        )
+        assert wrong.status_code == 401
+        valid = requests.post(
+            url, headers={"Authorization": "Bearer sk-or-expected"}, json={}, timeout=5
+        )
+        assert valid.status_code == 400
+        assert "model" in valid.json()["error"]
+        grant["expires_at"] = 0
+        set_grant(grant)
+        expired = requests.post(
+            url, headers={"Authorization": "Bearer sk-or-expected"}, json={}, timeout=5
+        )
+        assert expired.status_code == 401
+
+    def test_inference_field_telemetry(self, active_inference_grant):
+        url = f"http://127.0.0.1:{PROXY_PORT}/inference/chat/completions?private_query_marker=1"
+        response = requests.post(
+            url,
+            headers={
+                "User-Agent": "oro-field-probe",
+                "Authorization": "Bearer sk-or-expected",
+            },
+            json={
+                "messages": [{"role": "user", "content": "private_prompt_marker"}],
+                "stream": True,
+                "odd field": 1,
+                "tools": [
+                    {"type": "function"},
+                    {"type": "openrouter:advisor"},
+                    {"type": "unknown"},
+                ],
+                "chat_template_kwargs": {
+                    "bad key": "private_template_marker",
+                    **{f"k{i}": i for i in range(16)},
+                },
+            },
+            timeout=5,
+        )
+        assert response.status_code == 400
+        overflow = {f"f{i}": i for i in range(33)}
+        overflow.update({"model": "test/model", "stream": True})
+        overflow["tools"] = [{"type": "function"}] * 33
+        assert (
+            requests.post(
+                url,
+                headers={
+                    "User-Agent": "oro-overflow-probe",
+                    "Authorization": "Bearer sk-or-expected",
+                },
+                json=overflow,
+                timeout=5,
+            ).status_code
+            == 400
+        )
+        logs = subprocess.run(
+            ["docker", "logs", PROXY_CONTAINER],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
+        line = next(line for line in logs.splitlines() if '"oro-field-probe"' in line)
+        assert '"POST /inference/chat/completions HTTP/1.1"' in line
+        assert "fields=messages,stream,odd_field" in line
+        assert "tool_fn=1 tool_server=1 tool_other=1 tool_more=0" in line
+        assert "template_keys=bad_key,k0," in line
+        assert ",+more run=test-run" in line
+        assert "run=test-run" in line
+        assert all(
+            marker not in line
+            for marker in (
+                "private_query_marker",
+                "private_prompt_marker",
+                "private_template_marker",
+                "sk-or-expected",
+            )
+        )
+        overflow_line = next(
+            line for line in logs.splitlines() if '"oro-overflow-probe"' in line
+        )
+        assert ",+more" in overflow_line
+        assert "tool_fn=32 tool_server=0 tool_other=0 tool_more=1" in overflow_line
+
+    @pytest.mark.parametrize(
+        "path",
+        [
+            # The validator's decisions route, as the agent, and every spelling of it.
+            "/inference/alpha/decisions",
+            "/inference/alpha/decisions%3F",
+            "/inference/alpha/decisions%3Fx=1",
+            "/inference/alpha/decisions%253F",
+            "/inference/alpha%2Fdecisions",
+            "/inference/alpha%252Fdecisions",
+            "/inference/alpha/decisions/",
+            "/inference/Alpha/Decisions",
+            "/inference/alpha/decisions;x",
+            "/inference/alpha/decisions%23",
+            "/inference/chat/../alpha/decisions",
+            # Anything but the chat completions an agent needs.
+            "/inference/key",
+            "/inference/key%3F",
+            "/inference/completions",
+            "/inference/embeddings",
+            "/inference/chat/completions/",
+            "/inference/CHAT/completions",
+            "/inference/chat/completions%3F",
+            "/inference/models",
+        ],
+    )
+    def test_inference_posts_only_to_chat_completions(self, active_inference_grant, path):
+        """An agent POSTs only the exact chat completions route; nothing it can spell reaches
+        another upstream route (403 before the body is read, where the chat route answers 400
+        for this bodiless request)."""
+        conn = http.client.HTTPConnection("127.0.0.1", PROXY_PORT, timeout=5)
+        conn.request(
+            "POST",
+            path,
+            body="{}",
+            headers={
+                "Authorization": "Bearer sk-or-expected",
+                "Content-Type": "application/json",
+            },
+        )
+        response = conn.getresponse()
+        assert (response.status, json.loads(response.read())) == (
+            403,
+            {"error": "forbidden"},
+        ), path
+        chat = requests.post(
+            f"http://127.0.0.1:{PROXY_PORT}/inference/chat/completions",
+            headers={"Authorization": "Bearer sk-or-expected"},
+            json={},
+            timeout=5,
+        )
+        assert chat.status_code == 400 and "model" in chat.json()["error"]
+
+    def test_session_calls_route_only_through_proxy(self, sandbox_container):
+        """A grouped step (several actions in one call) reaches the real SessionServer only through nginx."""
+
+        result = exec_in_container(
+            sandbox_container,
+            [
+                "curl",
+                "-s",
+                "--max-time",
+                "5",
+                "-w",
+                "\n%{http_code}",
+                "-H",
+                "Content-Type: application/json",
+                "-d",
+                json.dumps(
+                    {
+                        "session_id": "integration-route",
+                        "step": 1,
+                        "actions": [
+                            {"name": "search", "args": {"query": "shoes"}},
+                            {"name": "message", "args": {"content": "Continue?"}},
+                        ],
+                    }
+                ),
+                "http://proxy:80/environment/call",
+            ],
+            timeout=10,
+        )
+
+        assert result.returncode == 0, result.stderr
+        body, status = result.stdout.rsplit("\n", 1)
+        assert status == "200"
+        response = json.loads(body)
+        assert response["step"] == 2 and response["finished"] is False
+        assert [o["tool"] for o in response["observations"]] == ["search", "message"]
+
+    def test_environment_preflight_agent_runs_through_proxy(self, tmp_path):
+        """The owned policy runs in the real sandbox with no inference token."""
+
+        tmp_path.chmod(0o777)
+        (tmp_path / "agent.py").write_text(
+            Path("subnet/validator/environment_preflight_agent.py").read_text(
+                encoding="utf-8"
+            ),
+            encoding="utf-8",
+        )
+        (tmp_path / "problems.jsonl").write_text(
+            json.dumps(
+                {
+                    "problem_id": "positive",
+                    "query": "Run the deterministic environment preflight.",
+                    "environment": {
+                        "binding": {"session_id": "integration-preflight"},
+                        "actions": [
+                            {"name": "search", "args": {"query": "shoes"}},
+                            {"name": "order", "args": {"id": "a"}},
+                        ],
+                    },
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        command = build_sandbox_command(
+            agent_host_path="",
+            logs_host_path=str(tmp_path),
+            problem_file_arg="/app/logs/problems.jsonl",
+            output_path="/app/logs/output.jsonl",
+            image=os.getenv(
+                "INTEGRATION_SANDBOX_IMAGE", "ghcr.io/oro-ai/oro/sandbox:stable"
+            ),
+            network=os.getenv("INTEGRATION_SANDBOX_NETWORK", "sandbox-network"),
+            agent_container_path="/app/logs/agent.py",
+            max_workers=1,
+            timeout=30,
+        )
+
+        result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+
+        assert result.returncode == 0, result.stderr
+        row = json.loads((tmp_path / "output.jsonl").read_text(encoding="utf-8"))
+        assert row["status"] == "SUCCESS"
+        assert row["inference_total"] == 0
+        results = [turn["environment_result"] for turn in row["dialogue"]]
+        assert [(r["step"], r["finished"]) for r in results] == [(1, False), (2, True)]
+
+    def test_hostile_agent_cannot_reach_validator_private_state(self, tmp_path):
+        """A real sandbox sees only the documented session and proxy surface."""
+
+        tmp_path.chmod(0o777)
+        (tmp_path / "agent.py").write_text(
+            Path("tests/integration/hostile_isolation_agent.py").read_text(
+                encoding="utf-8"
+            ),
+            encoding="utf-8",
+        )
+        (tmp_path / "problems.jsonl").write_text(
+            json.dumps(
+                {
+                    "problem_id": "hostile-isolation",
+                    "query": "Probe the sandbox for validator-private state.",
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        (tmp_path / "environment_sessions.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "oro.session_bootstrap.v1",
+                    "sessions": [
+                        {
+                            "session_id": "integration-hostile",
+                            "policy_view": {
+                                "query": "Public shopper request",
+                                "max_steps": 10,
+                                "tools": [],
+                                "max_calls_per_turn": 16,
+                            },
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        command = build_sandbox_command(
+            agent_host_path="",
+            logs_host_path=str(tmp_path),
+            problem_file_arg="/app/logs/problems.jsonl",
+            output_path="/app/logs/output.jsonl",
+            image=os.getenv(
+                "INTEGRATION_SANDBOX_IMAGE", "ghcr.io/oro-ai/oro/sandbox:stable"
+            ),
+            network=os.getenv("INTEGRATION_SANDBOX_NETWORK", "sandbox-network"),
+            agent_container_path="/app/logs/agent.py",
+            max_workers=1,
+            timeout=30,
+        )
+
+        result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+
+        assert result.returncode == 0, result.stderr
+        row = json.loads((tmp_path / "output.jsonl").read_text(encoding="utf-8"))
+        assert row["status"] == "SUCCESS"
+        assert row["inference_total"] == 0
+        report = row["dialogue"][0]["isolation_report"]
+        assert report and all(report.values()), report
+
+    def test_dns_resolution(self, sandbox_container):
+        """Test DNS resolution (optional - may not have nslookup)."""
+        result = exec_in_container(sandbox_container, ["nslookup", "proxy"], timeout=5)
+
+        if result.returncode == 0:
+            # DNS works
+            assert True
+        else:
+            # nslookup may not be available, which is fine
+            pytest.skip("nslookup not available (this is normal)")

@@ -1,0 +1,40 @@
+FEEE
+======================================================================
+ERROR: test_mode_is_derived_from_advertised_contract_with_renamed_values (agents.tests.test_tosky_v6.SearchProgressContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 380, in test_mode_is_derived_from_advertised_contract_with_renamed_values
+    result = e.keyword_args('catalog_query', args)
+AttributeError: 'Cairn' object has no attribute 'keyword_args'
+
+======================================================================
+ERROR: test_pure_filter_and_undocumented_modes_remain_unchanged (agents.tests.test_tosky_v6.SearchProgressContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 387, in test_pure_filter_and_undocumented_modes_remain_unchanged
+    self.assertEqual(e.keyword_args('catalog_query', args), args)
+AttributeError: 'Cairn' object has no attribute 'keyword_args'
+
+======================================================================
+ERROR: test_repeated_ids_with_updated_facts_count_as_new_evidence (agents.tests.test_tosky_v6.SearchProgressContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 396, in test_repeated_ids_with_updated_facts_count_as_new_evidence
+    e.search_progress('catalog_query', {'mode': 'alpha', 'query_words': 'first'}, {'products': [old]})
+AttributeError: 'Cairn' object has no attribute 'search_progress'
+
+======================================================================
+FAIL: test_corrected_mode_reaches_actual_environment_payload (agents.tests.test_tosky_v6.SearchProgressContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vboxuser/Documents/oro/agents/tests/test_tosky_v6.py", line 415, in test_corrected_mode_reaches_actual_environment_payload
+    self.assertEqual(calls[0]['action']['args']['mode'], 'alpha')
+AssertionError: 'beta' != 'alpha'
+- beta
++ alpha
+
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.837s
+
+FAILED (failures=1, errors=3)

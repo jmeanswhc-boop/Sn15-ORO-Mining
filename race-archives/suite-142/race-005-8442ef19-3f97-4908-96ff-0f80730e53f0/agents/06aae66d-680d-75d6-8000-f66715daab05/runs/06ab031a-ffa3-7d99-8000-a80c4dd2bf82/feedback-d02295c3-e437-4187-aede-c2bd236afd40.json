@@ -1,0 +1,804 @@
+{
+  "schema_version": "oro.episode_feedback.v1",
+  "episode_result_id": "d02295c3-e437-4187-aede-c2bd236afd40",
+  "task_id": "TF2-retrieval_recall-200164",
+  "query": "find an in-stock listing in the Salad Dressing category that matches the phrase burger dressing, at or under 145.00 PHP, and buy one\n\nTask rules:\nYou are a shopping agent. Search the catalog for what the user described. Reformulate queries and inspect candidates until you are confident, then buy the best in-stock item within the user's budget. Survey the realistic options before committing: a good shortlist covers several distinct products, not one lucky hit. When you need input or want to recommend something, send a short message to the user. Finish by placing the order for a valid, in-stock item within budget. Once an item is verified in stock and within budget, place the order - do not wait for permission or further confirmation.\nThe catalog category_path is available in view and compare. Check that classification against the required category. Reject accessories and non-device listings when a device is requested.\nRead shopper messages returned after cart actions before placing an order. The shopper may clarify requirements or tighten the budget; once stated, those updates apply to later choices. Answer any direct clarification request.\nUnless the shopper asks for a reason, structured justification is optional. If you supply it, use only field/value claims supported by view or compare of the final product and its current price/stock. Specification claims need raw product facts, not title guesses. Do not include summary or evidence free text.\nMatch the requested phrase against the listing title, not its brand, category, options, or description. Before ordering, surface at least 4 distinct matching product identities, with at least one appearing in your search or filter results. Duplicate listings and variants of the same underlying product count as one identity.",
+  "family": "retrieval_recall",
+  "phase": "RACE",
+  "outcome": "completed",
+  "passed": true,
+  "paid_reward": 0.731707,
+  "step_count": 12,
+  "tool_call_count": 12,
+  "search_call_count": 3,
+  "termination_code": "placed_order",
+  "interaction": [
+    {
+      "step_index": 0,
+      "turn": 1,
+      "calls": [
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-1-1",
+          "tool_name": "search",
+          "args": {
+            "in_stock": true,
+            "max_price": "145",
+            "query": "burger dressing"
+          },
+          "observation": {
+            "action": "search",
+            "results": [
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 168.0,
+                "product_id": "4269855688249346031",
+                "sku": "3875521567-1",
+                "title": "Mikes Best Burger Dressing/Mayo Delight 1000 Grams"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 28.27,
+                "product_id": "6442043494510452243",
+                "sku": "5035765174-2",
+                "title": "Mayonnaise Burger Dressing POUCH size for Burger Fries Cafe Restaurant Supplies laz1"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 109.0,
+                "product_id": "2323230298129107506",
+                "sku": "5036559653-1",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies LAZ5"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 106.27,
+                "product_id": "8717519853575924086",
+                "sku": "5035724233-1",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies laz1"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 106.27,
+                "product_id": "2595252973704864235",
+                "sku": "5035760484-1",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies laz2"
+              },
+              {
+                "brand": "Rogers",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 125.0,
+                "product_id": "8526596951194423314",
+                "sku": "3318647233-default",
+                "title": "INVICTUS BURGER DRESSING"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 252.0,
+                "product_id": "7082962627620664397",
+                "sku": "4492807452-default",
+                "title": "BUDGET BURGER DRESSING 3.5 LITERS"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 26.0,
+                "product_id": "5626246511129652028",
+                "sku": "4550813684-default",
+                "title": "Budget Burger Dressing 250g"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 159.0,
+                "product_id": "5087059326973009050",
+                "sku": "3360965981-default",
+                "title": "Burger Dressing  1liter"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 245.0,
+                "product_id": "5622293196421178038",
+                "sku": "4449917535-default",
+                "title": "Budget Burger Dressing 3.5 Liters"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-1-2",
+          "tool_name": "search",
+          "args": {
+            "in_stock": true,
+            "max_price": "145",
+            "query": "burger dressing salad"
+          },
+          "observation": {
+            "action": "search",
+            "results": [
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 214.0,
+                "product_id": "7225843508381766825",
+                "sku": "606968386-1",
+                "title": "Odip Creamy Mustard Dressing 260g ( Healthy Vegetable Salad Dressing | Hotdog Dressing | Burger Nuggets | Nachos Dip ) OdipMyDIp"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 119.0,
+                "product_id": "5571011503245028477",
+                "sku": "4455666550-1",
+                "title": "Seasons Mayonnaise All Purpose Dressing Good for: Burger Footlong Salad"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 168.0,
+                "product_id": "2774585653965817593",
+                "sku": "4453686448-1",
+                "title": "Mikes Best Mayo Delight All Purpose Dressing Good for: Burger Footlong Salad"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 168.0,
+                "product_id": "3368250031503166909",
+                "sku": "3875513610-1",
+                "title": "Mikes Best Mayo Delight All Purpose Dressing Good for: Burger Footlong Salad (1000 Grams)"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 72.0,
+                "product_id": "4447656731842428172",
+                "sku": "4098400757-7",
+                "title": "gummy candy caterpillar burger  hamburger cola eyeball jelly beans lips mango & salad and cube egg"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 219.0,
+                "product_id": "6841454219012984699",
+                "sku": "1947604157-1",
+                "title": "Odip Garlic Mayo 240g ( Sugar Free | Shawarma Kebab Sauce | Salad Dressing | Mayonnaise Dip | Burger Wraps Sandwich Toppings | Dirty Keto) OdipMyDip"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 168.0,
+                "product_id": "4269855688249346031",
+                "sku": "3875521567-1",
+                "title": "Mikes Best Burger Dressing/Mayo Delight 1000 Grams"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 28.27,
+                "product_id": "6442043494510452243",
+                "sku": "5035765174-2",
+                "title": "Mayonnaise Burger Dressing POUCH size for Burger Fries Cafe Restaurant Supplies laz1"
+              },
+              {
+                "brand": "nobrand",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 42.0,
+                "product_id": "3586705715671286250",
+                "sku": "4902825140-2",
+                "title": "Disposable Plastic Box Transparent Pastry Box Cake Peach Cake Burger Salad Rectangular Box"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 306.0,
+                "product_id": "7665023592394673383",
+                "sku": "4101762397-1",
+                "title": "(USA) Nob Hill Creamy Asiago Caesar Salad Dressing. 355 ml."
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-1-3",
+          "tool_name": "search",
+          "args": {
+            "in_stock": true,
+            "max_price": "145",
+            "query": "dressing burger"
+          },
+          "observation": {
+            "action": "search",
+            "results": [
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 168.0,
+                "product_id": "4269855688249346031",
+                "sku": "3875521567-1",
+                "title": "Mikes Best Burger Dressing/Mayo Delight 1000 Grams"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 28.27,
+                "product_id": "6442043494510452243",
+                "sku": "5035765174-2",
+                "title": "Mayonnaise Burger Dressing POUCH size for Burger Fries Cafe Restaurant Supplies laz1"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 109.0,
+                "product_id": "2323230298129107506",
+                "sku": "5036559653-1",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies LAZ5"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 106.27,
+                "product_id": "8717519853575924086",
+                "sku": "5035724233-1",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies laz1"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 106.27,
+                "product_id": "2595252973704864235",
+                "sku": "5035760484-1",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies laz2"
+              },
+              {
+                "brand": "Rogers",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 125.0,
+                "product_id": "8526596951194423314",
+                "sku": "3318647233-default",
+                "title": "INVICTUS BURGER DRESSING"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 252.0,
+                "product_id": "7082962627620664397",
+                "sku": "4492807452-default",
+                "title": "BUDGET BURGER DRESSING 3.5 LITERS"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 26.0,
+                "product_id": "5626246511129652028",
+                "sku": "4550813684-default",
+                "title": "Budget Burger Dressing 250g"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 159.0,
+                "product_id": "5087059326973009050",
+                "sku": "3360965981-default",
+                "title": "Burger Dressing  1liter"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 245.0,
+                "product_id": "5622293196421178038",
+                "sku": "4449917535-default",
+                "title": "Budget Burger Dressing 3.5 Liters"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-1-4",
+          "tool_name": "filter",
+          "args": {
+            "category": "Salad Dressing",
+            "in_stock": true,
+            "max_price": 145
+          },
+          "observation": {
+            "action": "filter",
+            "results": [
+              {
+                "brand": "Kewpie",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 120.0,
+                "product_id": "1422482790938303908",
+                "sku": "4328921071-3",
+                "title": "Kewpie Japanese Mayo Keto-Friendly (300grams & 130grams)"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 58.0,
+                "product_id": "1542420033897525801",
+                "sku": "3724435889-1",
+                "title": "Garlic Dressing 1.5L or 250ml"
+              },
+              {
+                "brand": "Member's Value",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 145.0,
+                "product_id": "163022796066184047",
+                "sku": "1746784035-1",
+                "title": "Members Value All-Purpose Dressing 1L"
+              },
+              {
+                "brand": "Clara Ole",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 55.0,
+                "product_id": "1745263349313371792",
+                "sku": "1325004717-default",
+                "title": "Clara Ole Dips n Dressing Caesar 120g"
+              },
+              {
+                "brand": "McCormick",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 70.4,
+                "product_id": "209533655001916409",
+                "sku": "4809901520-default",
+                "title": "McCormick Salad Shots- Roasted Sesame 15g - Pack of 4"
+              },
+              {
+                "brand": "McCormick",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 96.8,
+                "product_id": "2146650539546608056",
+                "sku": "4809984321-default",
+                "title": "McCormick Salad Shots- Caesar 15g - Pack of 4"
+              },
+              {
+                "brand": "Clara Ole",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 55.0,
+                "product_id": "2226728107533087674",
+                "sku": "1325028703-default",
+                "title": "Clara Ole Dips n Dressing honey Mustard 120g"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 109.0,
+                "product_id": "2323230298129107506",
+                "sku": "5036559653-1",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies LAZ5"
+              },
+              {
+                "brand": "Clara Ole",
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 52.0,
+                "product_id": "244305800492572181",
+                "sku": "1329912363-default",
+                "title": "Clara Ole Dips n Dressing Caesar 120g"
+              },
+              {
+                "brand": null,
+                "currency": "PHP",
+                "in_stock": true,
+                "price": 106.27,
+                "product_id": "2595252973704864235",
+                "sku": "5035760484-1",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies laz2"
+              }
+            ],
+            "returned": 10
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 1,
+      "turn": 2,
+      "calls": [
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-2-1",
+          "tool_name": "compare",
+          "args": {
+            "product_ids": [
+              "6442043494510452243",
+              "2323230298129107506",
+              "8717519853575924086",
+              "2595252973704864235",
+              "8526596951194423314"
+            ]
+          },
+          "observation": {
+            "compared": [
+              {
+                "brand": null,
+                "category_path": [
+                  "Groceries",
+                  "Food Staples & Cooking Essentials",
+                  "Cooking Sauces, Condiments & Dressings",
+                  "Asian Pastes & Sauces"
+                ],
+                "facts": {},
+                "product_id": "6442043494510452243",
+                "title": "Mayonnaise Burger Dressing POUCH size for Burger Fries Cafe Restaurant Supplies laz1",
+                "variants": [
+                  {
+                    "currency": "PHP",
+                    "in_stock": true,
+                    "options": "burger dressingpouch",
+                    "price": 28.27,
+                    "sku": "5035765174-2"
+                  }
+                ]
+              },
+              {
+                "brand": null,
+                "category_path": [
+                  "Groceries",
+                  "Food Staples & Cooking Essentials",
+                  "Cooking Sauces, Condiments & Dressings",
+                  "Salad Dressing"
+                ],
+                "facts": {},
+                "product_id": "2323230298129107506",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies LAZ5",
+                "variants": [
+                  {
+                    "currency": "PHP",
+                    "in_stock": true,
+                    "options": "smallconburgerdressi",
+                    "price": 109.0,
+                    "sku": "5036559653-1"
+                  }
+                ]
+              },
+              {
+                "brand": null,
+                "category_path": [
+                  "Groceries",
+                  "Food Staples & Cooking Essentials",
+                  "Cooking Sauces, Condiments & Dressings",
+                  "Salad Dressing"
+                ],
+                "facts": {},
+                "product_id": "8717519853575924086",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies laz1",
+                "variants": [
+                  {
+                    "currency": "PHP",
+                    "in_stock": true,
+                    "options": "smallconburgerdress",
+                    "price": 106.27,
+                    "sku": "5035724233-1"
+                  }
+                ]
+              },
+              {
+                "brand": null,
+                "category_path": [
+                  "Groceries",
+                  "Food Staples & Cooking Essentials",
+                  "Cooking Sauces, Condiments & Dressings",
+                  "Salad Dressing"
+                ],
+                "facts": {},
+                "product_id": "2595252973704864235",
+                "title": "Burger Dressing Budget Mayoketchup for Burger Fries Cafe Restaurant Supplies laz2",
+                "variants": [
+                  {
+                    "currency": "PHP",
+                    "in_stock": true,
+                    "options": "bigconburgerdressing",
+                    "price": 106.27,
+                    "sku": "5035760484-1"
+                  }
+                ]
+              },
+              {
+                "brand": "Rogers",
+                "category_path": [
+                  "Groceries",
+                  "Food Staples & Cooking Essentials",
+                  "Cooking Sauces, Condiments & Dressings",
+                  "Asian Pastes & Sauces"
+                ],
+                "facts": {},
+                "product_id": "8526596951194423314",
+                "title": "INVICTUS BURGER DRESSING",
+                "variants": [
+                  {
+                    "currency": "PHP",
+                    "in_stock": true,
+                    "options": null,
+                    "price": 125.0,
+                    "sku": "3318647233-default"
+                  }
+                ]
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        },
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-2-2",
+          "tool_name": "view",
+          "args": {
+            "product_id": "5626246511129652028"
+          },
+          "observation": {
+            "brand": null,
+            "category_path": [
+              "Groceries",
+              "Food Staples & Cooking Essentials",
+              "Cooking Sauces, Condiments & Dressings",
+              "Salad Dressing"
+            ],
+            "facts": {
+              "warranty_type": "local supplier warranty"
+            },
+            "product_id": "5626246511129652028",
+            "title": "Budget Burger Dressing 250g",
+            "variants": [
+              {
+                "currency": "PHP",
+                "in_stock": true,
+                "options": null,
+                "price": 26.0,
+                "sku": "4550813684-default"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 2,
+      "turn": 3,
+      "calls": [
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-3-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "5626246511129652028",
+            "sku": "4550813684-default"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": false,
+              "price": 26.0,
+              "product_id": "5626246511129652028",
+              "sku": "4550813684-default"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 26.0,
+                "in_stock": false,
+                "price_at_add": 26.0,
+                "product_id": "5626246511129652028",
+                "sku": "4550813684-default"
+              }
+            ],
+            "market_event": {
+              "contract_version": "oro_event_v3",
+              "currency": "PHP",
+              "in_stock_after": false,
+              "in_stock_before": true,
+              "kind": "stockout",
+              "new_price": null,
+              "old_price": 26.0,
+              "target": {
+                "product_id": "5626246511129652028",
+                "sku": "4550813684-default"
+              }
+            }
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 3,
+      "turn": 4,
+      "calls": [
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-4-1",
+          "tool_name": "remove_from_cart",
+          "args": {
+            "product_id": "5626246511129652028",
+            "sku": "4550813684-default"
+          },
+          "observation": {
+            "cart": []
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": "wait, is that still available?",
+      "message": null
+    },
+    {
+      "step_index": 4,
+      "turn": 5,
+      "calls": [
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-5-1",
+          "tool_name": "message",
+          "args": {
+            "content": "No, the Budget Burger Dressing 250g (26.00 PHP) just went out of stock. I've removed it from the cart. I have two other verified in-stock options in the Salad Dressing category with \"burger dressing\" in the title: Burger Dressing Budget Mayoketchup at 106.27 PHP and another at 109.00 PHP. I'll add the 106.27 PHP one now."
+          },
+          "observation": {
+            "sent": true
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 5,
+      "turn": 6,
+      "calls": [
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-6-1",
+          "tool_name": "add_to_cart",
+          "args": {
+            "product_id": "2595252973704864235",
+            "sku": "5035760484-1"
+          },
+          "observation": {
+            "added": {
+              "currency": "PHP",
+              "in_stock": true,
+              "price": 106.27,
+              "product_id": "2595252973704864235",
+              "sku": "5035760484-1"
+            },
+            "cart": [
+              {
+                "currency": "PHP",
+                "current_price": 106.27,
+                "in_stock": true,
+                "price_at_add": 106.27,
+                "product_id": "2595252973704864235",
+                "sku": "5035760484-1"
+              }
+            ]
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 6,
+      "turn": 7,
+      "calls": [
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-7-1",
+          "tool_name": "inspect_stock",
+          "args": {
+            "product_id": "2595252973704864235",
+            "sku": "5035760484-1"
+          },
+          "observation": {
+            "currency": "PHP",
+            "in_stock": true,
+            "price": 106.27,
+            "product_id": "2595252973704864235",
+            "sku": "5035760484-1"
+          },
+          "done": false,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    },
+    {
+      "step_index": 7,
+      "turn": 8,
+      "calls": [
+        {
+          "call_id": "799805e53e2b4b24a38a7a25da8148e0-turn-8-1",
+          "tool_name": "place_test_order",
+          "args": {
+            "product_id": "2595252973704864235",
+            "sku": "5035760484-1"
+          },
+          "observation": {
+            "order": {
+              "currency": "PHP",
+              "in_stock_at_order": true,
+              "price_at_order": 106.27,
+              "target": {
+                "product_id": "2595252973704864235",
+                "sku": "5035760484-1"
+              }
+            },
+            "status": "placed"
+          },
+          "done": true,
+          "error_code": null
+        }
+      ],
+      "shopper_message": null,
+      "message": null
+    }
+  ],
+  "observable_issues": [],
+  "diagnostics_state": "available",
+  "failure_category": null,
+  "end_reason": null
+}

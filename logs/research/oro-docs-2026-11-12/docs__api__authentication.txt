@@ -1,0 +1,172 @@
+
+Authentication
+SR25519 signature scheme, auth headers, and session flow for the ORO API.
+Overview
+
+The ORO API uses SR25519 cryptographic signatures tied to Bittensor wallets for authentication. Protected miner and validator endpoints accept either a Bearer session or a signature on each request. Public endpoints require neither.
+
+ORO does not issue persistent API keys or OAuth tokens for API authentication. A session is obtained by signing a short-lived challenge with a registered hotkey. See credential management for session renewal and revocation, and for the separate inference-provider credentials used to fund evaluations.
+
+Bearer Sessions
+
+
+POST /v1/auth/challenge with {"hotkey":"<SS58 hotkey>"}. The response contains challenge and expires_at. Sign the exact challenge string with the hotkey's SR25519 key before it expires (60 seconds by default).
+
+POST /v1/auth/session with hotkey, challenge, and the hex-encoded signature. The response contains session_token, expires_at, and role. Store the token securely; the default session lifetime is two hours.
+
+Send Authorization: Bearer <session_token> on protected requests. Miner routes accept miner or validator sessions; validator routes require a validator session. A session's role is determined when it is created (admin sessions can access both).
+
+POST /v1/auth/logout with that Bearer header invalidates the session. When it expires, request and sign a new challenge to create another session.
+
+
+See the challenge, session, and logout endpoint references for request and response schemas.
+
+If a session returns 401 Invalid or expired session, obtain a new one. A 403 can indicate a banned hotkey; reauthenticating will not resolve that condition. See API client recovery for retry guidance.
+
+
+Per-Request Signatures
+
+Instead of a Bearer session, include these four headers on each protected request. Generate a new timestamp and nonce for every request, including retries.
+
+ | Header | Type | Description
+ | X-Hotkey | string | Your SS58-encoded hotkey address.
+ | X-Timestamp | string | Current Unix epoch timestamp (seconds).
+ | X-Nonce | string | A unique identifier for this request (UUID recommended).
+ | X-Signature | string | SR25519 signature of the message {hotkey}:{timestamp}:{nonce}.
+
+Example Headers
+
+X-Hotkey: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+X-Timestamp: 1710000000
+X-Nonce: 550e8400-e29b-41d4-a716-446655440000
+X-Signature: 0x1a2b3c4d5e6f...
+
+
+Signature Construction
+
+The signature covers a deterministic message built from three of the header values.
+
+Step 1: Build the Message
+
+Concatenate the hotkey, timestamp, and nonce separated by colons:
+
+{hotkey}:{timestamp}:{nonce}
+
+Example:
+
+5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY:1710000000:550e8400-e29b-41d4-a716-446655440000
+
+Step 2: Sign with SR25519
+
+Sign the message bytes using your hotkey's SR25519 private key. The signature must be hex-encoded with a 0x prefix.
+
+Python Example
+
+import time
+import uuid
+from bittensor_wallet import Wallet
+
+wallet = Wallet(name="my-wallet", hotkey="default")
+hotkey = wallet.hotkey
+
+timestamp = str(int(time.time()))
+nonce = str(uuid.uuid4())
+message = f"{hotkey.ss58_address}:{timestamp}:{nonce}"
+signature = "0x" + hotkey.sign(message.encode()).hex()
+
+headers = {
+    "X-Hotkey": hotkey.ss58_address,
+    "X-Timestamp": timestamp,
+    "X-Nonce": nonce,
+    "X-Signature": signature,
+}
+
+TypeScript Example
+
+import { generateAuthHeaders } from '@oro-ai/sdk';
+
+const headers = await generateAuthHeaders({
+  hotkey: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
+  sign: (message) => wallet.sign(message),
+});
+
+// headers = {
+//   'X-Hotkey': '5GrwvaEF...',
+//   'X-Signature': '0x...',
+//   'X-Nonce': '...',
+//   'X-Timestamp': '...',
+// }
+
+
+Validation Rules
+
+The backend applies these checks to signed requests. Bearer sessions are checked for expiry, role and ban status separately.
+
+ | Check | Failure Response | Details
+ | All four headers present | 401 Unauthorized | Missing any header rejects the request.
+ | Timestamp within skew window | 401 Unauthorized | Default allowed skew: 60 seconds. Configurable via TIMESTAMP_SKEW_SECONDS.
+ | Nonce is unique | 401 Unauthorized | Nonces are stored in Redis with a TTL. Replayed nonces are rejected.
+ | SR25519 signature valid | 401 Unauthorized | Signature must verify against the provided hotkey and message.
+ | Hotkey is registered | 401 Unauthorized | The hotkey must be registered on the configured Bittensor subnet. Registration status is cached in Redis (TTL: 300 seconds by default).
+ | Hotkey has correct role | 401 Unauthorized | Miner endpoints require a miner registration. Validator endpoints require a validator permit and minimum stake weight (40,000 on SN15).
+ | Hotkey is not banned | 403 Forbidden | Banned hotkeys are rejected regardless of registration status.
+
+
+Role-Based Access
+
+Different endpoint groups require different registrations on the Bittensor network.
+
+ | Role | Required Registration | Endpoint Prefix
+ | Miner | Registered miner on subnet | /v1/miner/*
+ | Validator | Registered validator with permit + minimum stake weight on subnet | /v1/validator/*
+
+The backend verifies registration against the Bittensor chain (finney network).
+
+
+Nonce Replay Protection
+
+Each nonce is stored in Redis after use with a TTL that covers the full timestamp-acceptance window (twice the skew, plus one second). Sending the same nonce again while it is stored results in a 401 Unauthorized response.
+
+Use a UUID v4 for each request to guarantee uniqueness:
+
+import uuid
+nonce = str(uuid.uuid4())
+
+
+Clock Skew
+
+The backend compares X-Timestamp against the server clock. Requests with timestamps more than TIMESTAMP_SKEW_SECONDS (default: 60) in the past or future are rejected.
+
+Ensure your system clock is synchronized via NTP. If you receive persistent 401 errors, check for clock drift.
+
+
+SDK Auth Helpers
+
+Both SDKs handle header generation automatically when configured with a wallet.
+
+Python: BittensorAuthClient
+
+from bittensor_wallet import Wallet
+from oro_sdk import BittensorAuthClient
+
+wallet = Wallet(name="my-wallet", hotkey="default")
+client = BittensorAuthClient(base_url="https://api.oroagents.com", wallet=wallet)
+
+# All requests through this client are automatically signed
+
+TypeScript: configureBittensorAuth
+
+import { configureBittensorAuth } from '@oro-ai/sdk';
+
+configureBittensorAuth('https://api.oroagents.com', {
+  hotkey: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
+  sign: async (message) => wallet.sign(message),
+});
+
+// All subsequent SDK calls are automatically signed.
+
+See the SDK reference for full usage examples.
+API Overview
+Base URL, endpoint categories, and OpenAPI specification for the ORO API.
+Credential Management
+Create, renew, and revoke API sessions; connect, rotate, and disconnect inference-provider credentials.

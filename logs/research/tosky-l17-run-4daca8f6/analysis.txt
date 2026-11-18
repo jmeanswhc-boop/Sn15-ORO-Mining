@@ -1,0 +1,410 @@
+Tosky_l17 — paired investigation of local-4daca8f69b5c4cb28b9c14da6a468b7c
+Reviewed 2026-11-17. Analysis and offline diagnostic execution only.
+
+The submitted source is unchanged during this investigation. No paid model or
+environment calls were made. Diagnostic tests below intentionally expose
+current failures; they are not new passing tests or an improved score.
+
+1. Establishing the comparison
+
+Previous run: local-9f2ac835e808440197a18a9a65313580
+Source SHA: 929ab3a86af2b0669db18e9d44f13c8d6742db3ff3f2a55d985731684a0bb834
+Current run: local-4daca8f69b5c4cb28b9c14da6a468b7c
+Source SHA: 41c2c8363002f5bade4bc49c9ad890b6a979758559e7092c2cadd4f0cf62c526
+The current working source matches the current run exactly.
+
+Both runs used pack
+deea6de0ba52834e6853f7fee913c5b29679a2792561f81b50050df16f3f2dc4,
+the same world, the same 30 task IDs and byte-identical shopper requests.
+The first inference request JSON is also identical for all 30 corresponding
+tasks. The differing sampling seeds did not change the full 30-task roster.
+
+These are practice episodes, not the current public qualifier or hidden race.
+The first-model responses and later trajectories nevertheless vary. For
+example, the same mules request lost the wedding occasion in the old brief and
+included it in the new brief, even though that initial prompt was unchanged.
+Thus neither every recovered task nor every regressed task can be attributed
+causally to the previous source change. One paired run also does not quantify
+a stable expected-score difference.
+
+Score:                  22/30 (73.33%) -> 21/30 (70.00%)
+Passed both:            18
+Recovered:               3
+Regressed:               4
+Failed both:             5
+Provider cost:          $0.34363575 -> $0.370946155 (+7.95%)
+Successful LLM calls:   577 -> 575
+Failed LLM calls:         0 -> 0
+Environment steps:     781 -> 773
+Mean execution:         84.181 -> 86.246 seconds
+Median execution:       81.743 -> 80.928 seconds
+
+There is no evidence here of provider credit exhaustion, an API outage or an
+agent deadline being reached. There are reproducible LOCAL admission refusals,
+discussed below. The current score categories are five request-not-met, two
+needs-not-found and two changes-missed. A finished checkout is not proof of a
+correct order; terminal state and correctness are separate in ORO's contract.
+
+2. What the previous correction achieved, and the assumption it got wrong
+
+Actual interview follow-ups immediately after an indifferent interpretation:
+- Before: 55 pairs; all 55 repeated an exact topic, with 377 repeated mentions.
+- After:  51 pairs; zero repeated exact or spelling-equivalent topics.
+Interview questions decreased from 89 to 84. The 90 versus 85 overall ask events
+include an additional procedural message in each run.
+
+The literal-repeat fix therefore worked as coded. It did not establish that a
+customer had answered every topic in a compound question. That is the key
+unsupported assumption in the previous update.
+
+For t-82a9890683, the OLD first question included case shape among eight topics
+and received a generic indifferent answer. The OLD second question elicited
+the firm requirement "case shape ... rectangle". In the NEW run, the first
+compound question again included case.shape and received generic indifference;
+the controller marked case shape done and never elicited the rectangle need.
+It later learned female gender, but that did not replace the missing shape need.
+The run ended with needs-not-found.
+
+For t-70ef000b3f, the OLD first question put material first and elicited nylon.
+The NEW rank put gender first; material was fourth in a compound question. A
+generic indifferent reply marked all eight topics, including material, done.
+Subsequent questions did not elicit nylon. The final listing explicitly stated
+material Other, while the previous successful attempt had discovered nylon.
+The old attempt ended with a decline at step 34 and scored 1. The new attempt
+bought the Other-material listing at step 18 and scored 0. Losing the disclosed
+need changed the decision from decline to purchase, not just the chosen item.
+
+A changing rank and sampled listings also contributed; the broad settlement
+rule amplified them by preventing unresolved topics from being revisited with
+a clear focus. Some later questions still repeat a concept under a different
+namespace, such as material/clothing.material or pattern/fa.pattern. Eliminating
+literal repeats did not establish semantic coverage or effective elicitation.
+
+The public observations do not prove the simulator's private matching
+algorithm. In particular, they do not establish a universal first-property-only
+rule. They DO demonstrate that a vague answer to a compound question cannot
+reliably certify eight separate preferences as settled. A question with one
+clear decision focus avoids this ambiguity without asking that same resolved
+question again. Genuine explicit broader opt-outs must still be respected.
+
+The old rotation was inefficient but also moved different concepts into a
+position that could elicit a need. Removing that behavior without replacing
+its elicitation function removed an existing strength.
+
+The earlier 64 green tests checked the implemented contracts. Several new tests
+encoded the broad-settlement assumption itself. Replaying five already-spoken
+firm answers proved their consumption was preserved; it could not prove that
+changed questions would still elicit those answers. That was an evaluation
+shortcoming in the previous work, not evidence of improved shopping accuracy.
+
+3. Confirmed false budget-exhaustion cascade
+
+Relevant code: Cairn.wants_effort, token_prefix, quote_inference and call_model.
+
+At 90 seconds the light planner starts adding reasoning.effort=low. The local
+token-prefix signature includes reasoning, so the new mode stops matching the
+measured prefix. The estimator switches to its conservative serialized-byte
+bound. In these cases the byte bound crosses the agent's own 100,000-token
+pricing-envelope threshold and triggers a fivefold rate tier. That is an
+internal bound/tier transition, not a reported provider charge.
+
+For the regressed bomber t-5a9d1682ae, offline replay reproduced:
+- Clock: 94.971 seconds.
+- Spent: $0.01494031 of the $0.05 task allocation.
+- Remaining regular allocation after recovery reserve: $0.02905969.
+- Remaining total allocation: $0.03505969.
+- The previous prompt's measured count: 35,730 tokens.
+- The previous messages are still an identical prefix: true.
+- Signature mismatch: reasoning mode changed.
+- Cold bound: 103,498 tokens; reservation: $0.08876846; rejected.
+- Keeping the earlier mode: 41,837-token bound; $0.008257898 reservation;
+  admitted by the SAME existing budget guard.
+
+For clock t-abf1c45838 at 107.260 seconds:
+- Spent: $0.01787198; total allocation still available: $0.03212802.
+- Cold bound: 114,015 tokens; reservation: $0.09686655; rejected.
+- Keeping the earlier mode: 45,667-token bound; $0.008847718 reservation;
+  admitted by the same guard.
+
+The spare model also fails its separate cold-context reservation. call_model
+sets budget_exhausted, the planner stops, and the agent enters forced finish.
+This explains why increasing the overall dollar cap is not the first remedy.
+A mode-preserving fallback can retain the existing conservative accounting and
+unchanged per-task allocation; it must be tested for time room and normal
+retry limits. Blindly assuming a cache hit or deleting safety margins is not
+supported by this evidence.
+
+4. Emergency finish bypasses rejection and recovery state
+
+Relevant code: Cairn.finish and the ending path in run_calls.
+
+The normal route checks offers, cart, facts and reviews. finish directly calls
+checkout when it sees a held cart. It does not enforce all those preconditions.
+
+In the bomber task, checkout at step 34 reports stock loss. The agent marks the
+chosen listing sold out and has replacement candidates in its swap result.
+Planning is then locally denied for the reason above. At step 35 forced finish
+buys the SAME listing while sold_out is already true. The episode finishes and
+receives changes-missed. This is a directly observed illegal state transition,
+not a hypothesis about hidden requirements.
+
+In the clock task, forced checkout at step 34 receives a nonterminal stock-loss
+refusal. After further admission refusal, forced finish calls checkout again at
+step 35 without repairing the cart. This also receives changes-missed. The
+second retry need not be a network duplicate: it is a new step acting on an
+unchanged cart after a known refusal.
+
+Three fictional offline safety contracts fail against BOTH source versions:
+- Repeating a review of an unchanged rejected cart must preserve the block.
+- Emergency finish must not buy a cart with a current negative verdict.
+- A stock refusal requires repair before another checkout of that cart.
+All three fail by assertion; there are no diagnostic test execution errors.
+These are inherited defects left unresolved by the last interview correction.
+
+5. Review context is incomplete; rejection caching is also unsafe
+
+Relevant code: Cairn.ledger, check_cart and take_note.
+
+check_cart adds a key to self.checked before review. If the review says false,
+the first attempt returns a warning. The next attempt for the same key returns
+an empty string simply because the key is checked, even though self.verdicts
+still contains false. The caller interprets the empty warning as permission to
+continue. A checked flag is being used as if it meant passed.
+
+The watch task demonstrates a second, CONNECTED problem. At search step 11 the
+world returns a shopper update: "Never mind about color family, it was more of
+a wish than a need." The NOTE interpreter correctly drops the original green
+requirement. The final review receives the original request, which still says
+green, and an active-only ledger, which no longer lists color. It does not
+receive the explicit retirement and its source evidence. It rejects the
+replacement watch for being rose gold rather than green. That objection is
+stale: color had been explicitly withdrawn.
+
+At checkout step 24 the replayed controller still has that negative verdict,
+but sends checkout anyway. The MECHANICAL bypass is confirmed. However, the
+color objection is not the cause established for this zero: the failure label
+is needs-not-found, consistent with missing shape. Calling the rose-gold color
+itself a violation would ignore the intervening customer change.
+
+Consequently, simply making every negative review permanently binding could
+make performance worse. Specialists need explicit current active AND retired
+requirements, update evidence and scope. Then valid negative results should
+persist until relevant evidence, requirements, quantities or cart contents
+change. An evidence-backed appeal must remain possible.
+
+6. Original property bindings and category alternatives are lost
+
+For regressed tunik t-b9f98ac0cc, the original request explicitly specifies
+"the type of top is a tunik". BOTH versions' initial briefs turn that into the
+name tunik with zero firm property requirements. The current final state still
+has no active requirements. The replacement's top type says shirt while its
+separate Muslim-top-style fields say tunik; the review accepts it.
+
+The confirmed defect is loss of the requested PROPERTY-to-value binding. The
+different final product explains why a latent defect can pass in one run and
+fail in another. The exact sealed grading clause is not exposed, but the
+observed fields show why matching a word somewhere on a listing is insufficient.
+The new optional-preference interview even asks top type and records it as
+flexible because the parser failed to retain it as firm.
+
+For persistent pants-or-jeans t-9ab5c575f5, fuller_label converts the words of
+an OR request into a set and insists on the combined store label Pants & Jeans.
+It rejects Jeans candidates despite the request allowing jeans. Internal holds
+are described in planner messages as store refusals before a checkout is sent.
+In the new run, the cart is present at step 12 but checkout is not sent until
+step 36. Stock then changes and the agent declines at step 37 despite known
+replacement leads. The contradictory OR/category check and wasted recovery
+room are confirmed. The category spelling alone cannot prove the sealed
+expected product.
+
+7. All nine failed tasks, with confidence limits
+
+t-5a9d1682ae — bomber — REGRESSION — changes missed
+  Confirmed: local false exhaustion, known sold-out cart, forced identical buy.
+
+t-70ef000b3f — youth-fashion hoodie — REGRESSION — request not met
+  Confirmed: prior nylon disclosure absent now; material prematurely settled;
+  final material Other. Ranking differences also contribute. The exact sealed
+  reason for request-not-met rather than needs-not-found is not supplied.
+
+t-82a9890683 — formal watch — REGRESSION — needs not found
+  Confirmed: prior rectangle disclosure not elicited; broad question settlement.
+  Also confirmed: explicit color retirement omitted from review context and a
+  cached negative warning bypass. The withdrawn green requirement must not be
+  blamed for the zero.
+
+t-b9f98ac0cc — tunik — REGRESSION — request not met
+  Confirmed missing property binding and conflicting replacement attributes;
+  precise sealed criterion unexposed.
+
+t-9ab5c575f5 — baggy pants OR jeans — PERSISTENT — request not met
+  Confirmed OR-to-combined-category error, repeated internal holds, late stock
+  loss and decline with unresolved alternatives.
+
+t-9fc67ee841 — logo-pattern fall/winter clothing — PERSISTENT — request not met
+  New brief keeps the category but adds availability as a product must despite
+  having in_stock_only. Review rejects the first item for print rather than
+  logo; another candidate is off-category and removed. It ends by declining.
+  These are observed interpretation/retrieval/review difficulties. Available
+  feedback does not name the precise expected alternative. Do not claim the
+  omitted exact category in the OLD brief remains the NEW run's cause.
+
+t-86888552db — long-sleeved top — PERSISTENT — request not met
+  Both attempts eventually select the same replacement. Its sleeve.length says
+  long sleeve and sleeve.style says kimono sleeve; the brief and checker use
+  sleeve length. The failure is stable and field binding is suspicious, but
+  those records alone do not prove which hidden grading clause failed. A
+  definitive claim that kimono sleeve necessarily violates this request would
+  exceed the evidence.
+
+t-a6d85e34f3 — trench coat — PERSISTENT — needs not found
+  No additional firm need was elicited. The new run correctly applies the
+  later instruction to forget style: active requirements at the final checkout
+  retain closure but not style. Therefore an unprocessed style withdrawal is
+  NOT the demonstrated cause of the NEW zero. Delivery/payment timing appears
+  in the request, while the interviewer ranks listing attributes only. That is
+  a plausible blind spot, not proof of the exact undisclosed need.
+
+t-abf1c45838 — cheapest square clock — PERSISTENT — changes missed
+  Confirmed local false exhaustion and two forced checkouts of an unchanged
+  cart, despite a stock-loss observation after the first.
+
+The only per-episode category is not an exhaustive list of all mistakes. Some
+failed tasks have several independently visible defects. Two persistent cases
+above remain incompletely explained at the sealed-criterion level; no answer
+key or hidden requirement has been inferred as a confirmed fact.
+
+8. Cost explanation
+
+The changed HEAR stage has fewer calls, 89 -> 84, but prompt tokens increase
+86,930 -> 175,014. That stage's cost increases $0.01207365 -> $0.025916845,
+about $0.01384 of the total $0.02731 increase, approximately half. The longer
+state/schema and repeated output fields are not free merely because they use
+an existing LLM call.
+
+Planner cost increases $0.21012579 -> $0.221006445 as its prompt usage grows
+4,693,363 -> 5,084,538. Different paths, extra state and listing evidence also
+affect this. The aggregate cannot isolate each token's causal contribution.
+
+At the NEW practice mean, 90 tasks would project to about $1.113. This is a
+same-workload extrapolation, not a hidden-race cost estimate or guarantee.
+The source's per-task allocation remains $0.05 ($4.50 for 90). The immediate
+resource problem in the failed examples is premature LOCAL denial, not having
+actually spent the whole task allocation or the race's $5 allowance.
+
+9. Countermeasures, dependencies, and separate acceptance gates
+
+Stage 1 — Repair mode-switch admission before claiming exhaustion.
+  Component: wants_effort/call_model admission fallback, retaining existing
+  quote_inference bounds, allocation, output caps and retry/time limits.
+  If the optimization-mode request cannot be admitted, test the previously
+  measured, unchanged mode before declaring the task exhausted. Do not remove
+  token-count validation, assume cache discounts, or raise the cap.
+  Acceptance: reproduce both quoted cases; admissible mode stays below the
+  same cap; genuinely unaffordable requests still fail; unknown usage keeps its
+  reservation; retries cannot overrun cost/time. No search/question changes.
+
+Stage 2 — Make specialist task state explicit and consistent.
+  Component: current-state construction used by CHECK and related specialists.
+  Include active firm requirements, explicitly retired requirements, source
+  updates and scope; distinguish unknown from waived. Preserve original text
+  for evidence without making its superseded requirements authoritative.
+  Acceptance: the withdrawn-color example is represented as retired; an
+  unrelated firm need remains active; product A changes cannot mutate B;
+  budgets, quantities, approval requirements and original values survive.
+  Keep this state concise; avoid sending duplicated full histories to HEAR.
+
+Stage 3 — Enforce validated decisions on every checkout path.
+  Component: check_cart cache and finish/normal checkout preflight.
+  A cached rejection remains a rejection until evidence or task/cart revision
+  changes. All endings share checks for known stock loss, current requirements,
+  relevant review state and mandatory procedures. A nonterminal stock refusal
+  invalidates the prior candidate; a new step repeating the same cart is not
+  recovery. Keep an evidence-backed path to re-evaluate an erroneous review.
+  Stage 2 must precede strict rejection persistence: otherwise stale objections
+  such as the withdrawn green constraint would become harder to correct.
+  Acceptance: turn all three diagnostic contracts green; preserve positive
+  checkout; repair to an available validated alternative; handle a legitimate
+  review reversal; stop after finished:true; respect remaining step reserves.
+
+Stage 4 — Replace ambiguous interview coverage with clear answer scope.
+  Component: question selection/wording and HEAR settlement.
+  Use one clear decision focus per message, with other listing values only as
+  examples of that focus. A vague reply settles that focus, not a silent batch
+  of independent properties. Explicit named or broader scope remains binding.
+  Rank unresolved needs using both request clues and observed catalog evidence;
+  keep the existing shopper-message ceiling and procedural-message reserve.
+  Acceptance: scripted shoppers that answer one focus, explicitly waive many,
+  change their mind, mix a budget update with a preference, or reject a crowded
+  question. A hidden requirement in a previously mentioned but unanswered topic
+  must remain discoverable; a confirmed indifferent topic must not repeat.
+  Compare question budgets and preserve positive disclosure cases. These tests
+  establish behavior, not a promised score gain from any ranking strategy.
+
+Stage 5 — Repair original property/category bindings separately.
+  Component: brief validation, exact-property evidence and OR-category checks.
+  An explicit property/value relation must survive even when that value also
+  appears in the product's name. OR must remain OR; a combined store label
+  cannot silently replace permitted alternatives. Similar attribute names must
+  not erase distinctions among properties or dimensions.
+  Acceptance: fictional type-versus-style conflicts, part-specific colors,
+  dimension conflicts, AND/OR category examples, explicit category restrictions,
+  plain product names without an extra property, and successful existing cases.
+  Do not use task IDs, fixed product/attribute tables or expected answers.
+
+Each stage should have its own before/after review and offline regression
+evidence. A paid evaluation after an isolated change is a measurement, not a
+substitute for these diagnostic gates. No combination of these proposals can
+yet be claimed to guarantee an improved race score.
+
+The central engineering failure is promotion of partial information into
+permission to proceed: an ambiguous answer becomes many waivers, a checked
+cart becomes a passed cart, a held cart becomes safe for forced checkout, and
+an omitted retired constraint becomes an active objection again. The concrete
+repair is a shared, explicit task-state contract and an enforced checkout
+boundary, with resource recovery kept available. Additional independent LLM
+reviews alone do not restore information lost upstream.
+
+10. Verification and artifacts
+
+analyze_pair.py / paired-analysis.json:
+  Joins episode.session_id through problems to sandbox problem_id; checks
+  identical task queries and first inference requests; records outcome changes.
+
+replay_flow.py / flow-replay.json:
+  Executes the unchanged agent with a virtual clock and saved API responses.
+  All 30 recorded sequences match, including 773 environment actions and 575
+  inference responses, with no crashes. Environment request bodies are checked
+  exactly; inference model and role sequence are checked. This does NOT claim
+  byte-identical replayed inference prompts or new shopper/model behavior.
+  Captures current state immediately before terminal calls and rejected quotes.
+
+diagnostic_contracts.py / diagnostic-contracts.json:
+  Three fictional safety contracts; three assertion failures on both versions,
+  zero execution errors. They expose inherited bugs; no fix was applied here.
+
+cost-by-stage.json:
+  Uses each actual inference response once, avoiding cumulative-stat double
+  counting. Final per-problem cost totals agree with those actual responses.
+
+Per-task before/after text timelines:
+  Derived public observations and assistant outputs for all tasks with a failure
+  in at least one run. Provider hidden reasoning and repeated extra_info omitted.
+
+The checkout-state snapshots establish which requirements were actually active
+at the time; this prevents misdiagnosing retired color/style constraints as
+current requirements. Grading labels do not disclose all hidden criteria.
+
+Source references (unchanged agents/Tosky_l17.py):
+  HEAR_PROMPT ~721; SendoAsk.hear ~2023; AskItem.open_props ~1835;
+  wants_effort ~2598; token_prefix ~2649; quote_inference ~2661;
+  call_model ~2684; ledger ~3051; take_note ~4937;
+  fuller_label ~5366; check_cart ~5480; run_calls ~6408;
+  finish ~6774; run ~6868.
+
+Current public contract checked during the investigation:
+  https://oroagents.com/docs/oro-bench
+  https://oroagents.com/docs/miners/agent-interface
+These support practice/race separation, observation-borne changes, terminal
+state versus correctness, and the limits of released failure categories. They
+do not specify a universal one-property-only shopper response algorithm.

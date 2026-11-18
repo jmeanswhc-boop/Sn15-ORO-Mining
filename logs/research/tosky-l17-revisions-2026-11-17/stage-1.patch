@@ -1,0 +1,19 @@
+--- before
++++ after
+@@ -2691,6 +2691,16 @@
+         if effort:
+             body['reasoning'] = {'effort': 'low'}
+         quote = self.quote_inference(body)
++        if quote is None and effort and model == LIGHT and tools is not None and self.model_room() >= 3 * CALL_FLOOR:
++            previous = self.token_prefixes.get(model)
++            unchanged_mode = {k: v for k, v in body.items() if k != 'reasoning'}
++            signature, prefix = self.token_prefix(unchanged_mode)
++            if previous and signature == previous[0] and prefix[:len(previous[1])] == previous[1]:
++                alternative = self.quote_inference(unchanged_mode)
++                if alternative is not None:
++                    body, quote, effort = unchanged_mode, alternative, False
++                    self.trace.append({'kind': 'effort_budget_fallback', 'model': model,
++                                       'prompt_bound': quote[1], 'reserved_usd': round(quote[0], 8)})
+         if self.no_credit or self.budget_breached or self.calls >= ALL_CALLS or quote is None:
+             if quote is None and model in (LIGHT, SPARE):
+                 self.budget_exhausted = True

@@ -1,0 +1,214 @@
+"""Tests for LocalRetryQueue.
+
+Uses temp_storage_path and mock_backend_client fixtures from conftest.py.
+"""
+
+import json
+from unittest.mock import MagicMock, patch
+from uuid import UUID
+
+import httpx
+import pytest
+
+from oro_sdk.models.terminal_status import TerminalStatus
+
+from validator.backend_client import BackendClient, BackendError
+from validator.models import CompletionRequest
+from validator.retry_queue import LocalRetryQueue
+
+
+@pytest.fixture
+def sample_completion():
+    """Sample completion request for retry queue tests."""
+    return CompletionRequest(
+        eval_run_id=UUID("12345678-1234-1234-1234-123456789012"),
+        status=TerminalStatus.SUCCESS,
+        validator_score=0.85,
+        score_components={"accuracy": 0.9},
+        results_s3_key="logs/run-123.tar.gz",
+    )
+
+
+class TestLocalRetryQueue:
+    def test_rate_limited_completion_survives_restart_and_retries(
+        self, temp_storage_path, mock_backend_client, sample_completion
+    ):
+        queue = LocalRetryQueue(mock_backend_client, temp_storage_path)
+        queue.add(sample_completion)
+        mock_backend_client.complete_run.side_effect = BackendError(
+            "rate limited", status_code=429
+        )
+
+        queue.process_pending()
+
+        restarted = LocalRetryQueue(mock_backend_client, temp_storage_path)
+        assert restarted.get_pending_count() == 1
+        with open(temp_storage_path) as f:
+            assert json.load(f)["pending"][0]["retry_count"] == 1
+
+        mock_backend_client.complete_run.side_effect = None
+        restarted.process_pending()
+        assert restarted.get_pending_count() == 0
+
+    def test_add_persists_to_file(
+        self, temp_storage_path, mock_backend_client, sample_completion
+    ):
+        queue = LocalRetryQueue(mock_backend_client, temp_storage_path)
+        queue.add(sample_completion)
+
+        with open(temp_storage_path) as f:
+            data = json.load(f)
+
+        assert len(data["pending"]) == 1
+        assert (
+            data["pending"][0]["eval_run_id"] == "12345678-1234-1234-1234-123456789012"
+        )
+
+    def test_get_pending_count(
+        self, temp_storage_path, mock_backend_client, sample_completion
+    ):
+        queue = LocalRetryQueue(mock_backend_client, temp_storage_path)
+        assert queue.get_pending_count() == 0
+
+        queue.add(sample_completion)
+        assert queue.get_pending_count() == 1
+
+    def test_process_pending_removes_on_success(
+        self, temp_storage_path, mock_backend_client, sample_completion
+    ):
+        queue = LocalRetryQueue(mock_backend_client, temp_storage_path)
+        queue.add(sample_completion)
+
+        mock_backend_client.complete_run.return_value = MagicMock()
+
+        queue.process_pending()
+
+        assert queue.get_pending_count() == 0
+        mock_backend_client.complete_run.assert_called_once()
+
+    def test_retry_sends_sandbox_metadata(
+        self, temp_storage_path, mock_backend_client
+    ):
+        metadata = {"exit_code": 137, "duration_seconds": 12.5, "stderr_tail": "Killed"}
+        queue = LocalRetryQueue(mock_backend_client, temp_storage_path)
+        queue.add(
+            CompletionRequest(
+                eval_run_id=UUID("12345678-1234-1234-1234-123456789012"),
+                status=TerminalStatus.FAILED,
+                failure_reason="sandbox exited with 137",
+                sandbox_metadata=metadata,
+            )
+        )
+
+        queue.process_pending()
+
+        kwargs = mock_backend_client.complete_run.call_args.kwargs
+        assert kwargs["sandbox_metadata"] == metadata
+        assert kwargs["failure_reason"] == "sandbox exited with 137"
+
+    @pytest.mark.parametrize("then_transient", [False, True])
+    def test_rejected_success_is_reported_failed(
+        self, temp_storage_path, mock_backend_client, sample_completion, then_transient
+    ):
+        queue = LocalRetryQueue(mock_backend_client, temp_storage_path)
+        queue.add(sample_completion)
+        rejected = BackendError("episode set is incomplete", status_code=400)
+        failure_sent = BackendError("unavailable", status_code=503) if then_transient else None
+        mock_backend_client.complete_run.side_effect = [rejected, failure_sent or MagicMock()]
+
+        queue.process_pending()
+
+        kwargs = mock_backend_client.complete_run.call_args.kwargs
+        assert kwargs["status"] == TerminalStatus.FAILED
+        assert kwargs["failure_reason"] == "Completion rejected by Backend (HTTP 400)"
+        assert "score" not in kwargs
+        # A transient error on the failure report keeps it queued, as FAILED.
+        assert queue.get_pending_count() == int(then_transient)
+        if then_transient:
+            mock_backend_client.complete_run.side_effect = None
+            queue.process_pending()
+            assert mock_backend_client.complete_run.call_args.kwargs["status"] == TerminalStatus.FAILED
+            assert queue.get_pending_count() == 0
+
+    def test_process_pending_keeps_on_failure(
+        self, temp_storage_path, mock_backend_client, sample_completion
+    ):
+        queue = LocalRetryQueue(mock_backend_client, temp_storage_path)
+        queue.add(sample_completion)
+
+        mock_backend_client.complete_run.side_effect = BackendError(
+            "Server unavailable"
+        )
+
+        queue.process_pending()
+
+        assert queue.get_pending_count() == 1
+
+    def test_retry_count_increments(
+        self, temp_storage_path, mock_backend_client, sample_completion
+    ):
+        queue = LocalRetryQueue(mock_backend_client, temp_storage_path)
+        queue.add(sample_completion)
+
+        mock_backend_client.complete_run.side_effect = BackendError(
+            "Server unavailable"
+        )
+
+        queue.process_pending()
+        queue.process_pending()
+
+        with open(temp_storage_path) as f:
+            data = json.load(f)
+
+        assert data["pending"][0]["retry_count"] == 2
+
+    def test_loads_existing_queue_on_init(self, temp_storage_path, mock_backend_client):
+        existing_data = {
+            "pending": [
+                {
+                    "eval_run_id": "12345678-1234-1234-1234-123456789012",
+                    "terminal_status": "SUCCESS",
+                    "validator_score": 0.7,
+                    "score_components": {},
+                    "results_s3_key": "logs/old.tar.gz",
+                    "added_at": "2025-01-13T10:00:00",
+                    "retry_count": 1,
+                }
+            ]
+        }
+        with open(temp_storage_path, "w") as f:
+            json.dump(existing_data, f)
+
+        queue = LocalRetryQueue(mock_backend_client, temp_storage_path)
+        assert queue.get_pending_count() == 1
+
+    @pytest.mark.parametrize(
+        "exc",
+        [
+            pytest.param(httpx.ReadError("connection reset by peer"), id="read-error"),
+            pytest.param(
+                httpx.RemoteProtocolError("Server disconnected without sending a response."),
+                id="server-disconnected",
+            ),
+        ],
+    )
+    def test_dropped_connection_keeps_completion_queued(
+        self, temp_storage_path, mock_wallet, sample_completion, exc
+    ):
+        """A connection dropped during a complete_run replay goes through the
+        real BackendClient error mapping and must leave the entry queued for
+        the next pass, not drop the result."""
+        client = BackendClient("https://api.example.com", mock_wallet)
+        queue = LocalRetryQueue(client, temp_storage_path)
+        queue.add(sample_completion)
+
+        with patch(
+            "validator.backend_client.complete_run.sync_detailed",
+            side_effect=exc,
+        ) as sdk_call:
+            queue.process_pending()
+
+        sdk_call.assert_called_once()
+        assert queue.get_pending_count() == 1
+        with open(temp_storage_path) as f:
+            assert json.load(f)["pending"][0]["retry_count"] == 1

@@ -1,0 +1,453 @@
+"""Tests for process-based timeout enforcement in sandbox_executor."""
+
+import json
+import math
+import os
+import tempfile
+import time
+from pathlib import Path
+
+import pytest
+
+from src.agent.sandbox_executor import (
+    _read_inference_stats,
+    _read_request_log,
+    build_result_envelope,
+    execute_single_problem,
+    merge_inference_stats,
+    read_inference_stats,
+    read_regular_file,
+)
+
+FIXTURES = Path(__file__).parent / "fixtures"
+FAST = str(FIXTURES / "fast_agent.py")
+SLOW = str(FIXTURES / "slow_agent.py")
+CRASH = str(FIXTURES / "crashing_agent.py")
+FROZEN_DC = str(FIXTURES / "frozen_dataclass_agent.py")
+LARGE_RESULT = str(FIXTURES / "large_result_agent.py")
+INFERENCE_STATS = str(FIXTURES / "inference_stats_agent.py")
+
+
+def test_successful_execution():
+    result = execute_single_problem(
+        {"query": "laptop", "id": "p1"}, timeout=10.0, agent_file=FAST
+    )
+    assert result.success
+    assert result.result["answer"] == "hello"
+    assert result.problem_id == "p1"
+
+
+def test_large_result_is_received_before_child_exit():
+    """A result larger than the queue pipe must not make a finished agent time out."""
+    result = execute_single_problem(
+        {"query": "large result", "id": "p-large"},
+        timeout=2.0,
+        agent_file=LARGE_RESULT,
+    )
+
+    assert result.success
+    assert result.result == {"answer": "x" * 2_000_000}
+    assert result.status.value == "SUCCESS"
+
+
+def test_timeout_kills_process():
+    """Core test: slow agent (sleeps 9999s) is terminated after 2s timeout."""
+    start = time.time()
+    result = execute_single_problem({"query": "slow"}, timeout=2.0, agent_file=SLOW)
+    assert not result.success
+    assert "timeout" in result.error.lower()
+    assert time.time() - start < 15.0
+
+
+def test_agent_crash_returns_error():
+    result = execute_single_problem({"query": "crash"}, timeout=10.0, agent_file=CRASH)
+    assert not result.success
+    err_msg = result.error.message if hasattr(result.error, "message") else result.error
+    assert "agent crashed on purpose" in err_msg
+
+
+def test_missing_agent_file():
+    result = execute_single_problem(
+        {"query": "x"}, timeout=10.0, agent_file="/tmp/no_such_agent.py"
+    )
+    assert not result.success
+
+
+def test_frozen_dataclass_with_pep563_annotations():
+    """Agents using `from __future__ import annotations` + @dataclass rely on
+    the loaded module being present in sys.modules — dataclasses._is_type
+    reads sys.modules[cls.__module__] to resolve string-form annotations."""
+    result = execute_single_problem(
+        {"query": "anything", "id": "p-frozen"}, timeout=10.0, agent_file=FROZEN_DC
+    )
+    assert result.success
+    assert result.result["answer"] == "hello-frozen"
+
+
+def test_agent_process_snapshots_episode_inference_stats(tmp_path, monkeypatch):
+    monkeypatch.setenv("SANDBOX_OUTPUT_FILE", str(tmp_path / "output.jsonl"))
+    result = execute_single_problem(
+        {
+            "query": "test",
+            "problem_id": "episode-1",
+            "category": "generated_environment",
+        },
+        timeout=10.0,
+        agent_file=INFERENCE_STATS,
+    )
+
+    assert result.success
+    usage = read_inference_stats(str(tmp_path / "inference_stats.jsonl"))
+    assert usage["episode-1"] == {
+        "problem_id": "episode-1",
+        "inference_success": 1,
+        "inference_failed": 0,
+        "inference_total": 1,
+        "inference_cost_usd": 0.25,
+        "inference_cost_missing": 0,
+        "inference_byok_cost_usd": 0.0,
+        "inference_byok_requests": 0,
+        "prompt_tokens": 10,
+        "cached_tokens": 6,
+        "completion_tokens": 2,
+            "requested_models": {
+                "Unknown model": {
+                "requests": 1,
+                "failed_requests": 0,
+                "prompt_tokens": 10,
+                "cached_tokens": 6,
+                "completion_tokens": 2,
+                "cost_usd": 0.25,
+                "cost_missing": 0,
+                "byok_cost_usd": 0.0,
+                "byok_requests": 0,
+                }
+            },
+            "served_models": {
+                "Unknown model": {
+                    "requests": 1,
+                    "failed_requests": 0,
+                    "prompt_tokens": 10,
+                    "cached_tokens": 6,
+                    "completion_tokens": 2,
+                    "cost_usd": 0.25,
+                    "cost_missing": 0,
+                    "byok_cost_usd": 0.0,
+                    "byok_requests": 0,
+                }
+            },
+        }
+    assert result.inference_usage == usage["episode-1"]
+    output = tmp_path / "runner-output.jsonl"
+    envelope = build_result_envelope(result)
+    assert envelope["_shadow_inference_usage"] == usage["episode-1"]
+    envelope["_shadow_inference_usage"] = {
+        **envelope["_shadow_inference_usage"],
+        "problem_id": "spoofed",
+    }
+    output.write_text(json.dumps(envelope) + "\n")
+    assert read_inference_stats(str(output)) == {"episode-1": usage["episode-1"]}
+
+
+def test_legacy_result_envelope_does_not_include_shadow_inference_usage():
+    result = execute_single_problem(
+        {"query": "test", "problem_id": "legacy"},
+        timeout=10.0,
+        agent_file=FAST,
+    )
+
+    assert "_shadow_inference_usage" not in build_result_envelope(result)
+
+
+class TestReadInferenceStats:
+    def test_reads_matching_problem(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+            f.write(json.dumps({"problem_id": "p1", "inference_failed": 2, "inference_total": 8}) + "\n")
+            f.write(json.dumps({"problem_id": "p2", "inference_failed": 0, "inference_total": 5}) + "\n")
+            path = f.name
+        try:
+            failures, total = _read_inference_stats(path, "p1")
+            assert failures == 2
+            assert total == 8
+        finally:
+            os.unlink(path)
+
+    def test_missing_problem_returns_zeros(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+            f.write(json.dumps({"problem_id": "p1", "inference_failed": 1, "inference_total": 3}) + "\n")
+            path = f.name
+        try:
+            failures, total = _read_inference_stats(path, "p99")
+            assert failures == 0
+            assert total == 0
+        finally:
+            os.unlink(path)
+
+    def test_missing_file_returns_zeros(self):
+        failures, total = _read_inference_stats("/tmp/nonexistent.jsonl", "p1")
+        assert failures == 0
+        assert total == 0
+
+    def test_merges_latest_cumulative_stats_from_each_source(self):
+        agent_entries = [
+            {
+                "problem_id": "p1",
+                "inference_total": 1,
+                "inference_cost_usd": 0.1,
+            },
+            {
+                "problem_id": "p1",
+                "inference_total": 3,
+                "inference_cost_usd": 0.3,
+            },
+        ]
+        simulator_entry = {
+            "problem_id": "p1",
+            "inference_total": 2,
+            "inference_cost_usd": 0.2,
+        }
+        with (
+            tempfile.NamedTemporaryFile(
+                suffix=".jsonl", delete=False, mode="w"
+            ) as agent_file,
+            tempfile.NamedTemporaryFile(
+                suffix=".jsonl", delete=False, mode="w"
+            ) as simulator_file,
+        ):
+            for entry in agent_entries:
+                agent_file.write(json.dumps(entry) + "\n")
+            simulator_file.write(json.dumps(simulator_entry) + "\n")
+            paths = [agent_file.name, simulator_file.name]
+        try:
+            usage = read_inference_stats(paths)["p1"]
+            assert usage["inference_failed"] == 0
+            assert usage["inference_total"] == 5
+            assert usage["inference_cost_usd"] == 0.5
+        finally:
+            for path in paths:
+                os.unlink(path)
+
+    def test_malformed_line_does_not_hide_later_snapshot(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+            f.write('{"problem_id":"p1"\n')
+            f.write(json.dumps({"problem_id": "p1", "inference_total": 2}) + "\n")
+            path = f.name
+        try:
+            assert read_inference_stats(path)["p1"]["inference_total"] == 2
+        finally:
+            os.unlink(path)
+
+    def test_ignores_snapshot_with_no_valid_counters(self, tmp_path):
+        for index, value in enumerate(("bad", math.nan, math.inf, -1)):
+            path = tmp_path / f"stats-{index}.jsonl"
+            path.write_text(
+                json.dumps({"problem_id": "p1", "inference_total": value})
+            )
+
+            assert read_inference_stats(str(path)) == {}
+
+
+class TestReadRequestLog:
+    def test_reads_all_entries(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+            f.write(json.dumps({"method": "GET", "path": "/a"}) + "\n")
+            f.write(json.dumps({"method": "POST", "path": "/b"}) + "\n")
+            path = f.name
+        try:
+            entries = _read_request_log(path)
+            assert len(entries) == 2
+            assert entries[0]["path"] == "/a"
+            assert entries[1]["path"] == "/b"
+        finally:
+            os.unlink(path)
+
+    def test_missing_file_returns_empty(self):
+        entries = _read_request_log("/tmp/nonexistent_request_log.jsonl")
+        assert entries == []
+
+    def test_skips_blank_lines(self):
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+            f.write(json.dumps({"method": "GET", "path": "/a"}) + "\n")
+            f.write("\n")
+            f.write(json.dumps({"method": "GET", "path": "/b"}) + "\n")
+            path = f.name
+        try:
+            entries = _read_request_log(path)
+            assert len(entries) == 2
+        finally:
+            os.unlink(path)
+
+
+def test_merge_sums_byok_cost_across_sources():
+    agent = {
+        "p1": {
+            "problem_id": "p1",
+            "inference_total": 2,
+            "inference_cost_usd": 0.301,
+            "inference_byok_cost_usd": 0.25,
+            "inference_byok_requests": 1,
+            "served_models": {"byok/a": {"requests": 2, "cost_usd": 0.301, "byok_cost_usd": 0.25, "byok_requests": 1}},
+        }
+    }
+    simulator = {
+        "p1": {
+            "problem_id": "p1",
+            "inference_total": 1,
+            "inference_cost_usd": 0.2,
+            "inference_byok_cost_usd": 0.5,
+            "inference_byok_requests": 1,
+            "served_models": {"byok/a": {"requests": 1, "cost_usd": 0.2, "byok_cost_usd": 0.5, "byok_requests": 1}},
+        }
+    }
+
+    usage = merge_inference_stats(agent, simulator)["p1"]
+
+    assert usage["inference_total"] == 3
+    assert round(usage["inference_cost_usd"], 6) == 0.501
+    assert usage["inference_byok_cost_usd"] == 0.75
+    assert usage["inference_byok_requests"] == 2
+    assert usage["served_models"]["byok/a"] == {
+        "requests": 3,
+        "cost_usd": 0.501,
+        "byok_cost_usd": 0.75,
+        "byok_requests": 2,
+    }
+
+
+def test_sums_counters_from_multiple_clients_for_one_problem(tmp_path):
+    """An agent that builds a new ProxyClient per call must not report one call per problem."""
+    from src.agent.proxy_client import InferenceStats
+
+    path = str(tmp_path / "inference_stats.jsonl")
+    for _ in range(3):  # three clients, each making two calls for the same problem
+        stats = InferenceStats(stats_file=path, problem_id="p1")
+        stats.record_success({"cost": 0.01, "prompt_tokens": 10, "completion_tokens": 2})
+        stats.record_success({"cost": 0.01, "prompt_tokens": 10, "completion_tokens": 2})
+
+    usage = read_inference_stats(path)["p1"]
+
+    assert usage["inference_total"] == 6
+    assert usage["prompt_tokens"] == 60
+    assert round(usage["inference_cost_usd"], 6) == 0.06
+
+
+def test_execution_id_keeps_repeated_runs_of_one_problem_separate(tmp_path, monkeypatch):
+    """/run and /run_matrix can run one problem repeatedly against the same stats file."""
+    from src.agent.proxy_client import InferenceStats
+
+    path = str(tmp_path / "inference_stats.jsonl")
+    for execution_id, calls in (("run-a", 2), ("run-b", 5)):
+        monkeypatch.setenv("INFERENCE_STATS_EXECUTION_ID", execution_id)
+        stats = InferenceStats(stats_file=path, problem_id="p1")
+        for _ in range(calls):
+            stats.record_success()
+
+    assert read_inference_stats(path, "run-a")["p1"]["inference_total"] == 2
+    assert read_inference_stats(path, "run-b")["p1"]["inference_total"] == 5
+
+
+@pytest.mark.parametrize("kind", ["symlink", "fifo", "sparse"])
+def test_read_regular_file_rejects_non_regular_or_oversized_files(tmp_path, kind):
+    path = tmp_path / "output.jsonl"
+    if kind == "symlink":
+        path.symlink_to("/dev/zero")
+    elif kind == "fifo":
+        os.mkfifo(path)
+    else:
+        with open(path, "wb") as f:
+            f.truncate(1 << 40)
+    with pytest.raises((OSError, ValueError)):
+        read_regular_file(path, max_bytes=1024)
+
+
+def test_read_inference_stats_skips_a_non_regular_stats_file(tmp_path):
+    target = tmp_path / "trusted.jsonl"
+    target.write_text(json.dumps({"problem_id": "p1", "inference_total": 9}) + "\n")
+    stats = tmp_path / "inference_stats.jsonl"
+    stats.symlink_to(target)
+    assert read_inference_stats(str(stats)) == {}
+
+
+def test_read_inference_stats_skips_only_an_invalid_utf8_line(tmp_path):
+    stats = tmp_path / "inference_stats.jsonl"
+    good = json.dumps({"problem_id": "p1", "inference_total": 2}).encode()
+    stats.write_bytes(b"\xff\xfe broken\n" + good + b"\n")
+    assert read_inference_stats(str(stats))["p1"]["inference_total"] == 2
+
+
+def test_open_regular_file_closes_its_descriptor_on_rejection(tmp_path):
+    path = tmp_path / "output.jsonl"
+    path.mkdir()
+    fd_dir = "/proc/self/fd" if os.path.exists("/proc/self/fd") else "/dev/fd"
+    before = len(os.listdir(fd_dir))
+    for _ in range(20):
+        with pytest.raises((OSError, ValueError)):
+            read_regular_file(path, max_bytes=1024)
+    assert len(os.listdir(fd_dir)) == before
+
+
+def test_open_regular_file_supports_symlinked_parent_directory(tmp_path):
+    real_dir = tmp_path / "real"
+    real_dir.mkdir()
+    sym_dir = tmp_path / "sym"
+    sym_dir.symlink_to(real_dir)
+    file_path = sym_dir / "output.jsonl"
+    file_path.write_bytes(b"content")
+    assert read_regular_file(file_path, max_bytes=1024) == b"content"
+
+    sym_file = sym_dir / "sym_output.jsonl"
+    sym_file.symlink_to(file_path)
+    with pytest.raises((OSError, ValueError)):
+        read_regular_file(sym_file, max_bytes=1024)
+
+
+def test_read_inference_stats_stops_at_the_cap_if_the_file_grows(tmp_path, monkeypatch):
+    import src.agent.sandbox_executor as se
+
+    stats = tmp_path / "inference_stats.jsonl"
+    line = json.dumps({"problem_id": "p1", "inference_total": 1}) + "\n"
+    stats.write_text(line * 3)
+    monkeypatch.setattr(se, "MAX_SANDBOX_OUTPUT_BYTES", len(line) + 1)
+    real_open = se.open_regular_file
+    # Passes the size check at open, then holds more than the cap.
+    monkeypatch.setattr(
+        se, "open_regular_file", lambda path, _cap: real_open(path, 1 << 30)
+    )
+
+    assert read_inference_stats(str(stats)) == {}
+
+
+def test_append_attempt_appends_a_rerun_and_follows_no_planted_file(tmp_path: Path) -> None:
+    """A re-run's output joins the run's own; an agent-planted symlink is replaced, never written
+    through, and a FIFO or oversized file reads as nothing instead of blocking or failing."""
+    from src.agent.sandbox_executor import append_attempt
+
+    earlier, later = tmp_path / "output.jsonl", tmp_path / "rerun.jsonl"
+    earlier.write_bytes(b'{"a": 1}')
+    later.write_bytes(b'{"b": 2}\n')
+    append_attempt(earlier, later, 1024)
+    assert earlier.read_bytes() == b'{"a": 1}\n{"b": 2}\n'
+
+    target = tmp_path / "site.pth"
+    target.write_bytes(b"untouched")
+    earlier.unlink()
+    earlier.symlink_to(target)
+    append_attempt(earlier, later, 1024)
+    assert target.read_bytes() == b"untouched"
+    assert not earlier.is_symlink() and earlier.read_bytes() == b'{"b": 2}\n'
+
+    fifo = tmp_path / "fifo.jsonl"
+    os.mkfifo(fifo)
+    append_attempt(earlier, fifo, 1024)  # returns at once: nothing to append
+    append_attempt(fifo, later, 1024)  # replaces the FIFO without opening it for writing
+    assert fifo.read_bytes() == b'{"b": 2}\n'
+    big = tmp_path / "big.jsonl"
+    big.write_bytes(b"x" * 2048)
+    before = earlier.read_bytes()
+    append_attempt(earlier, big, 1024)
+    assert earlier.read_bytes() == before
+
+    blocked = tmp_path / "stats.jsonl"
+    blocked.mkdir()  # a directory where the run's own file should be: kept, never an error
+    append_attempt(blocked, later, 1024)
+    assert blocked.is_dir() and not [p for p in tmp_path.iterdir() if p.name.startswith(".merge-")]
